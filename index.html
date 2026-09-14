@@ -17,21 +17,27 @@
 --red:#ff2d43;--amber:#ffb400;--cyan:#5ad1ff;--green:#54e08a}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overflow-x:hidden}
-body{background:radial-gradient(900px 400px at 50% -100px,rgba(255,45,67,.12),transparent 70%),var(--bg);
+/* фон ОДНОЙ плиткой, без повторов-«полосок» */
+body{background-color:var(--bg);
+background-image:radial-gradient(900px 400px at 50% -100px,rgba(255,45,67,.12),transparent 70%);
+background-repeat:no-repeat;
 color:var(--txt);font-family:'Rajdhani',system-ui,sans-serif;padding:0 12px 20px}
 .wrap{max-width:860px;margin:0 auto}
 .view{display:none}.view.on{display:block}
 
-/* ===== НАВИГАЦИЯ ===== */
-.nav{position:sticky;top:0;z-index:40;display:flex;gap:6px;justify-content:center;align-items:center;
-padding:10px 6px;margin:0 -12px 14px;background:rgba(10,13,16,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);overflow-x:auto}
+/* ===== НАВИГАЦИЯ: ВСЕГДА В ОДНУ СТРОКУ ===== */
+.nav{position:sticky;top:0;z-index:40;display:flex;flex-wrap:nowrap;gap:4px;justify-content:center;align-items:center;
+padding:8px 6px;margin:0 -12px 14px;background:rgba(10,13,16,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 body[data-view="home"] .nav{display:none}
-.nav button{font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
-padding:10px 13px;cursor:pointer;color:#93a1aa;background:linear-gradient(180deg,#22272b,#12161a);
-border:1px solid #363d43;border-radius:8px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.nav button{flex:1 1 0;min-width:0;justify-content:center;
+font-family:'Orbitron',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+padding:10px 6px;cursor:pointer;color:#93a1aa;background:linear-gradient(180deg,#22272b,#12161a);
+border:1px solid #363d43;border-radius:8px;display:flex;align-items:center;gap:5px}
 .nav button.on{color:#fff;border-color:var(--red);background:linear-gradient(180deg,#3a0d13,#1a0507);box-shadow:0 0 14px rgba(255,45,67,.4)}
-.nav button.home{padding:10px 11px}
-.nav svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav button.home{flex:0 0 auto;padding:10px 10px}
+.nav button .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav svg{width:14px;height:14px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:460px){.nav button .txt{display:none}.nav button{gap:0}}
 
 /* ===== ИКОНКИ МОДУЛЕЙ ===== */
 .ico{flex:0 0 auto;width:46px;height:46px;display:flex;align-items:center;justify-content:center;
@@ -172,7 +178,7 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
  <div class="wrap">
   <div class="eye"></div>
   <div class="h-title">IRON <span>WORLD</span></div>
-  <div class="h-sub">Cyberdyne Training OS · v2.2</div>
+  <div class="h-sub">Cyberdyne Training OS · v2.3</div>
   <div class="h-status" id="hstatus"></div>
   <div class="h-select">▸ Select module ◂</div>
   <div class="mods">
@@ -191,9 +197,9 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
 
 <nav class="nav" id="nav">
  <button class="home" onclick="showView('home')" title="Меню"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
- <button data-v="train" onclick="showView('train')"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg>Тренировки</button>
- <button data-v="measure" onclick="showView('measure')"><svg viewBox="0 0 24 24"><rect x="2.5" y="9" width="19" height="6.5" rx="1.2"/><path d="M7 9v3M11 9v3M15 9v3M19 9v3"/></svg>Замеры</button>
- <button data-v="food" onclick="showView('food')"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M16.5 3v18"/><path d="M16.5 3c3 3.5 3 8 0 11"/></svg>Питание</button>
+ <button data-v="train" onclick="showView('train')"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg><span class="txt">Тренировки</span></button>
+ <button data-v="measure" onclick="showView('measure')"><svg viewBox="0 0 24 24"><rect x="2.5" y="9" width="19" height="6.5" rx="1.2"/><path d="M7 9v3M11 9v3M15 9v3M19 9v3"/></svg><span class="txt">Замеры</span></button>
+ <button data-v="food" onclick="showView('food')"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M16.5 3v18"/><path d="M16.5 3c3 3.5 3 8 0 11"/></svg><span class="txt">Питание</span></button>
 </nav>
 
 <!-- ========== ТРЕНИРОВКИ ========== -->
@@ -262,7 +268,7 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
    <div class="fnote"><b>Почему банан обязателен</b>Умеренный всплеск инсулина после силовой «открывает» мышечные клетки для аминокислот творога. На фоне Мастерона и Метформина углевод идёт строго в гликоген мышц, а не в висцеральный жир.</div>
    <div class="falt"><em>Альт</em><p><b>300 г творога</b> + 250 мл ряженки + 150 г сладких ягод (вместо банана).</p></div>
   </div>
-  <div class="empty">⚖ Крупы — в сухом виде · Мясо и рыбу — в сыром · Сон 7–9 ч · Вода 2.5–3 л</div>
+  <div class="empty">Крупы — в сухом виде · Мясо и рыбу — в сыром · Сон 7–9 ч · Вода 2.5–3 л</div>
  </div>
 </section>
 
