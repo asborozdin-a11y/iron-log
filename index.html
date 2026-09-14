@@ -17,7 +17,6 @@
 --red:#ff2d43;--amber:#ffb400;--cyan:#5ad1ff;--green:#54e08a}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overflow-x:hidden}
-/* фон ОДНОЙ плиткой, без повторов-«полосок» */
 body{background-color:var(--bg);
 background-image:radial-gradient(900px 400px at 50% -100px,rgba(255,45,67,.12),transparent 70%);
 background-repeat:no-repeat;
@@ -25,7 +24,6 @@ color:var(--txt);font-family:'Rajdhani',system-ui,sans-serif;padding:0 12px 20px
 .wrap{max-width:860px;margin:0 auto}
 .view{display:none}.view.on{display:block}
 
-/* ===== НАВИГАЦИЯ: ВСЕГДА В ОДНУ СТРОКУ ===== */
 .nav{position:sticky;top:0;z-index:40;display:flex;flex-wrap:nowrap;gap:4px;justify-content:center;align-items:center;
 padding:8px 6px;margin:0 -12px 14px;background:rgba(10,13,16,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 body[data-view="home"] .nav{display:none}
@@ -39,7 +37,6 @@ border:1px solid #363d43;border-radius:8px;display:flex;align-items:center;gap:5
 .nav svg{width:14px;height:14px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:460px){.nav button .txt{display:none}.nav button{gap:0}}
 
-/* ===== ИКОНКИ МОДУЛЕЙ ===== */
 .ico{flex:0 0 auto;width:46px;height:46px;display:flex;align-items:center;justify-content:center;
 border:1px solid var(--line);border-radius:10px;background:#0b0f12}
 .ico svg{width:27px;height:27px;stroke:var(--red);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
@@ -47,7 +44,6 @@ filter:drop-shadow(0 0 5px rgba(255,45,67,.55))}
 .modbtn.food .ico svg{stroke:var(--amber);filter:drop-shadow(0 0 5px rgba(255,180,0,.55))}
 .modbtn.meas .ico svg{stroke:var(--cyan);filter:drop-shadow(0 0 5px rgba(90,209,255,.55))}
 
-/* ===== СТАРТ ===== */
 #view-home{padding-top:6vh;text-align:center}
 .eye{width:74px;height:74px;margin:0 auto 14px;border-radius:50%;
 background:radial-gradient(circle at 37% 34%,#fff 0%,#ff5566 17%,#d1001a 44%,#4a0009 78%,#150003 100%);
@@ -70,7 +66,6 @@ background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var
 .modbtn b{display:block;font-family:'Orbitron',sans-serif;font-size:15px;letter-spacing:.14em;text-transform:uppercase}
 .modbtn small{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut);margin-top:3px;letter-spacing:.05em}
 
-/* ===== ОБЩЕЕ ===== */
 header.pg{text-align:center;margin:4px 0 14px}
 header.pg .hud{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.2em;color:var(--mut2);text-transform:uppercase}
 header.pg h1{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(24px,6vw,36px);letter-spacing:.08em;text-transform:uppercase}
@@ -106,6 +101,13 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .actions button{font-family:'Orbitron',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
 padding:14px 24px;cursor:pointer;border-radius:9px;color:#fff;border:1px solid var(--red);background:linear-gradient(180deg,#a3000f,#480009);box-shadow:0 0 22px rgba(255,45,67,.35)}
 .actions button.ghost{background:linear-gradient(180deg,#22272b,#12161a);border-color:#363d43;color:#93a1aa;box-shadow:none}
+.help{margin:4px auto 0;max-width:640px;font-size:13.5px;color:var(--mut)}
+.help summary{cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+color:#93a1aa;padding:9px;border:1px dashed #2b353e;border-radius:8px;text-align:center;list-style:none}
+.help summary::before{content:'? '}
+.help[open] summary{border-color:var(--red);color:#ffd9dd}
+.help ol{margin:10px 0 0 20px;line-height:1.75}
+.help code{font-family:'JetBrains Mono',monospace;color:var(--amber)}
 h2.sec{font-family:'Orbitron',sans-serif;font-size:16px;letter-spacing:.18em;text-transform:uppercase;color:#f2f6f8;border-bottom:1px solid var(--line);padding-bottom:8px;margin:24px 0 14px}
 h2.sec span{color:var(--red)}
 .ses{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
@@ -119,7 +121,6 @@ h2.sec span{color:var(--red)}
 .ses li .w{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--amber);white-space:nowrap}
 .empty{text-align:center;color:#5d686f;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;padding:20px 0;text-transform:uppercase}
 
-/* ===== ПИТАНИЕ ===== */
 .fmacros{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
 .fm{background:var(--card2);border:1px solid #1e262d;border-radius:8px;padding:10px 4px;text-align:center;position:relative;overflow:hidden}
 .fm b{display:block;font-family:'Oswald',sans-serif;font-weight:700;font-size:26px;line-height:1}
@@ -146,7 +147,6 @@ h2.sec span{color:var(--red)}
 .falt p{font-size:14px;line-height:1.45;color:#c3cdd4}
 .falt p b{color:var(--txt)}
 
-/* ===== ЗАМЕРЫ ===== */
 #view-measure{position:relative}
 .body-bg{position:absolute;left:50%;top:30px;transform:translateX(-50%);height:min(74vh,720px);opacity:.2;pointer-events:none;color:var(--red);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(255,45,67,.4));z-index:0}
 .body-bg .detail{stroke-width:1.1;opacity:.6}
@@ -173,12 +173,11 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
 </head>
 <body data-view="home">
 
-<!-- ========== СТАРТ ========== -->
 <section id="view-home" class="view">
  <div class="wrap">
   <div class="eye"></div>
   <div class="h-title">IRON <span>WORLD</span></div>
-  <div class="h-sub">Cyberdyne Training OS · v2.3</div>
+  <div class="h-sub">Cyberdyne Training OS · v2.4</div>
   <div class="h-status" id="hstatus"></div>
   <div class="h-select">▸ Select module ◂</div>
   <div class="mods">
@@ -202,7 +201,6 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
  <button data-v="food" onclick="showView('food')"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M16.5 3v18"/><path d="M16.5 3c3 3.5 3 8 0 11"/></svg><span class="txt">Питание</span></button>
 </nav>
 
-<!-- ========== ТРЕНИРОВКИ ========== -->
 <section id="view-train" class="view">
  <div class="wrap">
   <header class="pg"><div class="hud">MODULE 01 · STRENGTH LOG</div><h1>IRON <span>LOG</span></h1></header>
@@ -214,17 +212,30 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
    <button class="ghost" onclick="clearInputs()">Сброс полей</button>
   </div>
   <h2 class="sec">Журнал <span>//</span> история</h2>
-  <div class="actions" style="margin:0 0 14px">
+  <div class="actions" style="margin:0 0 10px">
    <button class="ghost" onclick="exportJ()">Экспорт JSON</button>
    <button class="ghost" onclick="fileIn.click()">Импорт JSON</button>
    <button class="ghost" onclick="clearJ()">Очистить</button>
    <input type="file" id="fileIn" accept=".json,application/json" hidden>
   </div>
-  <div id="journal"></div>
+  <div class="actions" style="margin:0 0 10px">
+   <button class="ghost" onclick="exportCSV('train')">CSV: тренировки</button>
+   <button class="ghost" onclick="exportCSV('meas')">CSV: замеры</button>
+  </div>
+  <details class="help">
+   <summary>Как положить таблицы на GitHub</summary>
+   <ol>
+    <li>Нажми <code>CSV: тренировки</code> и <code>CSV: замеры</code> — скачаются <code>trainings.csv</code> и <code>measures.csv</code>.</li>
+    <li>Открой репозиторий <code>iron-log</code> на GitHub → <code>Add file</code> → <code>Upload files</code>.</li>
+    <li>Перетащи оба файла. Если они уже там — GitHub <b>заменит</b> старые одноимённые, таблица обновится без дублей.</li>
+    <li><code>Commit changes</code>. Готово: GitHub показывает каждый CSV как таблицу, а история всех обновлений видна в коммитах.</li>
+    <li>Повторяй когда хочешь актуализировать таблицы (удобно раз в неделю).</li>
+   </ol>
+  </details>
+  <div id="journal" style="margin-top:14px"></div>
  </div>
 </section>
 
-<!-- ========== ПИТАНИЕ ========== -->
 <section id="view-food" class="view">
  <div class="wrap">
   <header class="pg"><div class="hud">MODULE 02 · FUEL PROTOCOL</div><h1>ПЛАН <span>ПИТАНИЯ</span></h1></header>
@@ -272,7 +283,6 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
  </div>
 </section>
 
-<!-- ========== ЗАМЕРЫ ========== -->
 <section id="view-measure" class="view">
  <svg class="body-bg" viewBox="0 0 200 400" aria-hidden="true">
   <defs><g id="half">
@@ -349,6 +359,7 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
 function lastOf(day){return [...S.sessions].reverse().find(s=>s.day===day)}
 function vol(s){let v=0;s.ex.forEach(e=>e.forEach(([w,r])=>{v+=(+w||0)*(+r||0)}));return v}
 function fmtDate(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0].slice(2)}`:iso}
+function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0]}`:iso}
 function todayISO(){return new Date().toISOString().slice(0,10)}
 
 function showView(v){
@@ -459,6 +470,40 @@ function journal(){
         const str=sets.filter(([w])=>w!=='').map(([w,r])=>`${w}×${r||'–'}`).join(', ');
         return str?`<li><span class="n">${d.ex[i].n}</span><span class="w">${str}</span></li>`:''}).join('')}${c}
      </ul></div>`}).join('');
+}
+
+/* ===== ЭКСПОРТ ===== */
+function csvEsc(v){v=(v===undefined||v===null)?'':String(v);return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function download(name,content){
+ const b=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();
+ setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+function exportCSV(kind){
+ if(kind==='train'){
+  if(!S.sessions.length){toast('[!] ЖУРНАЛ ПУСТ');return}
+  const rows=[['Дата','Время','День','Упражнение','Подход','Вес_кг','Повторы','Примечание']];
+  [...S.sessions].sort((a,b)=>a.ts-b.ts).forEach(s=>{
+   const d=DAYS.find(x=>x.id===s.day);
+   const dt=new Date(s.ts);
+   const ds=dt.toLocaleDateString('ru-RU'), tm=dt.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+   s.ex.forEach((sets,i)=>sets.forEach((set,k)=>{
+     if(set[0]===''&&set[1]==='')return;
+     rows.push([ds,tm,d.t,d.ex[i].n,k+1,set[0],set[1],'']);
+   }));
+   if(s.cardio)rows.push([ds,tm,d.t,'Кардио (заминка)','','','',s.cardio.done?(s.cardio.min!==''?s.cardio.min+' мин':'выполнено'):'пропущено']);
+  });
+  download('trainings.csv',rows.map(r=>r.map(csvEsc).join(',')).join('\r\n'));
+  toast('[>>] trainings.csv СОХРАНЁН');
+ }else{
+  if(!S.measures.length){toast('[!] ЗАМЕРОВ НЕТ');return}
+  const rows=[['Дата','Вес_кг','Шея_см','Грудь_см','Бицепс_см','Предплечье_см','Талия_см','Бедро_см','Голень_см']];
+  [...S.measures].sort((a,b)=>a.ts-b.ts).forEach(m=>{
+   rows.push([fmtDateFull(m.date),m.v.w,m.v.neck,m.v.chest,m.v.bicep,m.v.fore,m.v.waist,m.v.thigh,m.v.calf]);
+  });
+  download('measures.csv',rows.map(r=>r.map(csvEsc).join(',')).join('\r\n'));
+  toast('[>>] measures.csv СОХРАНЁН');
+ }
 }
 function exportJ(){
  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
