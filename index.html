@@ -35,13 +35,17 @@ h1 span{color:var(--red);text-shadow:0 0 20px rgba(255,45,67,.6)}
 .ex .meta{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--mut);margin-top:4px;letter-spacing:.05em}
 .ex .meta b{color:var(--amber)}
 .ex .note{font-size:13.5px;color:#8b98a0;margin-top:3px}
+.copybtn{margin:8px 0 0;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;
+  color:#93a1aa;background:#171c21;border:1px solid #2b353e;border-radius:6px;padding:6px 10px;cursor:pointer}
+.copybtn:hover{border-color:var(--red);color:#fff}
 .sets{margin-top:10px;display:flex;flex-direction:column;gap:6px}
-.srow{display:grid;grid-template-columns:64px 1fr 1fr;gap:8px;align-items:center}
-.srow .lab{font-family:'JetBrains Mono',monospace;font-size:12px;color:#7d8b95;letter-spacing:.08em}
+.srow{display:grid;grid-template-columns:76px 1fr 1fr;gap:8px;align-items:center}
+.srow .lab{font-family:'JetBrains Mono',monospace;font-size:12px;color:#7d8b95;letter-spacing:.08em;line-height:1.2}
+.srow .lab .prev{display:block;font-size:10px;letter-spacing:.02em;color:#d19a3f;margin-top:2px;font-weight:500;white-space:nowrap}
 .srow input{width:100%;background:#0b0f12;border:1px solid #2b353e;border-radius:7px;color:var(--txt);
   font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;padding:9px 10px;outline:none}
 .srow input:focus{border-color:var(--red);box-shadow:0 0 10px rgba(255,45,67,.35)}
-.srow input::placeholder{color:#4d565c;font-weight:500}
+.srow input::placeholder{color:#5d686f;font-weight:500}
 .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px 0 26px}
 .actions button{font-family:'Orbitron',sans-serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;
   padding:14px 26px;cursor:pointer;border-radius:9px;color:#fff;border:1px solid var(--red);
@@ -65,13 +69,13 @@ h2.sec span{color:var(--red)}
   font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.1em;padding:12px 22px;border-radius:9px;
   box-shadow:0 0 26px rgba(255,45,67,.5);transition:.3s;opacity:0}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-@media(max-width:520px){.srow{grid-template-columns:52px 1fr 1fr}.ex h3{font-size:16px}}
+@media(max-width:520px){.srow{grid-template-columns:64px 1fr 1fr}.ex h3{font-size:16px}}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
-  <div class="hud">CYBERDYNE STRENGTH OS · v1.0</div>
+  <div class="hud">CYBERDYNE STRENGTH OS · v1.1</div>
   <h1>IRON <span>LOG</span></h1>
 </header>
 
@@ -143,19 +147,38 @@ function render(){
  const d=DAYS.find(x=>x.id===cur);
  document.getElementById('dayhead').textContent=`День ${d.id} · ${d.t} — ${d.sub}`;
  const prev=lastOf(cur);
- document.getElementById('workout').innerHTML=d.ex.map((e,i)=>`
+ document.getElementById('workout').innerHTML=d.ex.map((e,i)=>{
+  const pset=(prev&&prev.ex[i])?prev.ex[i]:null;
+  const hasAny=pset&&pset.some(p=>p&&p[0]!=='');
+  return `
   <div class="ex ${e.ss?'ss':''}">
     <h3>${e.n}</h3>
     <div class="meta"><b>${e.s} × ${e.r}</b> · отдых ${e.rest}</div>
     <div class="note">${e.note}</div>
+    ${hasAny?`<button class="copybtn" onclick="copyPrev(${i})">↺ повторить прошлый раз</button>`:''}
     <div class="sets">${Array.from({length:e.s},(_,k)=>{
-      const p=prev&&prev.ex[i]&&prev.ex[i][k]?prev.ex[i][k]:['',''];
-      return `<div class="srow"><span class="lab">ПОДХОД ${k+1}</span>
-        <input type="number" step="0.5" min="0" inputmode="decimal" placeholder="вес, кг" data-e="${i}" data-s="${k}" data-f="w" value="${p[0]??''}">
-        <input type="number" step="1" min="0" inputmode="numeric" placeholder="повт" data-e="${i}" data-s="${k}" data-f="r" value="${p[1]??''}"></div>`}).join('')}
+      const p=(pset&&pset[k]&&pset[k][0]!=='')?pset[k]:['',''];
+      const hasP=p[0]!=='';
+      return `<div class="srow">
+        <span class="lab">ПОДХОД ${k+1}${hasP?`<span class="prev">прошлый: ${p[0]}×${p[1]||'–'}</span>`:''}</span>
+        <input type="number" step="0.5" min="0" inputmode="decimal" placeholder="${hasP?p[0]:'вес, кг'}" data-e="${i}" data-s="${k}" data-f="w" value="">
+        <input type="number" step="1" min="0" inputmode="numeric" placeholder="${hasP?p[1]:'повт'}" data-e="${i}" data-s="${k}" data-f="r" value="">
+      </div>`}).join('')}
     </div>
-  </div>`).join('');
+  </div>`}).join('');
  journal();
+}
+
+/* подставить все прошлые результаты упражнения в поля */
+function copyPrev(i){
+ const prev=lastOf(cur); if(!prev||!prev.ex[i])return;
+ prev.ex[i].forEach((set,k)=>{
+  const wi=document.querySelector(`input[data-e="${i}"][data-s="${k}"][data-f="w"]`);
+  const ri=document.querySelector(`input[data-e="${i}"][data-s="${k}"][data-f="r"]`);
+  if(wi&&set[0]!=='')wi.value=set[0];
+  if(ri&&set[1]!=='')ri.value=set[1];
+ });
+ toast('↺ ПОДСТАВЛЕНО ИЗ ПРОШЛОЙ ТРЕНИРОВКИ');
 }
 
 function collect(){
@@ -169,7 +192,7 @@ function collect(){
 function save(){
  const ex=collect();
  if(!ex.some(a=>a.some(([w])=>w!==''))){toast('⚠ ЗАПОЛНИ ВЕСА');return}
- S.sessions.push({ts:Date.now(),day:cur,ex});saveS();journal();
+ S.sessions.push({ts:Date.now(),day:cur,ex});saveS();render();
  toast('✔ ЗАПИСАНО В ЖУРНАЛ');
 }
 function clearInputs(){document.querySelectorAll('#workout input').forEach(i=>i.value='');toast('ПОЛЯ ОЧИЩЕНЫ')}
@@ -196,7 +219,6 @@ function exportJ(){
  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='iron-log.json';a.click();
  toast('⬇ ФАЙЛ СОХРАНЁН');
 }
-/* ИМПОРТ: объединяет с текущим журналом без дублей */
 document.getElementById('fileIn').addEventListener('change',async e=>{
  const f=e.target.files[0]; if(!f)return;
  try{
@@ -209,11 +231,9 @@ document.getElementById('fileIn').addEventListener('change',async e=>{
  }catch(err){toast('⚠ ФАЙЛ ПОВРЕЖДЁН')}
  e.target.value='';
 });
-function clearJ(){if(confirm('Удалить весь журнал безвозвратно?')){S={sessions:[]};saveS();journal();toast('ЖУРНАЛ ОЧИЩЕН')}}
+function clearJ(){if(confirm('Удалить весь журнал безвозвратно?')){S={sessions:[]};saveS();render();toast('ЖУРНАЛ ОЧИЩЕН')}}
 
-/* регистрация service worker (офлайн-работа) */
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
-
 render();
 </script>
 </body>
