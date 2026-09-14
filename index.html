@@ -78,6 +78,7 @@ padding:11px 18px;cursor:pointer;color:#93a1aa;background:linear-gradient(180deg
 .ex{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:10px;padding:14px 14px 12px;margin-bottom:12px;position:relative}
 .ex.ss{border-left:4px solid var(--red)}
 .ex.cardio{border-left:4px solid var(--cyan)}
+.ex.cloud{border-left:4px solid var(--green)}
 .ex h3{font-size:17.5px;font-weight:700;line-height:1.25}
 .ex .meta{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--mut);margin-top:4px;letter-spacing:.05em}
 .ex .meta b{color:var(--amber)}
@@ -92,6 +93,8 @@ padding:11px 18px;cursor:pointer;color:#93a1aa;background:linear-gradient(180deg
 font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;padding:10px;outline:none;text-align:center}
 .srow input:focus,.mcell input:focus{border-color:var(--red);box-shadow:0 0 10px rgba(255,45,67,.35)}
 .srow input::placeholder,.mcell input::placeholder{color:rgba(255,180,0,.42);font-weight:700;opacity:1}
+.srow input[type=password]{text-align:left;font-size:13px}
+.srow input[type=text]{text-align:left;font-size:13px}
 input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .ckrow{display:flex;align-items:center;gap:10px;margin-top:10px;cursor:pointer;user-select:none}
@@ -177,9 +180,9 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
  <div class="wrap">
   <div class="eye"></div>
   <div class="h-title">IRON <span>WORLD</span></div>
-  <div class="h-sub">Cyberdyne Training OS · v2.4</div>
+  <div class="h-sub">Cyberdyne Training OS · v3.0</div>
   <div class="h-status" id="hstatus"></div>
-  <div class="h-select">▸ Select module ◂</div>
+  <div class="h-select">▸ Select module </div>
   <div class="mods">
    <button class="modbtn" onclick="showView('train')">
     <span class="ico"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg></span>
@@ -218,21 +221,33 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
    <button class="ghost" onclick="clearJ()">Очистить</button>
    <input type="file" id="fileIn" accept=".json,application/json" hidden>
   </div>
-  <div class="actions" style="margin:0 0 10px">
-   <button class="ghost" onclick="exportCSV('train')">CSV: тренировки</button>
-   <button class="ghost" onclick="exportCSV('meas')">CSV: замеры</button>
+  <div id="journal"></div>
+
+  <h2 class="sec">Cloud <span>//</span> github sync</h2>
+  <div class="ex cloud">
+   <h3>Авто-синхронизация таблиц</h3>
+   <div class="meta">настроил один раз — после каждого сохранения таблицы на GitHub обновляются сами</div>
+   <div class="sets" style="margin-top:10px">
+    <div class="srow one"><span class="lab">ТОКЕН</span><input type="password" id="gh-token" placeholder="github_pat_…" autocomplete="off"></div>
+    <div class="srow"><span class="lab">РЕПО</span><input type="text" id="gh-owner" value="asborozdin-a11y"><input type="text" id="gh-repo" value="iron-log"></div>
+   </div>
+   <div class="actions" style="margin:12px 0 0">
+    <button class="ghost" onclick="ghSave()">Сохранить и подключить</button>
+    <button class="ghost" onclick="doSync(true)">Синхронизировать сейчас</button>
+   </div>
+   <details class="help">
+    <summary>Как получить токен (одноразово, 2 минуты)</summary>
+    <ol>
+     <li>GitHub → аватарка → <code>Settings</code> → внизу слева <code>Developer settings</code>.</li>
+     <li><code>Fine-grained personal access tokens</code> → <code>Generate new token</code>.</li>
+     <li>Repository access: <code>Only select repositories</code> → выбери <code>iron-log</code>.</li>
+     <li>Permissions → Repository permissions → <code>Contents</code>: <code>Read and write</code>.</li>
+     <li><code>Generate token</code> → скопируй и вставь в поле «ТОКЕН» выше.</li>
+    </ol>
+    <p style="margin-top:8px">Токен хранится только на этом устройстве и уходит только на api.github.com. Больше ничего настраивать не нужно.</p>
+   </details>
+   <div class="meta" id="gh-status" style="margin-top:10px"></div>
   </div>
-  <details class="help">
-   <summary>Как положить таблицы на GitHub</summary>
-   <ol>
-    <li>Нажми <code>CSV: тренировки</code> и <code>CSV: замеры</code> — скачаются <code>trainings.csv</code> и <code>measures.csv</code>.</li>
-    <li>Открой репозиторий <code>iron-log</code> на GitHub → <code>Add file</code> → <code>Upload files</code>.</li>
-    <li>Перетащи оба файла. Если они уже там — GitHub <b>заменит</b> старые одноимённые, таблица обновится без дублей.</li>
-    <li><code>Commit changes</code>. Готово: GitHub показывает каждый CSV как таблицу, а история всех обновлений видна в коммитах.</li>
-    <li>Повторяй когда хочешь актуализировать таблицы (удобно раз в неделю).</li>
-   </ol>
-  </details>
-  <div id="journal" style="margin-top:14px"></div>
  </div>
 </section>
 
@@ -351,17 +366,97 @@ const METRICS=[
  {k:'thigh',l:'Бедро',     u:'см', rule:'up'},
  {k:'calf',l:'Голень',     u:'см', rule:'up'}
 ];
-const KEY='ironlog_v1', VKEY='ironlog_view';
-let S=load(), cur=1;
+const KEY='ironlog_v1', VKEY='ironlog_view', GHKEY='ironlog_gh', PKEY='ironlog_pending';
+let S=load(), cur=1, GH=loadGH();
 function load(){try{const o=JSON.parse(localStorage.getItem(KEY));if(o){if(!o.sessions)o.sessions=[];if(!o.measures)o.measures=[];return o}}catch(e){}return{sessions:[],measures:[]}}
 function saveS(){localStorage.setItem(KEY,JSON.stringify(S))}
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+function loadGH(){try{return JSON.parse(localStorage.getItem(GHKEY))||{}}catch(e){return{}}}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 function lastOf(day){return [...S.sessions].reverse().find(s=>s.day===day)}
 function vol(s){let v=0;s.ex.forEach(e=>e.forEach(([w,r])=>{v+=(+w||0)*(+r||0)}));return v}
 function fmtDate(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0].slice(2)}`:iso}
 function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0]}`:iso}
 function todayISO(){return new Date().toISOString().slice(0,10)}
 
+/* ========== GITHUB SYNC ========== */
+function b64utf8(s){const b=new TextEncoder().encode(s);let bin='';for(let i=0;i<b.length;i++)bin+=String.fromCharCode(b[i]);return btoa(bin)}
+async function ghPut(path,content){
+ const url=`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`;
+ const h={'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github+json'};
+ let sha=null;
+ const g=await fetch(url,{headers:h});
+ if(g.ok)sha=(await g.json()).sha;
+ else if(g.status!==404)throw g.status;
+ const body={message:'sync: auto-update '+path,content:b64utf8(content)};
+ if(sha)body.sha=sha;
+ const r=await fetch(url,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify(body)});
+ if(r.status===409){ /* файл изменился снаружи — перечитываем sha и повторяем */
+   const g2=await fetch(url,{headers:h}); if(!g2.ok)throw g2.status;
+   body.sha=(await g2.json()).sha;
+   const r2=await fetch(url,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify(body)});
+   if(!r2.ok)throw r2.status;
+ } else if(!r.ok)throw r.status;
+}
+function buildTrainCSV(){
+ const rows=[['Дата','Время','День','Упражнение','Подход','Вес_кг','Повторы','Примечание']];
+ [...S.sessions].sort((a,b)=>a.ts-b.ts).forEach(s=>{
+  const d=DAYS.find(x=>x.id===s.day);
+  const dt=new Date(s.ts);
+  const ds=dt.toLocaleDateString('ru-RU'), tm=dt.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  s.ex.forEach((sets,i)=>sets.forEach((set,k)=>{
+    if(set[0]===''&&set[1]==='')return;
+    rows.push([ds,tm,d.t,d.ex[i].n,k+1,set[0],set[1],'']);
+  }));
+  if(s.cardio)rows.push([ds,tm,d.t,'Кардио (заминка)','','','',s.cardio.done?(s.cardio.min!==''?s.cardio.min+' мин':'выполнено'):'пропущено']);
+ });
+ return rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');
+}
+function buildMeasCSV(){
+ const rows=[['Дата','Вес_кг','Шея_см','Грудь_см','Бицепс_см','Предплечье_см','Талия_см','Бедро_см','Голень_см']];
+ [...S.measures].sort((a,b)=>a.ts-b.ts).forEach(m=>{
+  rows.push([fmtDateFull(m.date),m.v.w,m.v.neck,m.v.chest,m.v.bicep,m.v.fore,m.v.waist,m.v.thigh,m.v.calf]);
+ });
+ return rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');
+}
+function csvEsc(v){v=(v===undefined||v===null)?'':String(v);return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+let syncT=null;
+function scheduleSync(){
+ if(!GH.token)return;
+ localStorage.setItem(PKEY,'1');
+ clearTimeout(syncT);
+ syncT=setTimeout(()=>doSync(false),1500);
+ ghStatus();
+}
+async function doSync(manual){
+ if(!GH.token){if(manual)toast('[!] СНАЧАЛА ПОДКЛЮЧИ ТОКЕН');return;}
+ if(!navigator.onLine){if(manual)toast('[!] НЕТ СЕТИ — СИНК ПОЗЖЕ');return;}
+ try{
+  await ghPut('trainings.csv',buildTrainCSV());
+  await ghPut('measures.csv',buildMeasCSV());
+  localStorage.removeItem(PKEY);
+  toast('[CLOUD] GITHUB: ТАБЛИЦЫ ОБНОВЛЕНЫ');
+ }catch(e){
+  localStorage.setItem(PKEY,'1');
+  toast(manual?'[CLOUD] ОШИБКА: '+e:'[CLOUD] НЕ СИНК — ПОВТОРЮ ПОЗЖЕ');
+ }
+ ghStatus();
+}
+function ghSave(){
+ GH={token:document.getElementById('gh-token').value.trim(),
+     owner:document.getElementById('gh-owner').value.trim()||'asborozdin-a11y',
+     repo:document.getElementById('gh-repo').value.trim()||'iron-log'};
+ localStorage.setItem(GHKEY,JSON.stringify(GH));
+ toast('[OK] НАСТРОЙКИ СОХРАНЕНЫ');
+ ghStatus();
+ if(GH.token)doSync(true);
+}
+function ghStatus(){
+ const el=document.getElementById('gh-status'); if(!el)return;
+ el.innerHTML=!GH.token?'статус: <b>не подключено</b> — вставь токен один раз':
+  `статус: <b>подключено</b> · ${GH.owner}/${GH.repo} · ${localStorage.getItem(PKEY)?'есть несинхронизированные данные — жду сеть':'всё синхронизировано'}`;
+}
+
+/* ========== НАВИГАЦИЯ ========== */
 function showView(v){
  document.body.dataset.view=v;
  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
@@ -379,11 +474,13 @@ function renderHome(){
  document.getElementById('hstatus').innerHTML=
   `OPERATOR: <b>MALE · 186 CM · 40 Y</b><br>`+
   `SESSIONS: <b>${S.sessions.length}</b>${last?` · LAST: <b>${new Date(last.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})} · ${vol(last).toLocaleString('ru-RU')} кг</b>`:''}<br>`+
-  `MEASURES: <b>${S.measures.length}</b>${lm&&lm.v.w?` · LAST WEIGHT: <b>${lm.v.w} кг</b>`:''}`;
+  `MEASURES: <b>${S.measures.length}</b>${lm&&lm.v.w?` · LAST WEIGHT: <b>${lm.v.w} кг</b>`:''}<br>`+
+  `CLOUD: <b>${GH.token?'SYNC ON':'SYNC OFF'}</b>`;
  document.getElementById('ms-train').textContent=last?`последняя: ${new Date(last.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})} · ${vol(last).toLocaleString('ru-RU')} кг`:'журнал силовых · 3 дня';
  document.getElementById('ms-meas').textContent=lm&&lm.v.w?`последний: ${fmtDate(lm.date)} · ${lm.v.w} кг`:'история пропорций';
 }
 
+/* ========== ТРЕНИРОВКИ ========== */
 function tabs(){document.getElementById('tabs').innerHTML=DAYS.map(d=>
  `<button class="${d.id===cur?'on':''}" onclick="setDay(${d.id})">${d.t}</button>`).join('')}
 function setDay(id){cur=id;renderTrain()}
@@ -451,6 +548,7 @@ function save(){
  const cardio={done:document.getElementById('ck-done').checked, min:mv===''?'':+mv};
  S.sessions.push({ts:Date.now(),day:cur,ex,cardio});saveS();renderTrain();
  toast('[OK] ЗАПИСАНО В ЖУРНАЛ');
+ scheduleSync();
 }
 function clearInputs(){document.querySelectorAll('#workout input').forEach(i=>{if(i.type==='checkbox')i.checked=false;else i.value=''});toast('ПОЛЯ ОЧИЩЕНЫ')}
 function journal(){
@@ -471,40 +569,6 @@ function journal(){
         return str?`<li><span class="n">${d.ex[i].n}</span><span class="w">${str}</span></li>`:''}).join('')}${c}
      </ul></div>`}).join('');
 }
-
-/* ===== ЭКСПОРТ ===== */
-function csvEsc(v){v=(v===undefined||v===null)?'':String(v);return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
-function download(name,content){
- const b=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8'});
- const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();
- setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-}
-function exportCSV(kind){
- if(kind==='train'){
-  if(!S.sessions.length){toast('[!] ЖУРНАЛ ПУСТ');return}
-  const rows=[['Дата','Время','День','Упражнение','Подход','Вес_кг','Повторы','Примечание']];
-  [...S.sessions].sort((a,b)=>a.ts-b.ts).forEach(s=>{
-   const d=DAYS.find(x=>x.id===s.day);
-   const dt=new Date(s.ts);
-   const ds=dt.toLocaleDateString('ru-RU'), tm=dt.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
-   s.ex.forEach((sets,i)=>sets.forEach((set,k)=>{
-     if(set[0]===''&&set[1]==='')return;
-     rows.push([ds,tm,d.t,d.ex[i].n,k+1,set[0],set[1],'']);
-   }));
-   if(s.cardio)rows.push([ds,tm,d.t,'Кардио (заминка)','','','',s.cardio.done?(s.cardio.min!==''?s.cardio.min+' мин':'выполнено'):'пропущено']);
-  });
-  download('trainings.csv',rows.map(r=>r.map(csvEsc).join(',')).join('\r\n'));
-  toast('[>>] trainings.csv СОХРАНЁН');
- }else{
-  if(!S.measures.length){toast('[!] ЗАМЕРОВ НЕТ');return}
-  const rows=[['Дата','Вес_кг','Шея_см','Грудь_см','Бицепс_см','Предплечье_см','Талия_см','Бедро_см','Голень_см']];
-  [...S.measures].sort((a,b)=>a.ts-b.ts).forEach(m=>{
-   rows.push([fmtDateFull(m.date),m.v.w,m.v.neck,m.v.chest,m.v.bicep,m.v.fore,m.v.waist,m.v.thigh,m.v.calf]);
-  });
-  download('measures.csv',rows.map(r=>r.map(csvEsc).join(',')).join('\r\n'));
-  toast('[>>] measures.csv СОХРАНЁН');
- }
-}
 function exportJ(){
  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='iron-log.json';a.click();
@@ -518,12 +582,13 @@ document.getElementById('fileIn').addEventListener('change',async e=>{
    (data.sessions||[]).forEach(s=>{if(!S.sessions.some(x=>x.ts===s.ts))S.sessions.push(s)});
    (data.measures||[]).forEach(m=>{if(!S.measures.some(x=>x.ts===m.ts))S.measures.push(m)});
    S.sessions.sort((a,b)=>a.ts-b.ts);S.measures.sort((a,b)=>a.ts-b.ts);
-   saveS();renderTrain();renderMeasure();toast('[<<] ИМПОРТИРОВАНО');
+   saveS();renderTrain();renderMeasure();toast('[<<] ИМПОРТИРОВАНО');scheduleSync();
  }catch(err){toast('[!] ФАЙЛ ПОВРЕЖДЁН')}
  e.target.value='';
 });
-function clearJ(){if(confirm('Удалить все тренировки журнала? (замеры останутся)')){S.sessions=[];saveS();renderTrain();toast('ЖУРНАЛ ОЧИЩЕН')}}
+function clearJ(){if(confirm('Удалить все тренировки журнала? (замеры останутся)')){S.sessions=[];saveS();renderTrain();toast('ЖУРНАЛ ОЧИЩЕН');scheduleSync()}}
 
+/* ========== ЗАМЕРЫ ========== */
 function renderMeasure(){
  const di=document.getElementById('m-date');
  if(!di.value)di.value=todayISO();
@@ -540,8 +605,9 @@ function saveMeasure(){
  if(!any){toast('[!] ЗАПОЛНИ ХОТЯ БЫ ОДНО ПОЛЕ');return}
  S.measures.push({ts:Date.now(),date:document.getElementById('m-date').value||todayISO(),v});
  saveS();renderMeasure();toast('[OK] ЗАМЕР СОХРАНЁН');
+ scheduleSync();
 }
-function delMeasure(ts){if(confirm('Удалить этот замер?')){S.measures=S.measures.filter(m=>m.ts!==ts);saveS();renderMeasure();toast('ЗАМЕР УДАЛЁН')}}
+function delMeasure(ts){if(confirm('Удалить этот замер?')){S.measures=S.measures.filter(m=>m.ts!==ts);saveS();renderMeasure();toast('ЗАМЕР УДАЛЁН');scheduleSync()}}
 function dcls(rule,d){if(d===0)return'nt';if(rule==='nt')return'nt';if(rule==='dn')return d<0?'up':'dn';return d>0?'up':'dn'}
 function mhist(){
  const el=document.getElementById('mhist');
@@ -566,7 +632,17 @@ function mhist(){
    </div></div>`}).join('');
 }
 
+/* ========== СТАРТ ========== */
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+window.addEventListener('online',()=>{if(GH.token&&localStorage.getItem(PKEY))doSync(false)});
+(function init(){
+ const t=document.getElementById('gh-token');
+ if(t)t.value=GH.token||'';
+ const o=document.getElementById('gh-owner'); if(o&&GH.owner)o.value=GH.owner;
+ const r=document.getElementById('gh-repo'); if(r&&GH.repo)r.value=GH.repo;
+ ghStatus();
+ if(GH.token&&localStorage.getItem(PKEY))doSync(false);
+})();
 showView(localStorage.getItem(VKEY)||'home');
 </script>
 </body>
