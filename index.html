@@ -16,18 +16,19 @@
 :root{--bg:#0a0d10;--card:#141a1f;--card2:#0f1418;--line:#28323b;--txt:#eaeff3;--mut:#9fabb4;--mut2:#7d8b95;
 --red:#ff2d43;--amber:#ffb400;--cyan:#5ad1ff;--green:#54e08a}
 *{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:hidden}
 body{background:radial-gradient(900px 400px at 50% -100px,rgba(255,45,67,.12),transparent 70%),var(--bg);
-color:var(--txt);font-family:'Rajdhani',system-ui,sans-serif;padding:0 12px 90px}
+color:var(--txt);font-family:'Rajdhani',system-ui,sans-serif;padding:0 12px 20px}
 .wrap{max-width:860px;margin:0 auto}
 .view{display:none}.view.on{display:block}
 
 /* ===== НАВИГАЦИЯ ===== */
 .nav{position:sticky;top:0;z-index:40;display:flex;gap:6px;justify-content:center;align-items:center;
-padding:10px 6px;margin:0 -12px 14px;background:rgba(10,13,16,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+padding:10px 6px;margin:0 -12px 14px;background:rgba(10,13,16,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);overflow-x:auto}
 body[data-view="home"] .nav{display:none}
 .nav button{font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
 padding:10px 13px;cursor:pointer;color:#93a1aa;background:linear-gradient(180deg,#22272b,#12161a);
-border:1px solid #363d43;border-radius:8px;display:flex;align-items:center;gap:6px}
+border:1px solid #363d43;border-radius:8px;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .nav button.on{color:#fff;border-color:var(--red);background:linear-gradient(180deg,#3a0d13,#1a0507);box-shadow:0 0 14px rgba(255,45,67,.4)}
 .nav button.home{padding:10px 11px}
 .nav svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -44,8 +45,8 @@ filter:drop-shadow(0 0 5px rgba(255,45,67,.55))}
 #view-home{padding-top:6vh;text-align:center}
 .eye{width:74px;height:74px;margin:0 auto 14px;border-radius:50%;
 background:radial-gradient(circle at 37% 34%,#fff 0%,#ff5566 17%,#d1001a 44%,#4a0009 78%,#150003 100%);
-box-shadow:0 0 26px rgba(255,45,67,.85),0 0 70px rgba(255,45,67,.35),inset 0 0 18px rgba(0,0,0,.8);animation:eye 2.6s ease-in-out infinite}
-@keyframes eye{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.06);filter:brightness(1.3)}}
+box-shadow:0 0 26px rgba(255,45,67,.85),0 0 70px rgba(255,45,67,.35),inset 0 0 18px rgba(0,0,0,.8);animation:eye 3s ease-in-out infinite}
+@keyframes eye{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.04);filter:brightness(1.15)}}
 .h-title{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(30px,8vw,52px);letter-spacing:.1em;text-transform:uppercase}
 .h-title span{color:var(--red);text-shadow:0 0 22px rgba(255,45,67,.6)}
 .h-sub{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.3em;color:var(--mut2);text-transform:uppercase;margin-top:8px}
@@ -89,9 +90,7 @@ padding:11px 18px;cursor:pointer;color:#93a1aa;background:linear-gradient(180deg
 .srow input,.mcell input{width:100%;background:#0b0f12;border:1px solid #2b353e;border-radius:7px;color:var(--txt);
 font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;padding:10px;outline:none;text-align:center}
 .srow input:focus,.mcell input:focus{border-color:var(--red);box-shadow:0 0 10px rgba(255,45,67,.35)}
-/* прошлые цифры — полупрозрачным янтарём внутри поля */
 .srow input::placeholder,.mcell input::placeholder{color:rgba(255,180,0,.42);font-weight:700;opacity:1}
-/* убираем спиннеры у number */
 input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .ckrow{display:flex;align-items:center;gap:10px;margin-top:10px;cursor:pointer;user-select:none}
@@ -173,19 +172,19 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
  <div class="wrap">
   <div class="eye"></div>
   <div class="h-title">IRON <span>WORLD</span></div>
-  <div class="h-sub">Cyberdyne Training OS · v2.1</div>
+  <div class="h-sub">Cyberdyne Training OS · v2.2</div>
   <div class="h-status" id="hstatus"></div>
   <div class="h-select">▸ Select module ◂</div>
   <div class="mods">
    <button class="modbtn" onclick="showView('train')">
     <span class="ico"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg></span>
     <span><b>Тренировки</b><small id="ms-train">журнал силовых · 3 дня</small></span></button>
-   <button class="modbtn food" onclick="showView('food')">
-    <span class="ico"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M16.5 3v18"/><path d="M16.5 3c3 3.5 3 8 0 11"/></svg></span>
-    <span><b>Питание</b><small>памятка · 4 приёма · 2650 ккал</small></span></button>
    <button class="modbtn meas" onclick="showView('measure')">
     <span class="ico"><svg viewBox="0 0 24 24"><rect x="2.5" y="9" width="19" height="6.5" rx="1.2"/><path d="M7 9v3M11 9v3M15 9v3M19 9v3"/></svg></span>
     <span><b>Замеры тела</b><small id="ms-meas">история пропорций</small></span></button>
+   <button class="modbtn food" onclick="showView('food')">
+    <span class="ico"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M16.5 3v18"/><path d="M16.5 3c3 3.5 3 8 0 11"/></svg></span>
+    <span><b>Питание</b><small>памятка · 4 приёма · 2650 ккал</small></span></button>
   </div>
  </div>
 </section>
@@ -193,8 +192,8 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
 <nav class="nav" id="nav">
  <button class="home" onclick="showView('home')" title="Меню"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
  <button data-v="train" onclick="showView('train')"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg>Тренировки</button>
- <button data-v="food" onclick="showView('food')"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M16.5 3v18"/><path d="M16.5 3c3 3.5 3 8 0 11"/></svg>Питание</button>
  <button data-v="measure" onclick="showView('measure')"><svg viewBox="0 0 24 24"><rect x="2.5" y="9" width="19" height="6.5" rx="1.2"/><path d="M7 9v3M11 9v3M15 9v3M19 9v3"/></svg>Замеры</button>
+ <button data-v="food" onclick="showView('food')"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M16.5 3v18"/><path d="M16.5 3c3 3.5 3 8 0 11"/></svg>Питание</button>
 </nav>
 
 <!-- ========== ТРЕНИРОВКИ ========== -->
@@ -368,7 +367,6 @@ function renderHome(){
  document.getElementById('ms-meas').textContent=lm&&lm.v.w?`последний: ${fmtDate(lm.date)} · ${lm.v.w} кг`:'история пропорций';
 }
 
-/* ===== ТРЕНИРОВКИ ===== */
 function tabs(){document.getElementById('tabs').innerHTML=DAYS.map(d=>
  `<button class="${d.id===cur?'on':''}" onclick="setDay(${d.id})">${d.t}</button>`).join('')}
 function setDay(id){cur=id;renderTrain()}
@@ -475,7 +473,6 @@ document.getElementById('fileIn').addEventListener('change',async e=>{
 });
 function clearJ(){if(confirm('Удалить все тренировки журнала? (замеры останутся)')){S.sessions=[];saveS();renderTrain();toast('ЖУРНАЛ ОЧИЩЕН')}}
 
-/* ===== ЗАМЕРЫ ===== */
 function renderMeasure(){
  const di=document.getElementById('m-date');
  if(!di.value)di.value=todayISO();
