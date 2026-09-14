@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0d10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>IRON LOG // Журнал силовых</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0d10;--card:#141a1f;--card2:#0f1418;--line:#28323b;--txt:#eaeff3;--mut:#9fabb4;--red:#ff2d43;--amber:#ffb400;--green:#54e08a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(900px 400px at 50% -100px,rgba(255,45,67,.12),transparent 70%),var(--bg);
+  color:var(--txt);font-family:'Rajdhani',system-ui,sans-serif;padding:20px 12px 90px}
+.wrap{max-width:860px;margin:0 auto}
+header{text-align:center;margin-bottom:18px}
+header .hud{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;color:#7d8b95;text-transform:uppercase}
+h1{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(26px,6vw,40px);letter-spacing:.08em;text-transform:uppercase}
+h1 span{color:var(--red);text-shadow:0 0 20px rgba(255,45,67,.6)}
+.tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.tabs button{font-family:'Orbitron',sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  padding:11px 18px;cursor:pointer;color:#93a1aa;background:linear-gradient(180deg,#22272b,#12161a);
+  border:1px solid #363d43;border-radius:8px;transition:.2s}
+.tabs button.on{color:#fff;border-color:var(--red);background:linear-gradient(180deg,#3a0d13,#1a0507);box-shadow:0 0 18px rgba(255,45,67,.4)}
+.dayhead{text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;color:var(--mut);text-transform:uppercase;margin-bottom:14px}
+.ex{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:10px;
+  padding:14px 14px 12px;margin-bottom:12px;position:relative}
+.ex.ss{border-left:4px solid var(--red)}
+.ex h3{font-size:17.5px;font-weight:700;line-height:1.25}
+.ex .meta{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--mut);margin-top:4px;letter-spacing:.05em}
+.ex .meta b{color:var(--amber)}
+.ex .note{font-size:13.5px;color:#8b98a0;margin-top:3px}
+.sets{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.srow{display:grid;grid-template-columns:64px 1fr 1fr;gap:8px;align-items:center}
+.srow .lab{font-family:'JetBrains Mono',monospace;font-size:12px;color:#7d8b95;letter-spacing:.08em}
+.srow input{width:100%;background:#0b0f12;border:1px solid #2b353e;border-radius:7px;color:var(--txt);
+  font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;padding:9px 10px;outline:none}
+.srow input:focus{border-color:var(--red);box-shadow:0 0 10px rgba(255,45,67,.35)}
+.srow input::placeholder{color:#4d565c;font-weight:500}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px 0 26px}
+.actions button{font-family:'Orbitron',sans-serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+  padding:14px 26px;cursor:pointer;border-radius:9px;color:#fff;border:1px solid var(--red);
+  background:linear-gradient(180deg,#a3000f,#480009);box-shadow:0 0 22px rgba(255,45,67,.35)}
+.actions button.ghost{background:linear-gradient(180deg,#22272b,#12161a);border-color:#363d43;color:#93a1aa;box-shadow:none}
+h2.sec{font-family:'Orbitron',sans-serif;font-size:16px;letter-spacing:.18em;text-transform:uppercase;color:#f2f6f8;
+  border-bottom:1px solid var(--line);padding-bottom:8px;margin:26px 0 14px}
+h2.sec span{color:var(--red)}
+.ses{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.ses .sh{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:.06em}
+.ses .sh .d{color:#f2f6f8;font-weight:700}
+.ses .sh .v{color:var(--amber)}
+.ses .sh .dl.up{color:var(--green)}.ses .sh .dl.dn{color:var(--red)}.ses .sh .dl.eq{color:#7d8b95}
+.ses ul{list-style:none;margin-top:8px}
+.ses li{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-top:1px dashed #232c33;font-size:14.5px}
+.ses li .n{color:#c3cdd4}
+.ses li .w{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--amber);white-space:nowrap}
+.empty{text-align:center;color:#5d686f;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;padding:20px 0;text-transform:uppercase}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(80px);z-index:99;
+  background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);color:#fff;
+  font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.1em;padding:12px 22px;border-radius:9px;
+  box-shadow:0 0 26px rgba(255,45,67,.5);transition:.3s;opacity:0}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+@media(max-width:520px){.srow{grid-template-columns:52px 1fr 1fr}.ex h3{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="hud">CYBERDYNE STRENGTH OS · v1.0</div>
+  <h1>IRON <span>LOG</span></h1>
+</header>
+
+<div class="tabs" id="tabs"></div>
+<div class="dayhead" id="dayhead"></div>
+<div id="workout"></div>
+
+<div class="actions">
+  <button onclick="save()">💾 В журнал</button>
+  <button class="ghost" onclick="clearInputs()">✖ Сброс полей</button>
+</div>
+
+<h2 class="sec">Журнал <span>//</span> история</h2>
+<div class="actions" style="margin:0 0 14px">
+  <button class="ghost" onclick="exportJ()">⬇ Экспорт JSON</button>
+  <button class="ghost" onclick="fileIn.click()">⬆ Импорт JSON</button>
+  <button class="ghost" onclick="clearJ()">🗑 Очистить</button>
+  <input type="file" id="fileIn" accept=".json,application/json" hidden>
+</div>
+<div id="journal"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+const DAYS=[
+{id:1,t:'ПН · PUSH',sub:'Грудь верх + Дельты + Трицепс',ex:[
+ {n:'Жим гантелей на наклонной 30°',s:4,r:'8–10',rest:'120 сек',note:'Негатив 3 сек, локти под 45°'},
+ {n:'Жим штанги лёжа горизонт',s:3,r:'8–10',rest:'120 сек',note:'Тяжёлая база, без отбивки от груди'},
+ {n:'Жим в хаммере наклонной / Смит 30°',s:3,r:'10–12',rest:'90 сек',note:'Пиковое сокращение 1 сек вверху'},
+ {n:'Сведения в кроссовере снизу вверх',s:3,r:'12–15',rest:'60 сек',note:'Акцент на верх груди'},
+ {n:'Жим гантелей сидя',s:4,r:'10–12',rest:'без отдыха',note:'СУПЕРСЕТ A + B',ss:1},
+ {n:'Махи гантелями через стороны',s:4,r:'12–15',rest:'90 сек',note:'СУПЕРСЕТ B · мизинец выше большого пальца',ss:1},
+ {n:'Отжимания на брусьях',s:3,r:'10–12',rest:'без отдыха',note:'СУПЕРСЕТ A + B',ss:1},
+ {n:'Разгибания в блоке с канатом',s:3,r:'12–15',rest:'60 сек',note:'СУПЕРСЕТ B · локти зафиксированы',ss:1}]},
+{id:2,t:'СР · PULL',sub:'Спина + Задняя дельта + Бицепс',ex:[
+ {n:'Подтягивания широким хватом / тяга верхнего блока',s:4,r:'8–10',rest:'120 сек',note:'Тянуть локтями вниз, лопатки вниз'},
+ {n:'Тяга штанги в наклоне (прямой хват)',s:3,r:'8–10',rest:'120 сек',note:'Корпус 45°, тяга к низу живота'},
+ {n:'Тяга гантели одной рукой в наклоне',s:3,r:'10–12',rest:'60 сек',note:'Полная амплитуда, растяжение внизу'},
+ {n:'Горизонтальная тяга блока к поясу',s:3,r:'10–12',rest:'без отдыха',note:'СУПЕРСЕТ A + B',ss:1},
+ {n:'Обратные разведения в тренажёре',s:3,r:'12–15',rest:'90 сек',note:'СУПЕРСЕТ B · лопатки не сводить',ss:1},
+ {n:'Пуловер в кроссовере (прямая рукоять)',s:3,r:'12–15',rest:'60 сек',note:'Руки прямые, растяжение широчайших'},
+ {n:'Подъём штанги на бицепс стоя',s:3,r:'10–12',rest:'без отдыха',note:'СУПЕРСЕТ A + B',ss:1},
+ {n:'Молотковые сгибания с гантелями',s:3,r:'12',rest:'60 сек',note:'СУПЕРСЕТ B · без раскачки',ss:1}]},
+{id:3,t:'ПТ · LEGS',sub:'Ноги + Дельты + Верх груди',ex:[
+ {n:'Жим ногами в тренажёре',s:4,r:'10–15',rest:'120 сек',note:'Глубина до 90°, без отрыва таза'},
+ {n:'Румынская тяга с гантелями',s:3,r:'10–12',rest:'90 сек',note:'Бицепс бедра, спина прямая'},
+ {n:'Разгибания ног в тренажёре',s:3,r:'12–15',rest:'без отдыха',note:'СУПЕРСЕТ A + B',ss:1},
+ {n:'Сгибания ног лёжа в тренажёре',s:3,r:'12–15',rest:'90 сек',note:'СУПЕРСЕТ B',ss:1},
+ {n:'Подъёмы на носки стоя',s:4,r:'15–20',rest:'60 сек',note:'Полная амплитуда, пауза вверху'},
+ {n:'Махи гантелями через стороны',s:4,r:'12–15',rest:'60 сек',note:'Средние дельты, частота для роста'},
+ {n:'Жим гантелей на наклонной 30° (лёгкий)',s:3,r:'12–15',rest:'без отдыха',note:'СУПЕРСЕТ A + B',ss:1},
+ {n:'Сведения в кроссовере горизонтально',s:3,r:'12–15',rest:'60 сек',note:'СУПЕРСЕТ B · пампинг, без отказа',ss:1},
+ {n:'Вакуум',s:3,r:'30–60 сек',rest:'30 сек',note:'Втянуть живот максимально под рёбра'}]}
+];
+const KEY='ironlog_v1';
+let S=load(), cur=1;
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{sessions:[]}}catch(e){return{sessions:[]}}}
+function saveS(){localStorage.setItem(KEY,JSON.stringify(S))}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+function lastOf(day){return [...S.sessions].reverse().find(s=>s.day===day)}
+function vol(s){let v=0;s.ex.forEach(e=>e.forEach(([w,r])=>{v+=(+w||0)*(+r||0)}));return v}
+
+function tabs(){document.getElementById('tabs').innerHTML=DAYS.map(d=>
+ `<button class="${d.id===cur?'on':''}" onclick="setDay(${d.id})">${d.t}</button>`).join('')}
+function setDay(id){cur=id;render()}
+
+function render(){
+ tabs();
+ const d=DAYS.find(x=>x.id===cur);
+ document.getElementById('dayhead').textContent=`День ${d.id} · ${d.t} — ${d.sub}`;
+ const prev=lastOf(cur);
+ document.getElementById('workout').innerHTML=d.ex.map((e,i)=>`
+  <div class="ex ${e.ss?'ss':''}">
+    <h3>${e.n}</h3>
+    <div class="meta"><b>${e.s} × ${e.r}</b> · отдых ${e.rest}</div>
+    <div class="note">${e.note}</div>
+    <div class="sets">${Array.from({length:e.s},(_,k)=>{
+      const p=prev&&prev.ex[i]&&prev.ex[i][k]?prev.ex[i][k]:['',''];
+      return `<div class="srow"><span class="lab">ПОДХОД ${k+1}</span>
+        <input type="number" step="0.5" min="0" inputmode="decimal" placeholder="вес, кг" data-e="${i}" data-s="${k}" data-f="w" value="${p[0]??''}">
+        <input type="number" step="1" min="0" inputmode="numeric" placeholder="повт" data-e="${i}" data-s="${k}" data-f="r" value="${p[1]??''}"></div>`}).join('')}
+    </div>
+  </div>`).join('');
+ journal();
+}
+
+function collect(){
+ const d=DAYS.find(x=>x.id===cur);
+ return d.ex.map((e,i)=>Array.from({length:e.s},(_,k)=>{
+   const w=document.querySelector(`input[data-e="${i}"][data-s="${k}"][data-f="w"]`);
+   const r=document.querySelector(`input[data-e="${i}"][data-s="${k}"][data-f="r"]`);
+   return [w.value===''?'':+w.value, r.value===''?'':+r.value];
+ }));
+}
+function save(){
+ const ex=collect();
+ if(!ex.some(a=>a.some(([w])=>w!==''))){toast('⚠ ЗАПОЛНИ ВЕСА');return}
+ S.sessions.push({ts:Date.now(),day:cur,ex});saveS();journal();
+ toast('✔ ЗАПИСАНО В ЖУРНАЛ');
+}
+function clearInputs(){document.querySelectorAll('#workout input').forEach(i=>i.value='');toast('ПОЛЯ ОЧИЩЕНЫ')}
+
+function journal(){
+ const el=document.getElementById('journal');
+ if(!S.sessions.length){el.innerHTML='<div class="empty">// журнал пуст — сохрани первую тренировку</div>';return}
+ el.innerHTML=[...S.sessions].sort((a,b)=>b.ts-a.ts).map(s=>{
+   const d=DAYS.find(x=>x.id===s.day);
+   const same=[...S.sessions].filter(x=>x.day===s.day&&x.ts<s.ts).sort((a,b)=>b.ts-a.ts)[0];
+   const v=vol(s), pv=same?vol(same):null;
+   const dl=pv===null?'<span class="dl eq">ПЕРВАЯ</span>':
+     v>pv?`<span class="dl up">▲ +${v-pv} кг</span>`:v<pv?`<span class="dl dn">▼ ${v-pv} кг</span>`:'<span class="dl eq">= 0</span>';
+   return `<div class="ses">
+     <div class="sh"><span class="d">${new Date(s.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${d.t}</span>
+     <span class="v">ТОННАЖ ${v.toLocaleString('ru-RU')} кг</span>${dl}</div>
+     <ul>${s.ex.map((sets,i)=>{
+        const str=sets.filter(([w])=>w!=='').map(([w,r])=>`${w}×${r||'–'}`).join(', ');
+        return str?`<li><span class="n">${d.ex[i].n}</span><span class="w">${str}</span></li>`:''}).join('')}
+     </ul></div>`}).join('');
+}
+function exportJ(){
+ const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='iron-log.json';a.click();
+ toast('⬇ ФАЙЛ СОХРАНЁН');
+}
+/* ИМПОРТ: объединяет с текущим журналом без дублей */
+document.getElementById('fileIn').addEventListener('change',async e=>{
+ const f=e.target.files[0]; if(!f)return;
+ try{
+   const data=JSON.parse(await f.text());
+   if(!Array.isArray(data.sessions))throw 0;
+   const map=new Map(S.sessions.map(s=>[s.ts,s]));
+   data.sessions.forEach(s=>map.set(s.ts,s));
+   S={sessions:[...map.values()].sort((a,b)=>a.ts-b.ts)};
+   saveS();render();toast('⬆ ИМПОРТИРОВАНО: '+S.sessions.length);
+ }catch(err){toast('⚠ ФАЙЛ ПОВРЕЖДЁН')}
+ e.target.value='';
+});
+function clearJ(){if(confirm('Удалить весь журнал безвозвратно?')){S={sessions:[]};saveS();journal();toast('ЖУРНАЛ ОЧИЩЕН')}}
+
+/* регистрация service worker (офлайн-работа) */
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+render();
+</script>
+</body>
+</html>
