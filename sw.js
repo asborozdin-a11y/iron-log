@@ -1,4 +1,4 @@
-const C='ironlog-v1';
+const C='ironlog-v2';
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html','./manifest.webmanifest','./icon.svg']))
   .then(()=>self.skipWaiting()));
