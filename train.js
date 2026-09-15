@@ -9,7 +9,7 @@ function renderTrain(){
  const d=DAYS.find(x=>x.id===cur);
  document.getElementById('dayhead').textContent=`День ${d.id} · ${d.t} — ${d.sub}`;
  const prev=lastOf(cur);
- let html=d.ex.map((e,i)=>{
+ let html=(d.rules?`<div class="ex ss"><h3>Правила безопасности</h3>${d.rules.map(r=>`<div class="note">• ${r}</div>`).join('')}</div>`:'')+d.ex.map((e,i)=>{
   const pset=(prev&&prev.ex[i])?prev.ex[i]:null;
   const hasAny=pset&&pset.some(p=>p&&p[0]!=='');
   return `
