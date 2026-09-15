@@ -25,6 +25,7 @@
   <div class="h-status" id="hstatus"></div>
   <div class="h-select">▸ Select module ◂</div>
   <div class="mods">
+   <button class="home-chip" onclick="showView('profile',event)">⚙ Профиль</button>
    <button class="modbtn" onclick="showView('train',event)">
     <span class="ico"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg></span>
     <span><b>Тренировки</b><small id="ms-train">журнал силовых · 3 дня</small></span></button>
@@ -40,6 +41,7 @@
 
 <!-- ========== ВЕРХНЯЯ НАВИГАЦИЯ ========== -->
 <nav class="nav" id="nav">
+ <button data-v="profile" onclick="showView('profile',event)" title="Профили"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"/></svg><span class="txt">Профиль</span></button>
  <button class="home" onclick="showView('home',event)" title="Меню"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
  <button data-v="train" onclick="showView('train',event)"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg><span class="txt">Тренировки</span></button>
  <button data-v="measure" onclick="showView('measure',event)"><svg viewBox="0 0 24 24"><rect x="2.5" y="9" width="19" height="6.5" rx="1.2"/><path d="M7 9v3M11 9v3M15 9v3M19 9v3"/></svg><span class="txt">Замеры</span></button>
@@ -147,7 +149,15 @@
   <div id="mhist"></div>
  </div>
 </section>
-
+ 
+<!-- ========== МОДУЛЬ 04: ПРОФИЛИ ========== -->
+<section id="view-profile" class="view">
+ <div class="wrap">
+  <header class="pg"><div class="hud">MODULE · PERSONA</div><h1>ПРОФИ<span>ЛИ</span></h1></header>
+  <div id="profileBody"></div>
+ </div>
+</section>
+ 
 <!-- ========== ПОПАП: настройка напоминания ========== -->
 <div class="modal" id="remModal">
  <div class="mbox">
