@@ -185,3 +185,8 @@ padding:11px 18px;cursor:pointer;border-radius:8px;color:#fff;border:1px solid v
 background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);color:#fff;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.1em;padding:12px 22px;border-radius:9px;box-shadow:0 0 26px rgba(255,45,67,.5);transition:.3s;opacity:0}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 @media(max-width:520px){.srow{grid-template-columns:64px 1fr 1fr}.ex h3{font-size:16px}.fm b{font-size:21px}.mz .grid{grid-template-columns:repeat(2,1fr)}}
+
+/* ==== молнии главного экрана ==== */
+#view-home{position:relative;overflow:hidden}
+#storm{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;mix-blend-mode:screen}
+#view-home .wrap{position:relative;z-index:1}
