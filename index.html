@@ -12,198 +12,7 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <title>IRON WORLD // Тренировки · Питание · Замеры</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#0a0d10;--card:#141a1f;--card2:#0f1418;--line:#28323b;--txt:#eaeff3;--mut:#9fabb4;--mut2:#7d8b95;
---red:#ff2d43;--amber:#ffb400;--cyan:#5ad1ff;--green:#54e08a}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{overflow-x:hidden}
-body{background-color:var(--bg);
-background-image:radial-gradient(900px 400px at 50% -100px,rgba(255,45,67,.12),transparent 70%);
-background-repeat:no-repeat;
-color:var(--txt);font-family:'Rajdhani',system-ui,sans-serif;padding:0 12px 20px}
-.wrap{max-width:860px;margin:0 auto}
-.view{display:none}.view.on{display:block}
-
-.nav{position:sticky;top:0;z-index:40;display:flex;flex-wrap:nowrap;gap:4px;justify-content:center;align-items:center;
-padding:8px 6px;margin:0 -12px 14px;background:rgba(10,13,16,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-body[data-view="home"] .nav{display:none}
-.nav button{flex:1 1 0;min-width:0;justify-content:center;
-font-family:'Orbitron',sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
-padding:10px 6px;cursor:pointer;color:#93a1aa;background:linear-gradient(180deg,#22272b,#12161a);
-border:1px solid #363d43;border-radius:8px;display:flex;align-items:center;gap:5px}
-.nav button.on{color:#fff;border-color:var(--red);background:linear-gradient(180deg,#3a0d13,#1a0507);box-shadow:0 0 14px rgba(255,45,67,.4)}
-.nav button.home{flex:0 0 auto;padding:10px 10px}
-.nav button .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nav svg{width:14px;height:14px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-@media(max-width:460px){.nav button .txt{display:none}.nav button{gap:0}}
-
-.ico{flex:0 0 auto;width:46px;height:46px;display:flex;align-items:center;justify-content:center;
-border:1px solid var(--line);border-radius:10px;background:#0b0f12}
-.ico svg{width:27px;height:27px;stroke:var(--red);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
-filter:drop-shadow(0 0 5px rgba(255,45,67,.55))}
-.modbtn.food .ico svg{stroke:var(--amber);filter:drop-shadow(0 0 5px rgba(255,180,0,.55))}
-.modbtn.meas .ico svg{stroke:var(--cyan);filter:drop-shadow(0 0 5px rgba(90,209,255,.55))}
-
-#view-home{padding-top:6vh;text-align:center}
-.eye{width:74px;height:74px;margin:0 auto 14px;border-radius:50%;
-background:radial-gradient(circle at 37% 34%,#fff 0%,#ff5566 17%,#d1001a 44%,#4a0009 78%,#150003 100%);
-box-shadow:0 0 26px rgba(255,45,67,.85),0 0 70px rgba(255,45,67,.35),inset 0 0 18px rgba(0,0,0,.8);animation:eye 3s ease-in-out infinite}
-@keyframes eye{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.04);filter:brightness(1.15)}}
-.h-title{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(30px,8vw,52px);letter-spacing:.1em;text-transform:uppercase}
-.h-title span{color:var(--red);text-shadow:0 0 22px rgba(255,45,67,.6)}
-.h-sub{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.3em;color:var(--mut2);text-transform:uppercase;margin-top:8px}
-.h-status{max-width:420px;margin:22px auto;padding:12px 16px;border:1px dashed #35414b;border-radius:10px;
-font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.08em;color:var(--mut);text-align:left;line-height:1.9}
-.h-status b{color:var(--amber)}
-.h-select{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.24em;color:var(--red);text-transform:uppercase;margin:20px 0 10px;animation:bl 1.4s infinite}
-@keyframes bl{0%,100%{opacity:1}50%{opacity:.35}}
-.mods{display:flex;flex-direction:column;align-items:center;gap:12px}
-.modbtn{display:flex;align-items:center;gap:16px;width:100%;max-width:430px;padding:15px 18px;cursor:pointer;text-align:left;
-background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-left:4px solid var(--red);border-radius:12px;color:var(--txt);transition:.2s}
-.modbtn:hover{border-color:var(--red);box-shadow:0 0 22px rgba(255,45,67,.3);transform:translateY(-2px)}
-.modbtn.food{border-left-color:var(--amber)}.modbtn.food:hover{border-color:var(--amber);box-shadow:0 0 22px rgba(255,180,0,.25)}
-.modbtn.meas{border-left-color:var(--cyan)}.modbtn.meas:hover{border-color:var(--cyan);box-shadow:0 0 22px rgba(90,209,255,.25)}
-.modbtn b{display:block;font-family:'Orbitron',sans-serif;font-size:15px;letter-spacing:.14em;text-transform:uppercase}
-.modbtn small{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mut);margin-top:3px;letter-spacing:.05em}
-
-header.pg{text-align:center;margin:4px 0 14px}
-header.pg .hud{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.2em;color:var(--mut2);text-transform:uppercase}
-header.pg h1{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(24px,6vw,36px);letter-spacing:.08em;text-transform:uppercase}
-header.pg h1 span{color:var(--red);text-shadow:0 0 18px rgba(255,45,67,.6)}
-.tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}
-.tabs button{font-family:'Orbitron',sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
-padding:11px 18px;cursor:pointer;color:#93a1aa;background:linear-gradient(180deg,#22272b,#12161a);border:1px solid #363d43;border-radius:8px}
-.tabs button.on{color:#fff;border-color:var(--red);background:linear-gradient(180deg,#3a0d13,#1a0507);box-shadow:0 0 18px rgba(255,45,67,.4)}
-.dayhead{text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;color:var(--mut);text-transform:uppercase;margin-bottom:14px}
-.ex{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:10px;padding:14px 14px 12px;margin-bottom:12px;position:relative}
-.ex.ss{border-left:4px solid var(--red)}
-.ex.cardio{border-left:4px solid var(--cyan)}
-.ex.cloud{border-left:4px solid var(--green)}
-.ex.remind{border-left:4px solid var(--cyan)}
-.ex h3{font-size:17.5px;font-weight:700;line-height:1.25}
-.ex .meta{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--mut);margin-top:4px;letter-spacing:.05em}
-.ex .meta b{color:var(--amber)}
-.ex .note{font-size:13.5px;color:#8b98a0;margin-top:3px}
-.copybtn{margin:8px 0 0;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;color:#93a1aa;background:#171c21;border:1px solid #2b353e;border-radius:6px;padding:6px 10px;cursor:pointer}
-.copybtn:hover{border-color:var(--red);color:#fff}
-.sets{margin-top:10px;display:flex;flex-direction:column;gap:6px}
-.srow{display:grid;grid-template-columns:76px 1fr 1fr;gap:8px;align-items:center}
-.srow.one{grid-template-columns:76px 1fr}
-.srow .lab{font-family:'JetBrains Mono',monospace;font-size:12px;color:#7d8b95;letter-spacing:.08em;line-height:1.25}
-.srow .lab b{color:#b7c1c9;font-weight:700}
-.srow input,.mcell input{width:100%;background:#0b0f12;border:1px solid #2b353e;border-radius:7px;color:var(--txt);
-font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;padding:10px;outline:none;text-align:center}
-.srow input:focus,.mcell input:focus{border-color:var(--red);box-shadow:0 0 10px rgba(255,45,67,.35)}
-.srow input::placeholder,.mcell input::placeholder{color:rgba(255,180,0,.42);font-weight:700;opacity:1}
-.srow input[type=password],.srow input[type=text]{text-align:left;font-size:13px}
-input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-input[type=number]{-moz-appearance:textfield;appearance:textfield}
-.ckrow{display:flex;align-items:center;gap:10px;margin-top:10px;cursor:pointer;user-select:none}
-.ckrow input{width:22px;height:22px;accent-color:var(--cyan);cursor:pointer}
-.ckrow span{font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:.1em;color:var(--cyan);text-transform:uppercase}
-.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px 0 22px}
-.actions button{font-family:'Orbitron',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
-padding:14px 24px;cursor:pointer;border-radius:9px;color:#fff;border:1px solid var(--red);background:linear-gradient(180deg,#a3000f,#480009);box-shadow:0 0 22px rgba(255,45,67,.35)}
-.actions button.ghost{background:linear-gradient(180deg,#22272b,#12161a);border-color:#363d43;color:#93a1aa;box-shadow:none}
-
-/* сворачиваемые секции */
-.secd{margin:24px 0 0}
-.secd summary.sec{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;
-font-family:'Orbitron',sans-serif;font-size:16px;letter-spacing:.18em;text-transform:uppercase;color:#f2f6f8;
-border-bottom:1px solid var(--line);padding-bottom:8px;user-select:none}
-.secd summary.sec::-webkit-details-marker{display:none}
-.secd summary.sec::after{content:'▸';color:var(--red);font-size:15px;transition:.2s;margin-left:10px}
-.secd[open] summary.sec::after{content:'▾'}
-.secd summary.sec span{color:var(--red)}
-.secd .secb{padding-top:14px}
-.help{margin:4px auto 0;max-width:640px;font-size:13.5px;color:var(--mut)}
-.help summary{cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
-color:#93a1aa;padding:9px;border:1px dashed #2b353e;border-radius:8px;text-align:center;list-style:none}
-.help summary::before{content:'? '}
-.help[open] summary{border-color:var(--red);color:#ffd9dd}
-.help ol{margin:10px 0 0 20px;line-height:1.75}
-.help code{font-family:'JetBrains Mono',monospace;color:var(--amber)}
-h2.sec{font-family:'Orbitron',sans-serif;font-size:16px;letter-spacing:.18em;text-transform:uppercase;color:#f2f6f8;border-bottom:1px solid var(--line);padding-bottom:8px;margin:24px 0 14px}
-h2.sec span{color:var(--red)}
-.ses{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
-.ses .sh{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:.06em}
-.ses .sh .d{color:#f2f6f8;font-weight:700}
-.ses .sh .v{color:var(--amber)}
-.ses .sh .dl.up{color:var(--green)}.ses .sh .dl.dn{color:var(--red)}.ses .sh .dl.eq{color:#7d8b95}
-.ses ul{list-style:none;margin-top:8px}
-.ses li{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-top:1px dashed #232c33;font-size:14.5px}
-.ses li .n{color:#c3cdd4}
-.ses li .w{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--amber);white-space:nowrap}
-.empty{text-align:center;color:#5d686f;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;padding:20px 0;text-transform:uppercase}
-
-/* модалки / попапы */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:120;padding:16px}
-.modal.on{display:flex}
-.mbox{width:100%;max-width:370px;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--red);
-border-radius:14px;padding:18px;box-shadow:0 0 40px rgba(255,45,67,.35);animation:pop .3s cubic-bezier(.2,1.4,.4,1)}
-@keyframes pop{from{transform:translateY(46px) scale(.9);opacity:0}to{transform:none;opacity:1}}
-.mtitle{font-family:'Orbitron',sans-serif;font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:#f2f6f8}
-.mtitle.red{color:var(--red);text-shadow:0 0 14px rgba(255,45,67,.5)}
-.mtext{margin-top:8px;font-size:14.5px;line-height:1.5;color:var(--mut)}
-.mrow{margin-top:12px}
-.mrow label{display:block;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;margin-bottom:4px}
-.mrow input,.mrow select{width:100%;background:#0b0f12;border:1px solid #2b353e;border-radius:7px;color:var(--txt);
-font-family:'JetBrains Mono',monospace;font-size:14px;padding:10px;outline:none;color-scheme:dark}
-.mrow input:focus,.mrow select:focus{border-color:var(--cyan);box-shadow:0 0 10px rgba(90,209,255,.3)}
-.mact{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
-.mact button{font-family:'Orbitron',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
-padding:11px 18px;cursor:pointer;border-radius:8px;color:#fff;border:1px solid var(--red);background:linear-gradient(180deg,#a3000f,#480009)}
-.mact button.ghost{background:linear-gradient(180deg,#22272b,#12161a);border-color:#363d43;color:#93a1aa}
-
-.fmacros{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
-.fm{background:var(--card2);border:1px solid #1e262d;border-radius:8px;padding:10px 4px;text-align:center;position:relative;overflow:hidden}
-.fm b{display:block;font-family:'Oswald',sans-serif;font-weight:700;font-size:26px;line-height:1}
-.fm.p b{color:#ff5c6c}.fm.f b{color:var(--amber)}.fm.c b{color:var(--cyan)}.fm.k b{color:#fff}
-.fm span{display:block;margin-top:4px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:var(--mut2);text-transform:uppercase}
-.fm i{position:absolute;left:0;bottom:0;height:3px}
-.fm.p i{background:#ff5c6c;width:36%}.fm.f i{background:var(--amber);width:29%}.fm.c i{background:var(--cyan);width:35%}.fm.k i{background:var(--red);width:100%}
-.fmeal{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:10px;padding:14px 14px 12px 18px;margin-bottom:12px;position:relative}
-.fmeal::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:4px;background:var(--red);box-shadow:0 0 12px rgba(255,45,67,.4)}
-.fmeal.m4::before{background:var(--amber);box-shadow:0 0 12px rgba(255,180,0,.4)}
-.fmeal .fn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin-bottom:6px;display:block}
-.fmeal.m4 .fn{color:var(--amber)}
-.fgoal{padding-left:8px;border-left:3px solid #3a4650;color:var(--mut);font-size:14px;line-height:1.45;margin-bottom:6px}
-.fgoal b{color:#ff8f9b}
-.frow{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:7px 0;border-bottom:1px dashed #2b353e;font-size:15.5px}
-.frow:last-of-type{border-bottom:0}
-.frow .nm{font-weight:600;line-height:1.4}
-.frow .nm u{text-decoration:none;font-weight:400;color:var(--mut);font-size:14px}
-.frow .qt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14.5px;color:var(--amber);white-space:nowrap}
-.fnote{margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,180,0,.35);background:rgba(255,180,0,.07);font-size:14px;line-height:1.5;color:#d8cfae}
-.fnote b{display:block;margin-bottom:4px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
-.falt{margin-top:10px;display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:8px;border:1px solid rgba(255,45,67,.3);background:rgba(255,45,67,.06)}
-.falt em{flex:0 0 auto;font-style:normal;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#ff9aa4;border:1px solid rgba(255,45,67,.5);border-radius:5px;padding:3px 6px;margin-top:2px}
-.falt p{font-size:14px;line-height:1.45;color:#c3cdd4}
-.falt p b{color:var(--txt)}
-
-#view-measure{position:relative}
-.body-bg{position:absolute;left:50%;top:30px;transform:translateX(-50%);height:min(74vh,720px);opacity:.2;pointer-events:none;color:var(--red);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(255,45,67,.4));z-index:0}
-.body-bg .detail{stroke-width:1.1;opacity:.6}
-.mz{position:relative;z-index:1}
-.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.mcell label{display:block;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;margin-bottom:4px;text-align:center}
-.mcell input:focus{border-color:var(--cyan);box-shadow:0 0 10px rgba(90,209,255,.35)}
-.mdate{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:4px}
-.mdate label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
-.mdate input{background:#0b0f12;border:1px solid #2b353e;border-radius:7px;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:13px;padding:8px 10px;outline:none;color-scheme:dark}
-.mz .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
-.mzv{background:#0b0f12;border:1px solid #232c33;border-radius:7px;padding:7px 6px;text-align:center}
-.mzv span{display:block;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--mut2);text-transform:uppercase}
-.mzv b{display:block;font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--txt);margin-top:3px}
-.mzv i{font-style:normal;font-size:10px;font-family:'JetBrains Mono',monospace}
-.mzv i.up{color:var(--green)}.mzv i.dn{color:var(--red)}.mzv i.nt{color:#7d8b95}
-.delbtn{float:right;background:none;border:0;color:#5d686f;font-size:14px;cursor:pointer;padding:2px 4px}
-.delbtn:hover{color:var(--red)}
-#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(80px);z-index:99;
-background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);color:#fff;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.1em;padding:12px 22px;border-radius:9px;box-shadow:0 0 26px rgba(255,45,67,.5);transition:.3s;opacity:0}
-#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-@media(max-width:520px){.srow{grid-template-columns:64px 1fr 1fr}.ex h3{font-size:16px}.fm b{font-size:21px}.mz .grid{grid-template-columns:repeat(2,1fr)}}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body data-view="home">
 
@@ -211,7 +20,7 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
  <div class="wrap">
   <div class="eye"></div>
   <div class="h-title">IRON <span>WORLD</span></div>
-  <div class="h-sub">Cyberdyne Training OS · v3.2</div>
+  <div class="h-sub">Cyberdyne Training OS · v4.0</div>
   <div class="h-status" id="hstatus"></div>
   <div class="h-select">▸ Select module ◂</div>
   <div class="mods">
@@ -245,7 +54,6 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
    <button onclick="save()">Сохранить в журнал</button>
    <button class="ghost" onclick="clearInputs()">Сброс полей</button>
   </div>
-
   <details class="secd" id="secJ">
    <summary class="sec">Журнал <span>//</span> история</summary>
    <div class="secb">
@@ -258,7 +66,6 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
     <div id="journal"></div>
    </div>
   </details>
-
   <details class="secd" id="secC">
    <summary class="sec">Cloud <span>//</span> github sync</summary>
    <div class="secb">
@@ -294,47 +101,8 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
 <section id="view-food" class="view">
  <div class="wrap">
   <header class="pg"><div class="hud">MODULE · FUEL PROTOCOL</div><h1>ПЛАН <span>ПИТАНИЯ</span></h1></header>
-  <div class="fmacros">
-   <div class="fm p"><b>238</b><span>Белки, г</span><i></i></div>
-   <div class="fm f"><b>85</b><span>Жиры, г</span><i></i></div>
-   <div class="fm c"><b>230</b><span>Углеводы, г</span><i></i></div>
-   <div class="fm k"><b>2650</b><span>Ккал</span><i></i></div>
-  </div>
-  <div class="fmeal"><span class="fn">Приём 1 · Завтрак</span>
-   <p class="fgoal"><b>Цель:</b> белок, полезные жиры, клетчатка. Приём утренней фармакологии.</p>
-   <div class="frow"><span class="nm">Яйца куриные <u>(омлет, пашот или варёные)</u></span><span class="qt">4 шт</span></div>
-   <div class="frow"><span class="nm">Овсянка <u>(геркулес долгой варки)</u></span><span class="qt">70 г</span></div>
-   <div class="frow"><span class="nm">Ягоды <u>(черника / малина)</u> или зелёное яблоко</span><span class="qt">150 г</span></div>
-   <div class="frow"><span class="nm">Масло оливковое или льняное <u>(в кашу или яйца)</u></span><span class="qt">5 г</span></div>
-   <div class="falt"><em>Альт</em><p><b>200 г творога 2%</b> + 70 г овсянки + 15 г орехов + ягоды.</p></div>
-  </div>
-  <div class="fmeal"><span class="fn">Приём 2 · Обед</span>
-   <p class="fgoal"><b>Цель:</b> максимум нутриентов, сложные углеводы, жиры для усвоения витаминов.</p>
-   <div class="frow"><span class="nm">Говядина постная <u>(вырезка)</u> или бедро без кожи</span><span class="qt">280 г</span></div>
-   <div class="frow"><span class="nm">Гречка, киноа или бурый рис</span><span class="qt">70 г</span></div>
-   <div class="frow"><span class="nm">Овощной салат <u>(огурцы, помидоры, зелень, капуста)</u></span><span class="qt">200 г</span></div>
-   <div class="frow"><span class="nm">Масло оливковое <u>(в салат)</u></span><span class="qt">10 г</span></div>
-   <div class="frow"><span class="nm">Орехи <u>(миндаль, грецкие или фундук)</u></span><span class="qt">15 г</span></div>
-   <div class="falt"><em>Альт</em><p><b>280 г филе индейки</b> + 70 г булгура + 200 г тушёных овощей (кабачок, фасоль).</p></div>
-  </div>
-  <div class="fmeal"><span class="fn">Приём 3 · Предтренировочный</span>
-   <p class="fgoal"><b>Цель:</b> легкоусвояемый белок + углеводы, минимум жиров и грубой клетчатки — кровь работает на мышцы.</p>
-   <div class="frow"><span class="nm">Куриное филе или белая рыба <u>(треска, тилапия, минтай)</u></span><span class="qt">280 г</span></div>
-   <div class="frow"><span class="nm">Рис белый <u>(басмати / жасмин)</u> — быстрая энергия</span><span class="qt">70 г</span></div>
-   <div class="frow"><span class="nm">Овощи без грубой клетчатки <u>(кабачок, очищенные огурцы)</u></span><span class="qt">150 г</span></div>
-   <div class="frow"><span class="nm">Масло оливковое</span><span class="qt">5 г</span></div>
-   <div class="falt"><em>Альт</em><p><b>280 г кальмаров или креветок</b> + 70 г макарон твёрдых сортов + 150 г спаржи.</p></div>
-  </div>
-  <div class="fmeal m4"><span class="fn">Приём 4 ◆ · После тренировки / перед сном</span>
-   <p class="fgoal"><b>Цель:</b> казеин на ночь, закрытие углеводного окна, контроль сахара.</p>
-   <div class="frow"><span class="nm">Творог 2–5% <u>(ночной казеин)</u></span><span class="qt">300 г</span></div>
-   <div class="frow"><span class="nm">Кефир 1–2.5%</span><span class="qt">250 мл</span></div>
-   <div class="frow"><span class="nm">Банан — <u>обязателен!</u></span><span class="qt">100–120 г</span></div>
-   <div class="frow"><span class="nm">Псиллиум <u>(опционально, для ЖКТ)</u></span><span class="qt">1 ч.л.</span></div>
-   <div class="fnote"><b>Почему банан обязателен</b>Умеренный всплеск инсулина после силовой «открывает» мышечные клетки для аминокислот творога. На фоне Мастерона и Метформина углевод идёт строго в гликоген мышц, а не в висцеральный жир.</div>
-   <div class="falt"><em>Альт</em><p><b>300 г творога</b> + 250 мл ряженки + 150 г сладких ягод (вместо банана).</p></div>
-  </div>
-  <div class="empty">Крупы — в сухом виде · Мясо и рыбу — в сыром · Сон 7–9 ч · Вода 2.5–3 л</div>
+  <div class="fmacros" id="fmacros"></div>
+  <div id="foodMeals"></div>
  </div>
 </section>
 
@@ -358,7 +126,6 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
    <div class="mgrid" id="mform"></div>
   </div>
   <div class="actions"><button onclick="saveMeasure()">Сохранить замер</button></div>
-
   <div class="ex remind">
    <h3>Напоминание о замере</h3>
    <div class="meta" id="rem-status">не настроено</div>
@@ -367,13 +134,11 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
     <button class="ghost" onclick="remOff()">Выключить</button>
    </div>
   </div>
-
   <h2 class="sec">История <span>//</span> динамика</h2>
   <div id="mhist"></div>
  </div>
 </section>
 
-<!-- попап настройки напоминания -->
 <div class="modal" id="remModal">
  <div class="mbox">
   <div class="mtitle">Напоминание о замере</div>
@@ -393,7 +158,6 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
  </div>
 </div>
 
-<!-- попап-сработка напоминания -->
 <div class="modal" id="remAlert">
  <div class="mbox">
   <div class="mtitle red">Пора сделать замер!</div>
@@ -407,395 +171,10 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
 
 <div id="toast"></div>
 
-<script>
-const DAYS=[
-{id:1,t:'ПН · PUSH',sub:'Грудь верх + Дельты + Трицепс',ex:[
- {n:'Жим гантелей на наклонной 30°',s:4,r:'8–10',rest:'120 сек',note:'Негатив 3 сек, локти под 45°'},
- {n:'Жим штанги лёжа горизонт',s:3,r:'8–10',rest:'120 сек',note:'Тяжёлая база, без отбивки от груди'},
- {n:'Жим в хаммере наклонной / Смит 30°',s:3,r:'10–12',rest:'90 сек',note:'Пиковое сокращение 1 сек вверху'},
- {n:'Сведения в кроссовере снизу вверх',s:3,r:'12–15',rest:'60 сек',note:'Акцент на верх груди'},
- {n:'Жим гантелей сидя',s:4,r:'10–12',rest:'без отдыха',note:'СУПЕРСЕТ A + B',ss:1},
- {n:'Махи гантелями через стороны',s:4,r:'12–15',rest:'90 сек',note:'СУПЕРСЕТ B · мизинец выше большого пальца',ss:1},
- {n:'Отжимания на брусьях',s:3,r:'10–12',rest:'без отдыха',note:'СУПЕРСЕТ A + B',ss:1},
- {n:'Разгибания в блоке с канатом',s:3,r:'12–15',rest:'60 сек',note:'СУПЕРСЕТ B · локти зафиксированы',ss:1}]},
-{id:2,t:'СР · PULL',sub:'Спина + Задняя дельта + Бицепс',ex:[
- {n:'Подтягивания широким хватом / тяга верхнего блока',s:4,r:'8–10',rest:'120 сек',note:'Тянуть локтями вниз, лопатки вниз'},
- {n:'Тяга штанги в наклоне (прямой хват)',s:3,r:'8–10',rest:'120 сек',note:'Корпус 45°, тяга к низу живота'},
- {n:'Тяга гантели одной рукой в наклоне',s:3,r:'10–12',rest:'60 сек',note:'Полная амплитуда, растяжение внизу'},
- {n:'Горизонтальная тяга блока к поясу',s:3,r:'10–12',rest:'без отдыха',note:'СУПЕРСЕТ A + B',ss:1},
- {n:'Обратные разведения в тренажёре',s:3,r:'12–15',rest:'90 сек',note:'СУПЕРСЕТ B · лопатки не сводить',ss:1},
- {n:'Пуловер в кроссовере (прямая рукоять)',s:3,r:'12–15',rest:'60 сек',note:'Руки прямые, растяжение широчайших'},
- {n:'Подъём штанги на бицепс стоя',s:3,r:'10–12',rest:'без отдыха',note:'СУПЕРСЕТ A + B',ss:1},
- {n:'Молотковые сгибания с гантелями',s:3,r:'12',rest:'60 сек',note:'СУПЕРСЕТ B · без раскачки',ss:1}]},
-{id:3,t:'ПТ · LEGS',sub:'Ноги + Дельты + Верх груди',ex:[
- {n:'Жим ногами в тренажёре',s:4,r:'10–15',rest:'120 сек',note:'Глубина до 90°, без отрыва таза'},
- {n:'Румынская тяга с гантелями',s:3,r:'10–12',rest:'90 сек',note:'Бицепс бедра, спина прямая'},
- {n:'Разгибания ног в тренажёре',s:3,r:'12–15',rest:'без отдыха',note:'СУПЕРСЕТ A + B',ss:1},
- {n:'Сгибания ног лёжа в тренажёре',s:3,r:'12–15',rest:'90 сек',note:'СУПЕРСЕТ B',ss:1},
- {n:'Подъёмы на носки стоя',s:4,r:'15–20',rest:'60 сек',note:'Полная амплитуда, пауза вверху'},
- {n:'Махи гантелями через стороны',s:4,r:'12–15',rest:'60 сек',note:'Средние дельты, частота для роста'},
- {n:'Жим гантелей на наклонной 30° (лёгкий)',s:3,r:'12–15',rest:'без отдыха',note:'СУПЕРСЕТ A + B',ss:1},
- {n:'Сведения в кроссовере горизонтально',s:3,r:'12–15',rest:'60 сек',note:'СУПЕРСЕТ B · пампинг, без отказа',ss:1},
- {n:'Вакуум',s:3,r:'30–60 сек',rest:'30 сек',note:'Втянуть живот максимально под рёбра'}]}
-];
-const METRICS=[
- {k:'w',   l:'Вес',        u:'кг', rule:'nt'},
- {k:'neck',l:'Шея',        u:'см', rule:'up'},
- {k:'chest',l:'Грудь',     u:'см', rule:'up'},
- {k:'bicep',l:'Бицепс',    u:'см', rule:'up'},
- {k:'fore',l:'Предплечье', u:'см', rule:'up'},
- {k:'waist',l:'Талия',     u:'см', rule:'dn'},
- {k:'thigh',l:'Бедро',     u:'см', rule:'up'},
- {k:'calf',l:'Голень',     u:'см', rule:'up'}
-];
-const KEY='ironlog_v1', VKEY='ironlog_view', GHKEY='ironlog_gh', PKEY='ironlog_pending';
-let S=load(), cur=1, GH=loadGH();
-function load(){try{const o=JSON.parse(localStorage.getItem(KEY));if(o){if(!o.sessions)o.sessions=[];if(!o.measures)o.measures=[];if(!('reminder' in o))o.reminder=null;return o}}catch(e){}return{sessions:[],measures:[],reminder:null}}
-function saveS(){localStorage.setItem(KEY,JSON.stringify(S))}
-function loadGH(){try{return JSON.parse(localStorage.getItem(GHKEY))||{}}catch(e){return{}}}
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
-function lastOf(day){return [...S.sessions].reverse().find(s=>s.day===day)}
-function vol(s){let v=0;s.ex.forEach(e=>e.forEach(([w,r])=>{v+=(+w||0)*(+r||0)}));return v}
-function fmtDate(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0].slice(2)}`:iso}
-function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0]}`:iso}
-function todayISO(){return new Date().toISOString().slice(0,10)}
-
-/* ========== GITHUB SYNC ========== */
-function b64utf8(s){const b=new TextEncoder().encode(s);let bin='';for(let i=0;i<b.length;i++)bin+=String.fromCharCode(b[i]);return btoa(bin)}
-async function ghPut(path,content){
- const url=`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`;
- const h={'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github+json'};
- let sha=null;
- const g=await fetch(url,{headers:h});
- if(g.ok)sha=(await g.json()).sha;
- else if(g.status!==404)throw g.status;
- const body={message:'sync: auto-update '+path,content:b64utf8(content)};
- if(sha)body.sha=sha;
- const r=await fetch(url,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify(body)});
- if(r.status===409){
-   const g2=await fetch(url,{headers:h}); if(!g2.ok)throw g2.status;
-   body.sha=(await g2.json()).sha;
-   const r2=await fetch(url,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify(body)});
-   if(!r2.ok)throw r2.status;
- } else if(!r.ok)throw r.status;
-}
-function buildTrainCSV(){
- const rows=[['Дата','Время','День','Упражнение','Подход','Вес_кг','Повторы','Примечание']];
- [...S.sessions].sort((a,b)=>a.ts-b.ts).forEach(s=>{
-  const d=DAYS.find(x=>x.id===s.day);
-  const dt=new Date(s.ts);
-  const ds=dt.toLocaleDateString('ru-RU'), tm=dt.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
-  s.ex.forEach((sets,i)=>sets.forEach((set,k)=>{
-    if(set[0]===''&&set[1]==='')return;
-    rows.push([ds,tm,d.t,d.ex[i].n,k+1,set[0],set[1],'']);
-  }));
-  if(s.cardio)rows.push([ds,tm,d.t,'Кардио (заминка)','','','',s.cardio.done?(s.cardio.min!==''?s.cardio.min+' мин':'выполнено'):'пропущено']);
- });
- return rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');
-}
-function buildMeasCSV(){
- const rows=[['Дата','Вес_кг','Шея_см','Грудь_см','Бицепс_см','Предплечье_см','Талия_см','Бедро_см','Голень_см']];
- [...S.measures].sort((a,b)=>a.ts-b.ts).forEach(m=>{
-  rows.push([fmtDateFull(m.date),m.v.w,m.v.neck,m.v.chest,m.v.bicep,m.v.fore,m.v.waist,m.v.thigh,m.v.calf]);
- });
- return rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');
-}
-function csvEsc(v){v=(v===undefined||v===null)?'':String(v);return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
-let syncT=null;
-function scheduleSync(){
- if(!GH.token)return;
- localStorage.setItem(PKEY,'1');
- clearTimeout(syncT);
- syncT=setTimeout(()=>doSync(false),1500);
- ghStatus();
-}
-async function doSync(manual){
- if(!GH.token){if(manual)toast('[!] СНАЧАЛА ПОДКЛЮЧИ ТОКЕН');return;}
- if(!navigator.onLine){if(manual)toast('[!] НЕТ СЕТИ — СИНК ПОЗЖЕ');return;}
- try{
-  await ghPut('trainings.csv',buildTrainCSV());
-  await ghPut('measures.csv',buildMeasCSV());
-  localStorage.removeItem(PKEY);
-  toast('[CLOUD] GITHUB: ТАБЛИЦЫ ОБНОВЛЕНЫ');
- }catch(e){
-  localStorage.setItem(PKEY,'1');
-  toast(manual?'[CLOUD] ОШИБКА: '+e:'[CLOUD] НЕ СИНК — ПОВТОРЮ ПОЗЖЕ');
- }
- ghStatus();
-}
-function ghSave(){
- GH={token:document.getElementById('gh-token').value.trim(),
-     owner:document.getElementById('gh-owner').value.trim()||'asborozdin-a11y',
-     repo:document.getElementById('gh-repo').value.trim()||'iron-log'};
- localStorage.setItem(GHKEY,JSON.stringify(GH));
- toast('[OK] НАСТРОЙКИ СОХРАНЕНЫ');
- ghStatus();
- if(GH.token)doSync(true);
-}
-function ghStatus(){
- const el=document.getElementById('gh-status'); if(!el)return;
- el.innerHTML=!GH.token?'статус: <b>не подключено</b> — вставь токен один раз':
-  `статус: <b>подключено</b> · ${GH.owner}/${GH.repo} · ${localStorage.getItem(PKEY)?'есть несинхронизированные данные — жду сеть':'всё синхронизировано'}`;
-}
-
-/* ========== НАПОМИНАНИЯ ========== */
-const REPN={none:'разово',daily:'ежедневно',weekly:'еженедельно',monthly:'ежемесячно'};
-function remBase(){if(!S.reminder)return null;const[d]= (S.reminder.date||'').split('T');const t=S.reminder.time||'08:00';const dt=new Date(d+'T'+t);return isNaN(dt)?null:dt}
-function nextReminder(){
- const r=S.reminder; if(!r||!r.enabled)return null;
- let d=remBase(); if(!d)return null;
- const now=new Date();
- if(r.repeat==='none')return d;
- while(d<now){
-  if(r.repeat==='daily')d.setDate(d.getDate()+1);
-  else if(r.repeat==='weekly')d.setDate(d.getDate()+7);
-  else if(r.repeat==='monthly')d.setMonth(d.getMonth()+1);
-  else break;
- }
- return d;
-}
-function remStatus(){
- const el=document.getElementById('rem-status'); if(!el)return;
- const r=S.reminder;
- if(!r||!r.enabled){el.innerHTML='статус: <b>не настроено / выключено</b>';return}
- const n=nextReminder();
- el.innerHTML=`ближайшее: <b>${n?fmtDate(n.toISOString().slice(0,10))+' '+ (r.time||'08:00'): '—'}</b> · ${REPN[r.repeat]||'разово'}`;
-}
-function openRem(){
- const r=S.reminder||{};
- document.getElementById('rem-date').value=r.date||todayISO();
- document.getElementById('rem-time').value=r.time||'08:00';
- document.getElementById('rem-repeat').value=r.repeat||'weekly';
- document.getElementById('remModal').classList.add('on');
-}
-function closeRem(){document.getElementById('remModal').classList.remove('on')}
-function saveRem(){
- S.reminder={enabled:true,
-  date:document.getElementById('rem-date').value||todayISO(),
-  time:document.getElementById('rem-time').value||'08:00',
-  repeat:document.getElementById('rem-repeat').value,
-  lastFire:0,snooze:0};
- saveS();closeRem();remStatus();
- if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
- toast('[OK] НАПОМИНАНИЕ ВКЛЮЧЕНО');
- checkReminder();
-}
-function remOff(){if(S.reminder){S.reminder.enabled=false;saveS();remStatus();toast('НАПОМИНАНИЕ ВЫКЛЮЧЕНО')}}
-function checkReminder(){
- const r=S.reminder; if(!r||!r.enabled)return;
- const n=nextReminder(); if(!n)return;
- const now=Date.now();
- if(now>=n.getTime()&&now>=(r.snooze||0)&&(r.lastFire||0)<n.getTime()){
-   r.lastFire=n.getTime(); saveS();
-   document.getElementById('remAlert').classList.add('on');
-   if('Notification' in window&&Notification.permission==='grained'){}
-   if('Notification' in window&&Notification.permission==='granted'){try{new Notification('IRON WORLD',{body:'Пора сделать замер тела'})}catch(e){}}
-   remStatus();
- }
-}
-function snoozeRem(){
- document.getElementById('remAlert').classList.remove('on');
- if(S.reminder){S.reminder.snooze=Date.now()+3600*1000;saveS()}
- toast('[Z] ОТЛОЖЕНО НА 1 ЧАС');
-}
-function goMeasure(){
- document.getElementById('remAlert').classList.remove('on');
- if(S.reminder&&S.reminder.repeat==='none'){S.reminder.enabled=false;saveS();remStatus()}
- showView('measure');
-}
-setInterval(checkReminder,30000);
-
-/* ========== НАВИГАЦИЯ ========== */
-function showView(v){
- document.body.dataset.view=v;
- document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
- document.getElementById('view-'+v).classList.add('on');
- document.querySelectorAll('#nav button[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
- localStorage.setItem(VKEY,v);
- if(v==='train')renderTrain();
- if(v==='measure')renderMeasure();
- if(v==='home')renderHome();
- scrollTo({top:0});
- checkReminder();
-}
-function renderHome(){
- const last=S.sessions.length?[...S.sessions].sort((a,b)=>b.ts-a.ts)[0]:null;
- const lm=S.measures.length?[...S.measures].sort((a,b)=>b.ts-a.ts)[0]:null;
- document.getElementById('hstatus').innerHTML=
-  `OPERATOR: <b>MALE · 186 CM · 40 Y</b><br>`+
-  `SESSIONS: <b>${S.sessions.length}</b>${last?` · LAST: <b>${new Date(last.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})} · ${vol(last).toLocaleString('ru-RU')} кг</b>`:''}<br>`+
-  `MEASURES: <b>${S.measures.length}</b>${lm&&lm.v.w?` · LAST WEIGHT: <b>${lm.v.w} кг</b>`:''}<br>`+
-  `CLOUD: <b>${GH.token?'SYNC ON':'SYNC OFF'}</b>`;
- document.getElementById('ms-train').textContent=last?`последняя: ${new Date(last.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})} · ${vol(last).toLocaleString('ru-RU')} кг`:'журнал силовых · 3 дня';
- document.getElementById('ms-meas').textContent=lm&&lm.v.w?`последний: ${fmtDate(lm.date)} · ${lm.v.w} кг`:'история пропорций';
-}
-
-/* ========== ТРЕНИРОВКИ ========== */
-function tabs(){document.getElementById('tabs').innerHTML=DAYS.map(d=>
- `<button class="${d.id===cur?'on':''}" onclick="setDay(${d.id})">${d.t}</button>`).join('')}
-function setDay(id){cur=id;renderTrain()}
-function renderTrain(){
- tabs();
- const d=DAYS.find(x=>x.id===cur);
- document.getElementById('dayhead').textContent=`День ${d.id} · ${d.t} — ${d.sub}`;
- const prev=lastOf(cur);
- let html=d.ex.map((e,i)=>{
-  const pset=(prev&&prev.ex[i])?prev.ex[i]:null;
-  const hasAny=pset&&pset.some(p=>p&&p[0]!=='');
-  return `
-  <div class="ex ${e.ss?'ss':''}">
-   <h3>${e.n}</h3>
-   <div class="meta"><b>${e.s} × ${e.r}</b> · отдых ${e.rest}</div>
-   <div class="note">${e.note}</div>
-   ${hasAny?`<button class="copybtn" onclick="copyPrev(${i})">&lt;&lt; повторить прошлый раз</button>`:''}
-   <div class="sets">${Array.from({length:e.s},(_,k)=>{
-     const p=(pset&&pset[k]&&pset[k][0]!=='')?pset[k]:['',''];
-     const hasP=p[0]!=='';
-     return `<div class="srow">
-       <span class="lab"><b>${k+1}</b> ПОДХОД</span>
-       <input type="number" step="0.5" min="0" inputmode="decimal" placeholder="${hasP?p[0]:'вес'}" data-e="${i}" data-s="${k}" data-f="w" value="">
-       <input type="number" step="1" min="0" inputmode="numeric" placeholder="${hasP?(p[1]||'–'):'повт'}" data-e="${i}" data-s="${k}" data-f="r" value="">
-     </div>`}).join('')}
-   </div>
-  </div>`}).join('');
- const pc=prev&&prev.cardio?prev.cardio:null;
- const pcMin=(pc&&pc.min!=='')?pc.min:null;
- html+=`
-  <div class="ex cardio">
-   <h3>Кардио <u style="text-decoration:none;color:var(--mut);font-weight:500">(заминка)</u></h3>
-   <div class="meta">низкая интенсивность · пульс 110–130 · после силовой</div>
-   <label class="ckrow"><input type="checkbox" id="ck-done" ${pc&&pc.done?'checked':''}><span>выполнено</span></label>
-   <div class="sets"><div class="srow one">
-     <span class="lab">МИНУТЫ</span>
-     <input type="number" step="1" min="0" inputmode="numeric" id="ck-min" placeholder="${pcMin?pcMin:'мин'}" value="">
-   </div></div>
-  </div>`;
- document.getElementById('workout').innerHTML=html;
- journal();
-}
-function copyPrev(i){
- const prev=lastOf(cur); if(!prev||!prev.ex[i])return;
- prev.ex[i].forEach((set,k)=>{
-  const wi=document.querySelector(`input[data-e="${i}"][data-s="${k}"][data-f="w"]`);
-  const ri=document.querySelector(`input[data-e="${i}"][data-s="${k}"][data-f="r"]`);
-  if(wi&&set[0]!=='')wi.value=set[0];
-  if(ri&&set[1]!=='')ri.value=set[1];
- });
- toast('[<<] ПОДСТАВЛЕНО ИЗ ПРОШЛОЙ ТРЕНИРОВКИ');
-}
-function collect(){
- const d=DAYS.find(x=>x.id===cur);
- return d.ex.map((e,i)=>Array.from({length:e.s},(_,k)=>{
-   const w=document.querySelector(`input[data-e="${i}"][data-s="${k}"][data-f="w"]`);
-   const r=document.querySelector(`input[data-e="${i}"][data-s="${k}"][data-f="r"]`);
-   return [w.value===''?'':+w.value, r.value===''?'':+r.value];
- }));
-}
-function save(){
- const ex=collect();
- if(!ex.some(a=>a.some(([w])=>w!==''))){toast('[!] ЗАПОЛНИ ВЕСА');return}
- const mv=document.getElementById('ck-min').value;
- const cardio={done:document.getElementById('ck-done').checked, min:mv===''?'':+mv};
- S.sessions.push({ts:Date.now(),day:cur,ex,cardio});saveS();renderTrain();
- toast('[OK] ЗАПИСАНО В ЖУРНАЛ');
- scheduleSync();
-}
-function clearInputs(){document.querySelectorAll('#workout input').forEach(i=>{if(i.type==='checkbox')i.checked=false;else i.value=''});toast('ПОЛЯ ОЧИЩЕНЫ')}
-function journal(){
- const el=document.getElementById('journal');
- if(!S.sessions.length){el.innerHTML='<div class="empty">// журнал пуст — сохрани первую тренировку</div>';return}
- el.innerHTML=[...S.sessions].sort((a,b)=>b.ts-a.ts).map(s=>{
-   const d=DAYS.find(x=>x.id===s.day);
-   const same=[...S.sessions].filter(x=>x.day===s.day&&x.ts<s.ts).sort((a,b)=>b.ts-a.ts)[0];
-   const v=vol(s), pv=same?vol(same):null;
-   const dl=pv===null?'<span class="dl eq">ПЕРВАЯ</span>':
-     v>pv?`<span class="dl up">▲ +${v-pv} кг</span>`:v<pv?`<span class="dl dn">▼ ${v-pv} кг</span>`:'<span class="dl eq">= 0</span>';
-   const c=s.cardio?`<li><span class="n">Кардио</span><span class="w">${s.cardio.done?(s.cardio.min!==''?s.cardio.min+' мин':'ДА'):'—'}</span></li>`:'';
-   return `<div class="ses">
-     <div class="sh"><span class="d">${new Date(s.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${d.t}</span>
-     <span class="v">ТОННАЖ ${v.toLocaleString('ru-RU')} кг</span>${dl}</div>
-     <ul>${s.ex.map((sets,i)=>{
-        const str=sets.filter(([w])=>w!=='').map(([w,r])=>`${w}×${r||'–'}`).join(', ');
-        return str?`<li><span class="n">${d.ex[i].n}</span><span class="w">${str}</span></li>`:''}).join('')}${c}
-     </ul></div>`}).join('');
-}
-function exportJ(){
- const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
- const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='iron-log.json';a.click();
- toast('[>>] ФАЙЛ СОХРАНЁН');
-}
-document.getElementById('fileIn').addEventListener('change',async e=>{
- const f=e.target.files[0]; if(!f)return;
- try{
-   const data=JSON.parse(await f.text());
-   if(!data||(!Array.isArray(data.sessions)&&!Array.isArray(data.measures)))throw 0;
-   (data.sessions||[]).forEach(s=>{if(!S.sessions.some(x=>x.ts===s.ts))S.sessions.push(s)});
-   (data.measures||[]).forEach(m=>{if(!S.measures.some(x=>x.ts===m.ts))S.measures.push(m)});
-   S.sessions.sort((a,b)=>a.ts-b.ts);S.measures.sort((a,b)=>a.ts-b.ts);
-   saveS();renderTrain();renderMeasure();toast('[<<] ИМПОРТИРОВАНО');scheduleSync();
- }catch(err){toast('[!] ФАЙЛ ПОВРЕЖДЁН')}
- e.target.value='';
-});
-function clearJ(){if(confirm('Удалить все тренировки журнала? (замеры останутся)')){S.sessions=[];saveS();renderTrain();toast('ЖУРНАЛ ОЧИЩЕН');scheduleSync()}}
-
-/* ========== ЗАМЕРЫ ========== */
-function renderMeasure(){
- const di=document.getElementById('m-date');
- if(!di.value)di.value=todayISO();
- const lastM=S.measures.length?[...S.measures].sort((a,b)=>b.ts-a.ts)[0]:null;
- document.getElementById('mform').innerHTML=METRICS.map(m=>{
-  const pv=lastM&&lastM.v[m.k]!==''&&lastM.v[m.k]!==undefined?lastM.v[m.k]:null;
-  return `<div class="mcell"><label>${m.l}, ${m.u}</label>
-   <input type="number" step="0.1" min="0" inputmode="decimal" id="mz-${m.k}" placeholder="${pv!==null?pv:m.u}"></div>`}).join('');
- remStatus();
- mhist();
-}
-function saveMeasure(){
- const v={};let any=false;
- METRICS.forEach(m=>{const el=document.getElementById('mz-'+m.k);v[m.k]=el.value===''?'':+el.value;if(v[m.k]!=='')any=true});
- if(!any){toast('[!] ЗАПОЛНИ ХОТЯ БЫ ОДНО ПОЛЕ');return}
- S.measures.push({ts:Date.now(),date:document.getElementById('m-date').value||todayISO(),v});
- saveS();renderMeasure();toast('[OK] ЗАМЕР СОХРАНЁН');
- scheduleSync();
-}
-function delMeasure(ts){if(confirm('Удалить этот замер?')){S.measures=S.measures.filter(m=>m.ts!==ts);saveS();renderMeasure();toast('ЗАМЕР УДАЛЁН');scheduleSync()}}
-function dcls(rule,d){if(d===0)return'nt';if(rule==='nt')return'nt';if(rule==='dn')return d<0?'up':'dn';return d>0?'up':'dn'}
-function mhist(){
- const el=document.getElementById('mhist');
- if(!S.measures.length){el.innerHTML='<div class="empty">// замеров пока нет — сделай первый утром натощак</div>';return}
- const asc=[...S.measures].sort((a,b)=>a.ts-b.ts);
- el.innerHTML=[...asc].reverse().map(m=>{
-  const i=asc.indexOf(m);
-  const prevM=i>0?asc[i-1]:null;
-  return `<div class="ses">
-   <div class="sh"><span class="d">${fmtDate(m.date)}</span>
-   ${prevM?'<span class="dl eq">vs '+fmtDate(prevM.date)+'</span>':'<span class="dl eq">ПЕРВЫЙ</span>'}
-   <button class="delbtn" onclick="delMeasure(${m.ts})" title="удалить">✖</button></div>
-   <div class="grid">${METRICS.map(mt=>{
-     const val=m.v[mt.k];
-     if(val===''||val===undefined)return'';
-     let d='';
-     if(prevM&&prevM.v[mt.k]!==''&&prevM.v[mt.k]!==undefined){
-       const df=Math.round((val-prevM.v[mt.k])*10)/10;
-       if(df!==0)d=` <i class="${dcls(mt.rule,df)}">${df>0?'▲':'▼'}${Math.abs(df)}</i>`;
-     }
-     return `<div class="mzv"><span>${mt.l}</span><b>${val}</b>${d}</div>`}).join('')}
-   </div></div>`}).join('');
-}
-
-/* ========== СТАРТ ========== */
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
-window.addEventListener('online',()=>{if(GH.token&&localStorage.getItem(PKEY))doSync(false)});
-(function init(){
- const t=document.getElementById('gh-token');
- if(t)t.value=GH.token||'';
- const o=document.getElementById('gh-owner'); if(o&&GH.owner)o.value=GH.owner;
- const r=document.getElementById('gh-repo'); if(r&&GH.repo)r.value=GH.repo;
- ghStatus();
- if(GH.token&&localStorage.getItem(PKEY))doSync(false);
- checkReminder();
-})();
-showView(localStorage.getItem(VKEY)||'home');
-</script>
+<script defer src="data.js"></script>
+<script defer src="train.js"></script>
+<script defer src="measure.js"></script>
+<script defer src="food.js"></script>
+<script defer src="app.js"></script>
 </body>
 </html>
