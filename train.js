@@ -67,10 +67,23 @@ function collect(){
 function save(){
  const ex=collect();
  if(!ex.some(a=>a.some(([w])=>w!==''))){toast('[!] ЗАПОЛНИ ВЕСА');return}
+ /* детект личного рекорда до записи */
+ let pr=false;
+ ex.forEach((sets,i)=>{
+  const nm=Math.max(0,...sets.map(s=>+s[0]||0));
+  if(nm>0){
+   const old=Math.max(0,...S.sessions.filter(s=>s.day===cur).flatMap(s=>(s.ex[i]||[]).map(x=>+x[0]||0)));
+   if(nm>old)pr=true;
+  }
+ });
  const mv=document.getElementById('ck-min').value;
  const cardio={done:document.getElementById('ck-done').checked, min:mv===''?'':+mv};
  S.sessions.push({ts:Date.now(),day:cur,ex,cardio});saveS();renderTrain();
- toast('[OK] ЗАПИСАНО В ЖУРНАЛ');
+ toast(pr?'[PR] НОВЫЙ РЕКОРД ВЕСА!':'[OK] ЗАПИСАНО В ЖУРНАЛ');
+ /* разряд-награда из кнопки сохранения */
+ const b=document.querySelector('#view-train .actions button');
+ const r=b?b.getBoundingClientRect():null;
+ fireReward(r?r.left+r.width/2:innerWidth/2, r?r.top+r.height/2:innerHeight/2, pr);
  scheduleSync();
 }
 function clearInputs(){document.querySelectorAll('#workout input').forEach(i=>{if(i.type==='checkbox')i.checked=false;else i.value=''});toast('ПОЛЯ ОЧИЩЕНЫ')}
