@@ -11,12 +11,13 @@ function renderFood(){
  const pk=curPack();
  const MAC=(pk&&pk.MACROS)?pk.MACROS:(typeof MACROS!=='undefined'?MACROS:[]);
  const FD=(pk&&pk.FOOD)?pk.FOOD:(typeof FOOD!=='undefined'?FOOD:[]);
+ const SUP=(pk&&pk.SUPP)?pk.SUPP:[];
  const fm=document.getElementById('fmacros');
  const fw=document.getElementById('foodMeals');
  if(!fm||!fw)return;
  fm.innerHTML=MAC.map(m=>
   `<div class="fm ${m.cls||''}"><b>${m.v}</b><span>${m.l}</span><i style="width:${m.w||100}%"></i></div>`).join('');
- fw.innerHTML=`<div class="empty" style="padding:4px 0 14px">ПАКЕТ: ${ME?ME.pack:'—'} · приёмов: ${FD.length}</div>`+
+ fw.innerHTML=
   FD.map(f=>`
   <div class="fmeal ${f.cls||''}">
    <span class="fn">${f.fn}</span>
@@ -25,6 +26,7 @@ function renderFood(){
    ${f.note?`<div class="fnote"><b>${f.note.t}</b>${f.note.x}</div>`:''}
    ${f.alt?`<div class="falt"><em>Альт</em><p>${f.alt}</p></div>`:''}
   </div>`).join('')+
-  `<div class="empty">Крупы — в сухом виде · Мясо и рыбу — в сыром · Сон 7–9 ч · Вода 2.5–3 л</div>`;
+  `<div class="empty">Крупы — в сухом виде · Мясо и рыбу — в сыром · Сон 7–9 ч · Вода 2.5–3 л</div>`+
+  (SUP.length?`<div class="fnote supp"><b>Нутрицевтическая поддержка</b>${SUP.map(s=>`<div class="supp-i">${s.n}${s.t?` <u>· ${s.t}</u>`:''}<div class="supp-x">${s.x}</div></div>`).join('')}</div>`:'');
 }
 renderFood();
