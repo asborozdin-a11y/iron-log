@@ -1,4 +1,4 @@
-/* IRON WORLD · ЯДРО v7: персоны, темы, пакеты, хранилище, навигация, boot, FX, GitHub-синк */
+/* IRON WORLD · ЯДРО v8: персоны, пресеты, PIN, темы, пакеты, boot, FX, GitHub-синк */
 
 /* ==== ПЕРСОНЫ ==== */
 const P_LIST='ironlog_personas', P_CUR='ironlog_persona', LEGACY='ironlog_v1', LEGACY_FLAG='ironlog_legacy_migrated';
@@ -10,6 +10,12 @@ function loadPersonas(){try{return JSON.parse(localStorage.getItem(P_LIST))||[]}
 function savePersonas(){localStorage.setItem(P_LIST,JSON.stringify(PERSONAS))}
 function personaById(id){return PERSONAS.find(p=>p.id===id)}
 function esc(s){return String(s===undefined||s===null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ==== ПРЕСЕТЫ ПРОФИЛЕЙ ==== */
+const PRESETS=[
+ {key:'alex',name:'ALEX',desc:'мужской пакет · terminator',pack:'default',theme:'terminator',stats:'MALE · 186 CM · 40 Y'},
+ {key:'ksy', name:'KSY', desc:'женский пакет · tiffany noir',pack:'oksana',theme:'tiffany-noir',stats:'FEMALE · 153 CM · 50 Y'}
+];
 
 /* ==== ТЕМЫ ==== */
 const THEMES={
@@ -24,18 +30,74 @@ const TH_SW={
  'tiffany-noir':'linear-gradient(135deg,#17c3bc 50%,#081114 50%)',
  'tiffany-audrey':'linear-gradient(135deg,#0abab5 50%,#f2f6f5 50%)',
  'rose-champagne':'linear-gradient(135deg,#ff7a9c 50%,#120d14 50%)'};
-if(typeof window.applyPack!=='function'){window.applyPack=function(){/* data.js без паков — работаем на базовом контенте */};}
+if(typeof window.applyPack!=='function'){window.applyPack=function(){};}
 let FXC=THEMES.terminator.fx;
-function applyTheme(t){
- document.body.dataset.theme=t;
- FXC=(THEMES[t]||THEMES.terminator).fx;
-}
+function applyTheme(t){document.body.dataset.theme=t;FXC=(THEMES[t]||THEMES.terminator).fx;}
 function setTheme(t){
  if(!ME)return;
  ME.theme=t;
  const p=personaById(ME.id); if(p){p.theme=t;savePersonas();}
  applyTheme(t);renderProfile();
  toast('[OK] ТЕМА: '+t.toUpperCase());
+}
+
+/* ==== PIN (уровень 1: хэш SHA-256 с солью) ==== */
+function randSalt(){const a=new Uint8Array(8);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function pinHashFn(pin,salt){
+ try{const d=new TextEncoder().encode(salt+':'+pin);const h=await crypto.subtle.digest('SHA-256',d);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+ catch(e){let h=5381;const s=salt+':'+pin;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return 'fb'+(h>>>0).toString(16)}
+}
+async function pinVerify(pin,p){return !!(p&&p.pinHash)&&(await pinHashFn(pin,p.pinSalt||''))===p.pinHash}
+function pinGate(p,done){
+ const b=onboardShell(`
+  <div class="ob-title">IRON <span>WORLD</span></div>
+  <div class="ob-sub"><span class="ob-lock">[PIN]</span> профиль ${esc(p.name)} защищён</div>
+  <label class="ob-lab">Введите PIN-код</label>
+  <div class="pin-row"><input id="gate-pin" class="pin-in" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+  <div class="mact" style="justify-content:center;margin-top:16px"><button id="gate-go">Войти</button></div>`);
+ const go=async()=>{
+  const ok=await pinVerify(b.querySelector('#gate-pin').value.trim(),p);
+  if(ok){sessionStorage.setItem('ironlog_unlocked_'+p.id,'1');b.remove();done();}
+  else{toast('[!] НЕВЕРНЫЙ PIN');const el=b.querySelector('#gate-pin');el.value='';el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),350);}
+ };
+ b.querySelector('#gate-go').onclick=go;
+ b.querySelector('#gate-pin').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+}
+function pinSetup(){
+ const b=onboardShell(`
+  <div class="ob-title">IRON <span>WORLD</span></div>
+  <div class="ob-sub">PIN профиля ${esc(ME.name)}</div>
+  ${ME.pinHash?`<label class="ob-lab">Текущий PIN</label><div class="pin-row"><input id="ps-cur" class="pin-in" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>`:''}
+  <label class="ob-lab">Новый PIN (4 цифры)</label><div class="pin-row"><input id="ps-new" class="pin-in" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+  <label class="ob-lab">Повторите</label><div class="pin-row"><input id="ps-new2" class="pin-in" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+  <div class="mact" style="justify-content:center;margin-top:16px"><button class="ghost" id="ps-cancel">Отмена</button><button id="ps-go">Сохранить</button></div>`);
+ b.querySelector('#ps-cancel').onclick=()=>b.remove();
+ b.querySelector('#ps-go').onclick=async()=>{
+  if(ME.pinHash){const ok=await pinVerify(b.querySelector('#ps-cur').value.trim(),ME);if(!ok){toast('[!] НЕВЕРНЫЙ ТЕКУЩИЙ PIN');return;}}
+  const n1=b.querySelector('#ps-new').value.trim(),n2=b.querySelector('#ps-new2').value.trim();
+  if(!/^\d{4}$/.test(n1)){toast('[!] PIN: РОВНО 4 ЦИФРЫ');return;}
+  if(n1!==n2){toast('[!] PIN НЕ СОВПАДАЕТ');return;}
+  const p=personaById(ME.id);
+  ME.pinSalt=randSalt();ME.pinHash=await pinHashFn(n1,ME.pinSalt);
+  if(p){p.pinHash=ME.pinHash;p.pinSalt=ME.pinSalt;savePersonas();}
+  sessionStorage.setItem('ironlog_unlocked_'+ME.id,'1');
+  b.remove();renderProfile();toast('[OK] PIN УСТАНОВЛЕН');
+ };
+}
+function pinRemove(){
+ const b=onboardShell(`
+  <div class="ob-title">IRON <span>WORLD</span></div>
+  <div class="ob-sub">снятие PIN профиля ${esc(ME.name)}</div>
+  <label class="ob-lab">Текущий PIN</label><div class="pin-row"><input id="pr-cur" class="pin-in" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+  <div class="mact" style="justify-content:center;margin-top:16px"><button class="ghost" id="pr-cancel">Отмена</button><button id="pr-go">Снять PIN</button></div>`);
+ b.querySelector('#pr-cancel').onclick=()=>b.remove();
+ b.querySelector('#pr-go').onclick=async()=>{
+  const ok=await pinVerify(b.querySelector('#pr-cur').value.trim(),ME);
+  if(!ok){toast('[!] НЕВЕРНЫЙ PIN');return;}
+  const p=personaById(ME.id);ME.pinHash=null;ME.pinSalt=null;
+  if(p){p.pinHash=null;p.pinSalt=null;savePersonas();}
+  b.remove();renderProfile();toast('[OK] PIN СНЯТ');
+ };
 }
 
 /* ==== ХРАНИЛИЩЕ ==== */
@@ -50,7 +112,7 @@ function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.spl
 function todayISO(){return new Date().toISOString().slice(0,10)}
 function fxOK(){return !matchMedia('(prefers-reduced-motion: reduce)').matches}
 
-/* ==== ОНБОРДИНГ ==== */
+/* ==== ОНБОРДИНГ: пресеты + новый профиль + PIN ==== */
 function onboardShell(html){
  const old=document.getElementById('onboard'); if(old)old.remove();
  const b=document.createElement('div');b.id='onboard';
@@ -59,50 +121,104 @@ function onboardShell(html){
  return b;
 }
 function onboardCreate(adopt){
- let chosenPack='default';
- let chosenTheme=((typeof PACKS!=='undefined'?PACKS:{})[chosenPack]||{}).theme||'terminator';
  const PK=(typeof PACKS!=='undefined')?PACKS:{default:{label:'базовый'}};
- const b=onboardShell(`
-  <div class="ob-title">IRON <span>WORLD</span></div>
-  <div class="ob-sub">persona setup · создание профиля</div>
-  ${adopt?`<div class="ob-note">Найден существующий журнал тренировок и замеров. Он будет привязан к создаваемому профилю.</div>`:''}
-  <label class="ob-lab">Имя оператора</label>
-  <input id="ob-name" class="ob-in" maxlength="18" placeholder="ALEX / ОКСАНА / …">
-  <label class="ob-lab">Пакет программ</label>
-  <div class="ob-packs">${Object.keys(PK).map(k=>`<button class="ob-pk ${k===chosenPack?'on':''}" data-p="${k}">${esc(PK[k].label||k)}</button>`).join('')}</div>
-  <label class="ob-lab">Тема оформления</label>
-  <div class="ob-themes">${TH_LIST.map(t=>`<button class="ob-th ${t===chosenTheme?'on':''}" data-t="${t}" style="background:${TH_SW[t]}" title="${t}"></button>`).join('')}</div>
-  <div class="mact" style="justify-content:center;margin-top:16px"><button id="ob-go">Создать профиль</button></div>`);
- b.querySelectorAll('.ob-pk').forEach(pk=>pk.onclick=()=>{
-  chosenPack=pk.dataset.p;
-  b.querySelectorAll('.ob-pk').forEach(x=>x.classList.toggle('on',x===pk));
-  const dt=(PK[chosenPack]&&PK[chosenPack].theme)||'terminator';
-  chosenTheme=dt;
-  b.querySelectorAll('.ob-th').forEach(x=>x.classList.toggle('on',x.dataset.t===dt));
- });
- b.querySelectorAll('.ob-th').forEach(th=>th.onclick=()=>{
-  chosenTheme=th.dataset.t;
-  b.querySelectorAll('.ob-th').forEach(x=>x.classList.toggle('on',x===th));
- });
- b.querySelector('#ob-go').onclick=()=>{
-  const name=(b.querySelector('#ob-name').value||'').trim().toUpperCase()||'OPERATOR';
-  const p={id:'p'+Date.now(),name,pack:chosenPack,theme:chosenTheme,stats:'',created:Date.now()};
-  if(chosenPack==='oksana')p.stats='FEMALE · 153 CM · 50 Y';
+ let params=null;
+ const b=onboardShell('');
+ function stage1(){
+  b.innerHTML=`<div class="ob-box">
+   <div class="ob-title">IRON <span>WORLD</span></div>
+   <div class="ob-sub">persona setup · выбор оператора</div>
+   ${adopt&&localStorage.getItem(LEGACY)&&!localStorage.getItem(LEGACY_FLAG)?`<div class="ob-note">Найден существующий журнал тренировок и замеров — он привяжется к создаваемому профилю.</div>`:''}
+   <div class="ob-presets">
+    ${PRESETS.map(pr=>`<button class="ob-preset ${pr.key}" data-k="${pr.key}"><b>${pr.name}</b><small>${pr.desc}</small></button>`).join('')}
+   </div>
+   <div class="ob-div">— или —</div>
+   <div id="ob-manual" style="display:none;margin-top:12px">
+    <label class="ob-lab">Имя оператора</label>
+    <input id="ob-name" class="ob-in" maxlength="18" placeholder="ИМЯ">
+    <label class="ob-lab">Пакет программ</label>
+    <div class="ob-packs">${Object.keys(PK).map(k=>`<button class="ob-pk ${k==='default'?'on':''}" data-p="${k}">${esc(PK[k].label||k)}</button>`).join('')}</div>
+    <label class="ob-lab">Тема оформления</label>
+    <div class="ob-themes">${TH_LIST.map(t=>`<button class="ob-th ${t==='terminator'?'on':''}" data-t="${t}" style="background:${TH_SW[t]}" title="${t}"></button>`).join('')}</div>
+    <div class="mact" style="justify-content:center;margin-top:14px"><button id="ob-manual-go">Далее: PIN</button></div>
+   </div>
+   <div class="mact" style="justify-content:center;margin-top:12px"><button class="ghost" id="ob-toggle">+ Новый профиль</button></div>
+  </div>`;
+  let mPack='default', mTheme='terminator';
+  b.querySelectorAll('.ob-preset').forEach(btn=>btn.onclick=()=>{
+   const pr=PRESETS.find(x=>x.key===btn.dataset.k);
+   params={name:pr.name,pack:pr.pack,theme:pr.theme,stats:pr.stats};
+   stage2();
+  });
+  b.querySelector('#ob-toggle').onclick=()=>{const m=b.querySelector('#ob-manual');m.style.display=(m.style.display==='none'?'block':'none');};
+  b.querySelectorAll('#ob-manual .ob-pk').forEach(pk=>pk.onclick=()=>{
+   mPack=pk.dataset.p;
+   b.querySelectorAll('#ob-manual .ob-pk').forEach(x=>x.classList.toggle('on',x===pk));
+   const dt=(PK[mPack]&&PK[mPack].theme)||'terminator';mTheme=dt;
+   b.querySelectorAll('#ob-manual .ob-th').forEach(x=>x.classList.toggle('on',x.dataset.t===dt));
+  });
+  b.querySelectorAll('#ob-manual .ob-th').forEach(th=>th.onclick=()=>{
+   mTheme=th.dataset.t;
+   b.querySelectorAll('#ob-manual .ob-th').forEach(x=>x.classList.toggle('on',x===th));
+  });
+  b.querySelector('#ob-manual-go').onclick=()=>{
+   const nm=(b.querySelector('#ob-name').value||'').trim().toUpperCase();
+   if(!nm){toast('[!] ВВЕДИ ИМЯ');return;}
+   params={name:nm,pack:mPack,theme:mTheme,stats:''};
+   stage2();
+  };
+ }
+ function stage2(){
+  b.innerHTML=`<div class="ob-box">
+   <div class="ob-title">IRON <span>WORLD</span></div>
+   <div class="ob-sub">профиль ${esc(params.name)} · защита</div>
+   <label class="ob-lab">PIN-код (4 цифры)</label>
+   <div class="pin-row"><input id="pin1" class="pin-in" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+   <label class="ob-lab">Повторите PIN</label>
+   <div class="pin-row"><input id="pin2" class="pin-in" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+   <div class="mact" style="justify-content:center;margin-top:16px">
+    <button class="ghost" id="pin-back">Назад</button>
+    <button class="ghost" id="pin-skip">Пропустить</button>
+    <button id="pin-go">Создать профиль</button>
+   </div>
+  </div>`;
+  b.querySelector('#pin-back').onclick=()=>stage1();
+  b.querySelector('#pin-skip').onclick=()=>finishCreate('');
+  b.querySelector('#pin-go').onclick=()=>finishCreate(b.querySelector('#pin1').value.trim(),b.querySelector('#pin2').value.trim());
+ }
+ async function finishCreate(pin,pin2){
+  if(pin===undefined)pin='';
+  if(pin!==''){
+   if(!/^\d{4}$/.test(pin)){toast('[!] PIN: РОВНО 4 ЦИФРЫ');return;}
+   if(pin!==(pin2||'')){toast('[!] PIN НЕ СОВПАДАЕТ');const el=b.querySelector('#pin2');if(el){el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),350);}return;}
+  }
+  let pinHash=null,pinSalt=null;
+  if(pin){pinSalt=randSalt();pinHash=await pinHashFn(pin,pinSalt);}
+  const p={id:'p'+Date.now(),name:params.name,pack:params.pack,theme:params.theme,stats:params.stats||'',pinHash,pinSalt,created:Date.now()};
   if(adopt&&localStorage.getItem(LEGACY)&&!localStorage.getItem(LEGACY_FLAG)){
    localStorage.setItem('ironlog_d_'+p.id,localStorage.getItem(LEGACY));
    localStorage.setItem(LEGACY_FLAG,p.id);
-   p.stats='MALE · 186 CM · 40 Y';
+   if(!p.stats)p.stats='MALE · 186 CM · 40 Y';
   }
-  PERSONAS.push(p);savePersonas();b.remove();startApp(p.id);
- };
+  PERSONAS.push(p);savePersonas();b.remove();
+  if(pinHash)sessionStorage.setItem('ironlog_unlocked_'+p.id,'1');
+  startApp(p.id);
+ }
+ stage1();
+ return b;
 }
 function onboardSelect(){
  const b=onboardShell(`
   <div class="ob-title">IRON <span>WORLD</span></div>
   <div class="ob-sub">persona setup · выбор профиля</div>
-  <div class="ob-list">${PERSONAS.map(p=>`<button class="ob-p" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.stats||'')}</small></button>`).join('')}</div>
+  <div class="ob-list">${PERSONAS.map(p=>`<button class="ob-p" data-id="${p.id}"><b>${esc(p.name)}</b><small>${p.pinHash?'<span class="ob-lock">[PIN]</span> ':''}${esc(p.stats||'')}</small></button>`).join('')}</div>
   <div class="mact" style="justify-content:center;margin-top:16px"><button class="ghost" id="ob-add">+ Новый профиль</button></div>`);
- b.querySelectorAll('.ob-p').forEach(btn=>btn.onclick=()=>{b.remove();startApp(btn.dataset.id);});
+ b.querySelectorAll('.ob-p').forEach(btn=>btn.onclick=()=>{
+  const p=personaById(btn.dataset.id);
+  b.remove();
+  if(p.pinHash&&sessionStorage.getItem('ironlog_unlocked_'+p.id)!=='1'){pinGate(p,()=>startApp(p.id));}
+  else{startApp(p.id);}
+ });
  b.querySelector('#ob-add').onclick=()=>{b.remove();onboardCreate(false);};
 }
 
@@ -142,7 +258,8 @@ function renderProfile(){
    </ul>
    ${p.id===ME.id?`
     <div class="pf-themes"><span class="pf-lab">Пакет:</span>${Object.keys(PACKS).map(k=>`<button class="ob-pk ${ME.pack===k?'on':''}" onclick="setPack('${k}')">${esc(PACKS[k].label||k)}</button>`).join('')}</div>
-    <div class="pf-themes"><span class="pf-lab">Тема:</span>${TH_LIST.map(t=>`<button class="ob-th ${ME.theme===t?'on':''}" style="background:${TH_SW[t]}" title="${t}" onclick="setTheme('${t}')"></button>`).join('')}</div>`
+    <div class="pf-themes"><span class="pf-lab">Тема:</span>${TH_LIST.map(t=>`<button class="ob-th ${ME.theme===t?'on':''}" style="background:${TH_SW[t]}" title="${t}" onclick="setTheme('${t}')"></button>`).join('')}</div>
+    <div class="pf-themes"><span class="pf-lab">PIN:</span><button class="ob-pk on" onclick="pinSetup()">${ME.pinHash?'сменить':'установить'}</button>${ME.pinHash?`<button class="ob-pk" onclick="pinRemove()">снять</button>`:''}</div>`
    :`<div class="mact" style="justify-content:flex-start;margin-top:10px"><button class="ghost" onclick="switchPersona('${p.id}')">Открыть профиль</button></div>`}
   </div>`).join('')+
   `<div class="actions"><button class="ghost" onclick="onboardCreate(false)">+ Добавить профиль</button></div>`;
@@ -247,8 +364,8 @@ function runBoot(done){
   '> CYBERDYNE TACTICAL CORE · ONLINE',
   `> PERSONA: ${ME?ME.name:'—'}`,
   `> THEME: ${(ME&&ME.theme||'terminator').toUpperCase()}`,
+  `> SECURITY: ${ME&&ME.pinHash?'PIN LOCK ON':'OPEN'}`,
   `> MUSCLE DB: ${S.sessions.length} SESSIONS LOADED`,
-  `> METRICS DB: ${S.measures.length} RECORDS`,
   `> CLOUD LINK: ${GH.token?'SYNC ON':'SYNC OFF'}`
  ];
  b.innerHTML=`<div class="b-lines">${lines.map((l,i)=>`<div style="animation-delay:${i*100}ms">${l}</div>`).join('')}</div>
@@ -394,5 +511,7 @@ window.addEventListener('online',()=>{if(GH.token&&localStorage.getItem(PKEYC))d
  const pid=localStorage.getItem(P_CUR);
  if(!PERSONAS.length){onboardCreate(!!localStorage.getItem(LEGACY));return;}
  if(!pid||!personaById(pid)){onboardSelect();return;}
+ const p=personaById(pid);
+ if(p.pinHash&&sessionStorage.getItem('ironlog_unlocked_'+pid)!=='1'){pinGate(p,()=>startApp(pid));return;}
  startApp(pid);
 })();
