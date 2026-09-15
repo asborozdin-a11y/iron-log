@@ -60,23 +60,34 @@ function themePickerHTML(sel){
  return `<div class="ob-themes">${TH_LIST.map(t=>`<button class="ob-th ${t===sel?'on':''}" data-t="${t}" style="background:${TH_SW[t]}" title="${t}"></button>`).join('')}</div>`;
 }
 function onboardCreate(adopt){
- let chosen='terminator';
+ let chosenPack='default';
+ let chosenTheme=(PACKS.default&&PACKS.default.theme)||'terminator';
  const b=onboardShell(`
   <div class="ob-title">IRON <span>WORLD</span></div>
   <div class="ob-sub">persona setup · создание профиля</div>
   ${adopt?`<div class="ob-note">Найден существующий журнал тренировок и замеров. Он будет привязан к создаваемому профилю.</div>`:''}
   <label class="ob-lab">Имя оператора</label>
   <input id="ob-name" class="ob-in" maxlength="18" placeholder="ALEX / ОКСАНА / …">
+  <label class="ob-lab">Пакет программ</label>
+  <div class="ob-packs">${Object.keys(PACKS).map(k=>`<button class="ob-pk ${k===chosenPack?'on':''}" data-p="${k}">${esc(PACKS[k].label||k)}</button>`).join('')}</div>
   <label class="ob-lab">Тема оформления</label>
-  ${themePickerHTML(chosen)}
+  <div class="ob-themes">${TH_LIST.map(t=>`<button class="ob-th ${t===chosenTheme?'on':''}" data-t="${t}" style="background:${TH_SW[t]}" title="${t}"></button>`).join('')}</div>
   <div class="mact" style="justify-content:center;margin-top:16px"><button id="ob-go">Создать профиль</button></div>`);
+ b.querySelectorAll('.ob-pk').forEach(pk=>pk.onclick=()=>{
+  chosenPack=pk.dataset.p;
+  b.querySelectorAll('.ob-pk').forEach(x=>x.classList.toggle('on',x===pk));
+  const dt=(PACKS[chosenPack]&&PACKS[chosenPack].theme)||'terminator';
+  chosenTheme=dt;
+  b.querySelectorAll('.ob-th').forEach(x=>x.classList.toggle('on',x.dataset.t===dt));
+ });
  b.querySelectorAll('.ob-th').forEach(th=>th.onclick=()=>{
-  chosen=th.dataset.t;
+  chosenTheme=th.dataset.t;
   b.querySelectorAll('.ob-th').forEach(x=>x.classList.toggle('on',x===th));
  });
  b.querySelector('#ob-go').onclick=()=>{
   const name=(b.querySelector('#ob-name').value||'').trim().toUpperCase()||'OPERATOR';
-  const p={id:'p'+Date.now(),name,pack:'default',theme:chosen,stats:'',created:Date.now()};
+  const p={id:'p'+Date.now(),name,pack:chosenPack,theme:chosenTheme,stats:'',created:Date.now()};
+  if(chosenPack==='oksana')p.stats='FEMALE · 153 CM · 50 Y';
   if(adopt&&localStorage.getItem(LEGACY)&&!localStorage.getItem(LEGACY_FLAG)){
    localStorage.setItem('ironlog_d_'+p.id,localStorage.getItem(LEGACY));
    localStorage.setItem(LEGACY_FLAG,p.id);
