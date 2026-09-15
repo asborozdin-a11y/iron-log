@@ -17,6 +17,7 @@ function saveMeasure(){
  if(!any){toast('[!] ЗАПОЛНИ ХОТЯ БЫ ОДНО ПОЛЕ');return}
  S.measures.push({ts:Date.now(),date:document.getElementById('m-date').value||todayISO(),v});
  saveS();renderMeasure();toast('[OK] ЗАМЕР СОХРАНЁН');
+ eyeFlare();
  scheduleSync();
 }
 function delMeasure(ts){if(confirm('Удалить этот замер?')){S.measures=S.measures.filter(m=>m.ts!==ts);saveS();renderMeasure();toast('ЗАМЕР УДАЛЁН');scheduleSync()}}
