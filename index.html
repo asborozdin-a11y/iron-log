@@ -16,34 +16,37 @@
 </head>
 <body data-view="home">
 
+<!-- ========== ГЛАВНЫЙ ЭКРАН ========== -->
 <section id="view-home" class="view">
  <div class="wrap">
   <div class="eye"></div>
   <div class="h-title">IRON <span>WORLD</span></div>
-  <div class="h-sub">Cyberdyne Training OS · v4.0</div>
+  <div class="h-sub">Cyberdyne Training OS · v4.3</div>
   <div class="h-status" id="hstatus"></div>
   <div class="h-select">▸ Select module ◂</div>
   <div class="mods">
-   <button class="modbtn" onclick="showView('train')">
+   <button class="modbtn" onclick="showView('train',event)">
     <span class="ico"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg></span>
     <span><b>Тренировки</b><small id="ms-train">журнал силовых · 3 дня</small></span></button>
-   <button class="modbtn meas" onclick="showView('measure')">
+   <button class="modbtn meas" onclick="showView('measure',event)">
     <span class="ico"><svg viewBox="0 0 24 24"><rect x="2.5" y="9" width="19" height="6.5" rx="1.2"/><path d="M7 9v3M11 9v3M15 9v3M19 9v3"/></svg></span>
     <span><b>Замеры тела</b><small id="ms-meas">история пропорций</small></span></button>
-   <button class="modbtn food" onclick="showView('food')">
+   <button class="modbtn food" onclick="showView('food',event)">
     <span class="ico"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M16.5 3v18"/><path d="M16.5 3c3 3.5 3 8 0 11"/></svg></span>
     <span><b>Питание</b><small>памятка · 4 приёма · 2650 ккал</small></span></button>
   </div>
  </div>
 </section>
 
+<!-- ========== ВЕРХНЯЯ НАВИГАЦИЯ ========== -->
 <nav class="nav" id="nav">
- <button class="home" onclick="showView('home')" title="Меню"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
- <button data-v="train" onclick="showView('train')"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg><span class="txt">Тренировки</span></button>
- <button data-v="measure" onclick="showView('measure')"><svg viewBox="0 0 24 24"><rect x="2.5" y="9" width="19" height="6.5" rx="1.2"/><path d="M7 9v3M11 9v3M15 9v3M19 9v3"/></svg><span class="txt">Замеры</span></button>
- <button data-v="food" onclick="showView('food')"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M16.5 3v18"/><path d="M16.5 3c3 3.5 3 8 0 11"/></svg><span class="txt">Питание</span></button>
+ <button class="home" onclick="showView('home',event)" title="Меню"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+ <button data-v="train" onclick="showView('train',event)"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg><span class="txt">Тренировки</span></button>
+ <button data-v="measure" onclick="showView('measure',event)"><svg viewBox="0 0 24 24"><rect x="2.5" y="9" width="19" height="6.5" rx="1.2"/><path d="M7 9v3M11 9v3M15 9v3M19 9v3"/></svg><span class="txt">Замеры</span></button>
+ <button data-v="food" onclick="showView('food',event)"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M16.5 3v18"/><path d="M16.5 3c3 3.5 3 8 0 11"/></svg><span class="txt">Питание</span></button>
 </nav>
 
+<!-- ========== МОДУЛЬ 01: ТРЕНИРОВКИ ========== -->
 <section id="view-train" class="view">
  <div class="wrap">
   <header class="pg"><div class="hud">MODULE · STRENGTH LOG</div><h1>IRON <span>LOG</span></h1></header>
@@ -54,6 +57,7 @@
    <button onclick="save()">Сохранить в журнал</button>
    <button class="ghost" onclick="clearInputs()">Сброс полей</button>
   </div>
+
   <details class="secd" id="secJ">
    <summary class="sec">Журнал <span>//</span> история</summary>
    <div class="secb">
@@ -66,6 +70,7 @@
     <div id="journal"></div>
    </div>
   </details>
+
   <details class="secd" id="secC">
    <summary class="sec">Cloud <span>//</span> github sync</summary>
    <div class="secb">
@@ -98,6 +103,7 @@
  </div>
 </section>
 
+<!-- ========== МОДУЛЬ 02: ПИТАНИЕ ========== -->
 <section id="view-food" class="view">
  <div class="wrap">
   <header class="pg"><div class="hud">MODULE · FUEL PROTOCOL</div><h1>ПЛАН <span>ПИТАНИЯ</span></h1></header>
@@ -106,6 +112,7 @@
  </div>
 </section>
 
+<!-- ========== МОДУЛЬ 03: ЗАМЕРЫ ========== -->
 <section id="view-measure" class="view">
  <svg class="body-bg" viewBox="0 0 200 400" aria-hidden="true">
   <defs><g id="half">
@@ -126,6 +133,7 @@
    <div class="mgrid" id="mform"></div>
   </div>
   <div class="actions"><button onclick="saveMeasure()">Сохранить замер</button></div>
+
   <div class="ex remind">
    <h3>Напоминание о замере</h3>
    <div class="meta" id="rem-status">не настроено</div>
@@ -134,11 +142,13 @@
     <button class="ghost" onclick="remOff()">Выключить</button>
    </div>
   </div>
+
   <h2 class="sec">История <span>//</span> динамика</h2>
   <div id="mhist"></div>
  </div>
 </section>
 
+<!-- ========== ПОПАП: настройка напоминания ========== -->
 <div class="modal" id="remModal">
  <div class="mbox">
   <div class="mtitle">Напоминание о замере</div>
@@ -158,6 +168,7 @@
  </div>
 </div>
 
+<!-- ========== ПОПАП: сработка напоминания ========== -->
 <div class="modal" id="remAlert">
  <div class="mbox">
   <div class="mtitle red">Пора сделать замер!</div>
@@ -171,6 +182,7 @@
 
 <div id="toast"></div>
 
+<!-- порядок важен: данные → разделы → ядро -->
 <script defer src="data.js"></script>
 <script defer src="train.js"></script>
 <script defer src="measure.js"></script>
