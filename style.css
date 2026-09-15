@@ -224,5 +224,5 @@ background:linear-gradient(180deg,transparent,rgba(255,45,67,.20) 42%,rgba(255,1
 /* раскрытие БЕЗ залипающего clip-path — больше ничего не обрезается */
 .view.reveal .wrap{animation:reveal .45s cubic-bezier(.3,.9,.4,1)}
 @keyframes reveal{from{clip-path:inset(0 0 100% 0);opacity:.35}to{clip-path:inset(0 0 0 0);opacity:1}}
-.eye{transition:box-shadow .2s}
-.eye.flare{box-shadow:0 0 44px rgba(255,45,67,1),0 0 130px rgba(255,45,67,.65),inset 0 0 26px rgba(255,130,130,.95)}
+.eye-wrap.flare::before{opacity:1;transform:translate(-50%,-50%) scale(1.22);
+background:radial-gradient(circle,rgba(255,90,100,.85) 0%,rgba(255,45,67,.40) 34%,rgba(255,45,67,.16) 55%,transparent 75%)}
