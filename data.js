@@ -90,3 +90,8 @@ const FOOD=[
         x:'Умеренный всплеск инсулина после силовой «открывает» мышечные клетки для аминокислот творога. На фоне Мастерона и Метформина углевод идёт строго в гликоген мышц, а не в висцеральный жир.'},
   alt:'<b>300 г творога</b> + 250 мл ряженки + 150 г сладких ягод (вместо банана).'}
 ];
+
+/* паки контента персон */
+const PACK_DEFAULT={DAYS,METRICS,MACROS,FOOD};
+const PACKS={default:PACK_DEFAULT};
+function applyPack(pk){if(!pk)return;DAYS=pk.DAYS;METRICS=pk.METRICS;MACROS=pk.MACROS;FOOD=pk.FOOD;}
