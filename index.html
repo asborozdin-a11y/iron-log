@@ -79,6 +79,7 @@ padding:11px 18px;cursor:pointer;color:#93a1aa;background:linear-gradient(180deg
 .ex.ss{border-left:4px solid var(--red)}
 .ex.cardio{border-left:4px solid var(--cyan)}
 .ex.cloud{border-left:4px solid var(--green)}
+.ex.remind{border-left:4px solid var(--cyan)}
 .ex h3{font-size:17.5px;font-weight:700;line-height:1.25}
 .ex .meta{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--mut);margin-top:4px;letter-spacing:.05em}
 .ex .meta b{color:var(--amber)}
@@ -88,13 +89,13 @@ padding:11px 18px;cursor:pointer;color:#93a1aa;background:linear-gradient(180deg
 .sets{margin-top:10px;display:flex;flex-direction:column;gap:6px}
 .srow{display:grid;grid-template-columns:76px 1fr 1fr;gap:8px;align-items:center}
 .srow.one{grid-template-columns:76px 1fr}
-.srow .lab{font-family:'JetBrains Mono',monospace;font-size:12px;color:#7d8b95;letter-spacing:.08em;line-height:1.2}
+.srow .lab{font-family:'JetBrains Mono',monospace;font-size:12px;color:#7d8b95;letter-spacing:.08em;line-height:1.25}
+.srow .lab b{color:#b7c1c9;font-weight:700}
 .srow input,.mcell input{width:100%;background:#0b0f12;border:1px solid #2b353e;border-radius:7px;color:var(--txt);
 font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;padding:10px;outline:none;text-align:center}
 .srow input:focus,.mcell input:focus{border-color:var(--red);box-shadow:0 0 10px rgba(255,45,67,.35)}
 .srow input::placeholder,.mcell input::placeholder{color:rgba(255,180,0,.42);font-weight:700;opacity:1}
-.srow input[type=password]{text-align:left;font-size:13px}
-.srow input[type=text]{text-align:left;font-size:13px}
+.srow input[type=password],.srow input[type=text]{text-align:left;font-size:13px}
 input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .ckrow{display:flex;align-items:center;gap:10px;margin-top:10px;cursor:pointer;user-select:none}
@@ -104,6 +105,17 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .actions button{font-family:'Orbitron',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
 padding:14px 24px;cursor:pointer;border-radius:9px;color:#fff;border:1px solid var(--red);background:linear-gradient(180deg,#a3000f,#480009);box-shadow:0 0 22px rgba(255,45,67,.35)}
 .actions button.ghost{background:linear-gradient(180deg,#22272b,#12161a);border-color:#363d43;color:#93a1aa;box-shadow:none}
+
+/* сворачиваемые секции */
+.secd{margin:24px 0 0}
+.secd summary.sec{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;
+font-family:'Orbitron',sans-serif;font-size:16px;letter-spacing:.18em;text-transform:uppercase;color:#f2f6f8;
+border-bottom:1px solid var(--line);padding-bottom:8px;user-select:none}
+.secd summary.sec::-webkit-details-marker{display:none}
+.secd summary.sec::after{content:'▸';color:var(--red);font-size:15px;transition:.2s;margin-left:10px}
+.secd[open] summary.sec::after{content:'▾'}
+.secd summary.sec span{color:var(--red)}
+.secd .secb{padding-top:14px}
 .help{margin:4px auto 0;max-width:640px;font-size:13.5px;color:var(--mut)}
 .help summary{cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
 color:#93a1aa;padding:9px;border:1px dashed #2b353e;border-radius:8px;text-align:center;list-style:none}
@@ -123,6 +135,25 @@ h2.sec span{color:var(--red)}
 .ses li .n{color:#c3cdd4}
 .ses li .w{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--amber);white-space:nowrap}
 .empty{text-align:center;color:#5d686f;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;padding:20px 0;text-transform:uppercase}
+
+/* модалки / попапы */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:120;padding:16px}
+.modal.on{display:flex}
+.mbox{width:100%;max-width:370px;background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--red);
+border-radius:14px;padding:18px;box-shadow:0 0 40px rgba(255,45,67,.35);animation:pop .3s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:translateY(46px) scale(.9);opacity:0}to{transform:none;opacity:1}}
+.mtitle{font-family:'Orbitron',sans-serif;font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:#f2f6f8}
+.mtitle.red{color:var(--red);text-shadow:0 0 14px rgba(255,45,67,.5)}
+.mtext{margin-top:8px;font-size:14.5px;line-height:1.5;color:var(--mut)}
+.mrow{margin-top:12px}
+.mrow label{display:block;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;margin-bottom:4px}
+.mrow input,.mrow select{width:100%;background:#0b0f12;border:1px solid #2b353e;border-radius:7px;color:var(--txt);
+font-family:'JetBrains Mono',monospace;font-size:14px;padding:10px;outline:none;color-scheme:dark}
+.mrow input:focus,.mrow select:focus{border-color:var(--cyan);box-shadow:0 0 10px rgba(90,209,255,.3)}
+.mact{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.mact button{font-family:'Orbitron',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
+padding:11px 18px;cursor:pointer;border-radius:8px;color:#fff;border:1px solid var(--red);background:linear-gradient(180deg,#a3000f,#480009)}
+.mact button.ghost{background:linear-gradient(180deg,#22272b,#12161a);border-color:#363d43;color:#93a1aa}
 
 .fmacros{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
 .fm{background:var(--card2);border:1px solid #1e262d;border-radius:8px;padding:10px 4px;text-align:center;position:relative;overflow:hidden}
@@ -180,9 +211,9 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
  <div class="wrap">
   <div class="eye"></div>
   <div class="h-title">IRON <span>WORLD</span></div>
-  <div class="h-sub">Cyberdyne Training OS · v3.0</div>
+  <div class="h-sub">Cyberdyne Training OS · v3.2</div>
   <div class="h-status" id="hstatus"></div>
-  <div class="h-select">▸ Select module </div>
+  <div class="h-select">▸ Select module ◂</div>
   <div class="mods">
    <button class="modbtn" onclick="showView('train')">
     <span class="ico"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg></span>
@@ -206,7 +237,7 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
 
 <section id="view-train" class="view">
  <div class="wrap">
-  <header class="pg"><div class="hud">MODULE 01 · STRENGTH LOG</div><h1>IRON <span>LOG</span></h1></header>
+  <header class="pg"><div class="hud">MODULE · STRENGTH LOG</div><h1>IRON <span>LOG</span></h1></header>
   <div class="tabs" id="tabs"></div>
   <div class="dayhead" id="dayhead"></div>
   <div id="workout"></div>
@@ -214,46 +245,55 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
    <button onclick="save()">Сохранить в журнал</button>
    <button class="ghost" onclick="clearInputs()">Сброс полей</button>
   </div>
-  <h2 class="sec">Журнал <span>//</span> история</h2>
-  <div class="actions" style="margin:0 0 10px">
-   <button class="ghost" onclick="exportJ()">Экспорт JSON</button>
-   <button class="ghost" onclick="fileIn.click()">Импорт JSON</button>
-   <button class="ghost" onclick="clearJ()">Очистить</button>
-   <input type="file" id="fileIn" accept=".json,application/json" hidden>
-  </div>
-  <div id="journal"></div>
 
-  <h2 class="sec">Cloud <span>//</span> github sync</h2>
-  <div class="ex cloud">
-   <h3>Авто-синхронизация таблиц</h3>
-   <div class="meta">настроил один раз — после каждого сохранения таблицы на GitHub обновляются сами</div>
-   <div class="sets" style="margin-top:10px">
-    <div class="srow one"><span class="lab">ТОКЕН</span><input type="password" id="gh-token" placeholder="github_pat_…" autocomplete="off"></div>
-    <div class="srow"><span class="lab">РЕПО</span><input type="text" id="gh-owner" value="asborozdin-a11y"><input type="text" id="gh-repo" value="iron-log"></div>
+  <details class="secd" id="secJ">
+   <summary class="sec">Журнал <span>//</span> история</summary>
+   <div class="secb">
+    <div class="actions" style="margin:0 0 10px">
+     <button class="ghost" onclick="exportJ()">Экспорт JSON</button>
+     <button class="ghost" onclick="fileIn.click()">Импорт JSON</button>
+     <button class="ghost" onclick="clearJ()">Очистить</button>
+     <input type="file" id="fileIn" accept=".json,application/json" hidden>
+    </div>
+    <div id="journal"></div>
    </div>
-   <div class="actions" style="margin:12px 0 0">
-    <button class="ghost" onclick="ghSave()">Сохранить и подключить</button>
-    <button class="ghost" onclick="doSync(true)">Синхронизировать сейчас</button>
+  </details>
+
+  <details class="secd" id="secC">
+   <summary class="sec">Cloud <span>//</span> github sync</summary>
+   <div class="secb">
+    <div class="ex cloud">
+     <h3>Авто-синхронизация таблиц</h3>
+     <div class="meta">настроил один раз — после каждого сохранения таблицы на GitHub обновляются сами</div>
+     <div class="sets" style="margin-top:10px">
+      <div class="srow one"><span class="lab">ТОКЕН</span><input type="password" id="gh-token" placeholder="github_pat_…" autocomplete="off"></div>
+      <div class="srow"><span class="lab">РЕПО</span><input type="text" id="gh-owner" value="asborozdin-a11y"><input type="text" id="gh-repo" value="iron-log"></div>
+     </div>
+     <div class="actions" style="margin:12px 0 0">
+      <button class="ghost" onclick="ghSave()">Сохранить и подключить</button>
+      <button class="ghost" onclick="doSync(true)">Синхронизировать сейчас</button>
+     </div>
+     <details class="help">
+      <summary>Как получить токен (одноразово, 2 минуты)</summary>
+      <ol>
+       <li>GitHub → аватарка → <code>Settings</code> → внизу слева <code>Developer settings</code>.</li>
+       <li><code>Fine-grained personal access tokens</code> → <code>Generate new token</code>.</li>
+       <li>Repository access: <code>Only select repositories</code> → выбери <code>iron-log</code>.</li>
+       <li>Permissions → Repository permissions → <code>Contents</code>: <code>Read and write</code>.</li>
+       <li><code>Generate token</code> → скопируй и вставь в поле «ТОКЕН» выше.</li>
+      </ol>
+      <p style="margin-top:8px">Токен хранится только на этом устройстве и уходит только на api.github.com.</p>
+     </details>
+     <div class="meta" id="gh-status" style="margin-top:10px"></div>
+    </div>
    </div>
-   <details class="help">
-    <summary>Как получить токен (одноразово, 2 минуты)</summary>
-    <ol>
-     <li>GitHub → аватарка → <code>Settings</code> → внизу слева <code>Developer settings</code>.</li>
-     <li><code>Fine-grained personal access tokens</code> → <code>Generate new token</code>.</li>
-     <li>Repository access: <code>Only select repositories</code> → выбери <code>iron-log</code>.</li>
-     <li>Permissions → Repository permissions → <code>Contents</code>: <code>Read and write</code>.</li>
-     <li><code>Generate token</code> → скопируй и вставь в поле «ТОКЕН» выше.</li>
-    </ol>
-    <p style="margin-top:8px">Токен хранится только на этом устройстве и уходит только на api.github.com. Больше ничего настраивать не нужно.</p>
-   </details>
-   <div class="meta" id="gh-status" style="margin-top:10px"></div>
-  </div>
+  </details>
  </div>
 </section>
 
 <section id="view-food" class="view">
  <div class="wrap">
-  <header class="pg"><div class="hud">MODULE 02 · FUEL PROTOCOL</div><h1>ПЛАН <span>ПИТАНИЯ</span></h1></header>
+  <header class="pg"><div class="hud">MODULE · FUEL PROTOCOL</div><h1>ПЛАН <span>ПИТАНИЯ</span></h1></header>
   <div class="fmacros">
    <div class="fm p"><b>238</b><span>Белки, г</span><i></i></div>
    <div class="fm f"><b>85</b><span>Жиры, г</span><i></i></div>
@@ -310,7 +350,7 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
   <path class="detail" d="M100,104 L100,186"/>
  </svg>
  <div class="wrap mz">
-  <header class="pg"><div class="hud">MODULE 03 · BODY METRICS</div><h1>ЗАМЕРЫ <span>ТЕЛА</span></h1></header>
+  <header class="pg"><div class="hud">MODULE · BODY METRICS</div><h1>ЗАМЕРЫ <span>ТЕЛА</span></h1></header>
   <div class="ex">
    <h3>Новый замер</h3>
    <div class="meta">порядок: сверху вниз · сантиметры мягкой лентой, утром натощак</div>
@@ -318,10 +358,52 @@ background:linear-gradient(180deg,#a3000f,#480009);border:1px solid var(--red);c
    <div class="mgrid" id="mform"></div>
   </div>
   <div class="actions"><button onclick="saveMeasure()">Сохранить замер</button></div>
+
+  <div class="ex remind">
+   <h3>Напоминание о замере</h3>
+   <div class="meta" id="rem-status">не настроено</div>
+   <div class="actions" style="margin:10px 0 0">
+    <button class="ghost" onclick="openRem()">Настроить</button>
+    <button class="ghost" onclick="remOff()">Выключить</button>
+   </div>
+  </div>
+
   <h2 class="sec">История <span>//</span> динамика</h2>
   <div id="mhist"></div>
  </div>
 </section>
+
+<!-- попап настройки напоминания -->
+<div class="modal" id="remModal">
+ <div class="mbox">
+  <div class="mtitle">Напоминание о замере</div>
+  <div class="mrow"><label>Дата начала</label><input type="date" id="rem-date"></div>
+  <div class="mrow"><label>Время</label><input type="time" id="rem-time"></div>
+  <div class="mrow"><label>Цикличность</label>
+   <select id="rem-repeat">
+    <option value="none">разово</option>
+    <option value="daily">ежедневно</option>
+    <option value="weekly">еженедельно</option>
+    <option value="monthly">ежемесячно</option>
+   </select></div>
+  <div class="mact">
+   <button class="ghost" onclick="closeRem()">Отмена</button>
+   <button onclick="saveRem()">Сохранить</button>
+  </div>
+ </div>
+</div>
+
+<!-- попап-сработка напоминания -->
+<div class="modal" id="remAlert">
+ <div class="mbox">
+  <div class="mtitle red">Пора сделать замер!</div>
+  <p class="mtext">Сработало напоминание расписания. Замер утром натощак даёт самые точные цифры — лента и 60 секунд времени.</p>
+  <div class="mact">
+   <button class="ghost" onclick="snoozeRem()">Позже (1 ч)</button>
+   <button onclick="goMeasure()">Замериться</button>
+  </div>
+ </div>
+</div>
 
 <div id="toast"></div>
 
@@ -368,7 +450,7 @@ const METRICS=[
 ];
 const KEY='ironlog_v1', VKEY='ironlog_view', GHKEY='ironlog_gh', PKEY='ironlog_pending';
 let S=load(), cur=1, GH=loadGH();
-function load(){try{const o=JSON.parse(localStorage.getItem(KEY));if(o){if(!o.sessions)o.sessions=[];if(!o.measures)o.measures=[];return o}}catch(e){}return{sessions:[],measures:[]}}
+function load(){try{const o=JSON.parse(localStorage.getItem(KEY));if(o){if(!o.sessions)o.sessions=[];if(!o.measures)o.measures=[];if(!('reminder' in o))o.reminder=null;return o}}catch(e){}return{sessions:[],measures:[],reminder:null}}
 function saveS(){localStorage.setItem(KEY,JSON.stringify(S))}
 function loadGH(){try{return JSON.parse(localStorage.getItem(GHKEY))||{}}catch(e){return{}}}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
@@ -390,7 +472,7 @@ async function ghPut(path,content){
  const body={message:'sync: auto-update '+path,content:b64utf8(content)};
  if(sha)body.sha=sha;
  const r=await fetch(url,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify(body)});
- if(r.status===409){ /* файл изменился снаружи — перечитываем sha и повторяем */
+ if(r.status===409){
    const g2=await fetch(url,{headers:h}); if(!g2.ok)throw g2.status;
    body.sha=(await g2.json()).sha;
    const r2=await fetch(url,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -456,6 +538,73 @@ function ghStatus(){
   `статус: <b>подключено</b> · ${GH.owner}/${GH.repo} · ${localStorage.getItem(PKEY)?'есть несинхронизированные данные — жду сеть':'всё синхронизировано'}`;
 }
 
+/* ========== НАПОМИНАНИЯ ========== */
+const REPN={none:'разово',daily:'ежедневно',weekly:'еженедельно',monthly:'ежемесячно'};
+function remBase(){if(!S.reminder)return null;const[d]= (S.reminder.date||'').split('T');const t=S.reminder.time||'08:00';const dt=new Date(d+'T'+t);return isNaN(dt)?null:dt}
+function nextReminder(){
+ const r=S.reminder; if(!r||!r.enabled)return null;
+ let d=remBase(); if(!d)return null;
+ const now=new Date();
+ if(r.repeat==='none')return d;
+ while(d<now){
+  if(r.repeat==='daily')d.setDate(d.getDate()+1);
+  else if(r.repeat==='weekly')d.setDate(d.getDate()+7);
+  else if(r.repeat==='monthly')d.setMonth(d.getMonth()+1);
+  else break;
+ }
+ return d;
+}
+function remStatus(){
+ const el=document.getElementById('rem-status'); if(!el)return;
+ const r=S.reminder;
+ if(!r||!r.enabled){el.innerHTML='статус: <b>не настроено / выключено</b>';return}
+ const n=nextReminder();
+ el.innerHTML=`ближайшее: <b>${n?fmtDate(n.toISOString().slice(0,10))+' '+ (r.time||'08:00'): '—'}</b> · ${REPN[r.repeat]||'разово'}`;
+}
+function openRem(){
+ const r=S.reminder||{};
+ document.getElementById('rem-date').value=r.date||todayISO();
+ document.getElementById('rem-time').value=r.time||'08:00';
+ document.getElementById('rem-repeat').value=r.repeat||'weekly';
+ document.getElementById('remModal').classList.add('on');
+}
+function closeRem(){document.getElementById('remModal').classList.remove('on')}
+function saveRem(){
+ S.reminder={enabled:true,
+  date:document.getElementById('rem-date').value||todayISO(),
+  time:document.getElementById('rem-time').value||'08:00',
+  repeat:document.getElementById('rem-repeat').value,
+  lastFire:0,snooze:0};
+ saveS();closeRem();remStatus();
+ if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
+ toast('[OK] НАПОМИНАНИЕ ВКЛЮЧЕНО');
+ checkReminder();
+}
+function remOff(){if(S.reminder){S.reminder.enabled=false;saveS();remStatus();toast('НАПОМИНАНИЕ ВЫКЛЮЧЕНО')}}
+function checkReminder(){
+ const r=S.reminder; if(!r||!r.enabled)return;
+ const n=nextReminder(); if(!n)return;
+ const now=Date.now();
+ if(now>=n.getTime()&&now>=(r.snooze||0)&&(r.lastFire||0)<n.getTime()){
+   r.lastFire=n.getTime(); saveS();
+   document.getElementById('remAlert').classList.add('on');
+   if('Notification' in window&&Notification.permission==='grained'){}
+   if('Notification' in window&&Notification.permission==='granted'){try{new Notification('IRON WORLD',{body:'Пора сделать замер тела'})}catch(e){}}
+   remStatus();
+ }
+}
+function snoozeRem(){
+ document.getElementById('remAlert').classList.remove('on');
+ if(S.reminder){S.reminder.snooze=Date.now()+3600*1000;saveS()}
+ toast('[Z] ОТЛОЖЕНО НА 1 ЧАС');
+}
+function goMeasure(){
+ document.getElementById('remAlert').classList.remove('on');
+ if(S.reminder&&S.reminder.repeat==='none'){S.reminder.enabled=false;saveS();remStatus()}
+ showView('measure');
+}
+setInterval(checkReminder,30000);
+
 /* ========== НАВИГАЦИЯ ========== */
 function showView(v){
  document.body.dataset.view=v;
@@ -467,6 +616,7 @@ function showView(v){
  if(v==='measure')renderMeasure();
  if(v==='home')renderHome();
  scrollTo({top:0});
+ checkReminder();
 }
 function renderHome(){
  const last=S.sessions.length?[...S.sessions].sort((a,b)=>b.ts-a.ts)[0]:null;
@@ -502,7 +652,7 @@ function renderTrain(){
      const p=(pset&&pset[k]&&pset[k][0]!=='')?pset[k]:['',''];
      const hasP=p[0]!=='';
      return `<div class="srow">
-       <span class="lab">ПОДХОД ${k+1}</span>
+       <span class="lab"><b>${k+1}</b> ПОДХОД</span>
        <input type="number" step="0.5" min="0" inputmode="decimal" placeholder="${hasP?p[0]:'вес'}" data-e="${i}" data-s="${k}" data-f="w" value="">
        <input type="number" step="1" min="0" inputmode="numeric" placeholder="${hasP?(p[1]||'–'):'повт'}" data-e="${i}" data-s="${k}" data-f="r" value="">
      </div>`}).join('')}
@@ -597,6 +747,7 @@ function renderMeasure(){
   const pv=lastM&&lastM.v[m.k]!==''&&lastM.v[m.k]!==undefined?lastM.v[m.k]:null;
   return `<div class="mcell"><label>${m.l}, ${m.u}</label>
    <input type="number" step="0.1" min="0" inputmode="decimal" id="mz-${m.k}" placeholder="${pv!==null?pv:m.u}"></div>`}).join('');
+ remStatus();
  mhist();
 }
 function saveMeasure(){
@@ -642,6 +793,7 @@ window.addEventListener('online',()=>{if(GH.token&&localStorage.getItem(PKEY))do
  const r=document.getElementById('gh-repo'); if(r&&GH.repo)r.value=GH.repo;
  ghStatus();
  if(GH.token&&localStorage.getItem(PKEY))doSync(false);
+ checkReminder();
 })();
 showView(localStorage.getItem(VKEY)||'home');
 </script>
