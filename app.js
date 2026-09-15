@@ -1,4 +1,4 @@
-/* IRON WORLD · ЯДРО: хранилище, навигация, boot, FX-движок v3, GitHub-синк */
+/* IRON WORLD · ЯДРО: хранилище, навигация, boot, FX-движок v2, GitHub-синк */
 
 const KEY='ironlog_v1', GHKEY='ironlog_gh', PKEY='ironlog_pending';
 let S=load(), cur=1, GH=loadGH();
@@ -14,48 +14,7 @@ function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.spl
 function todayISO(){return new Date().toISOString().slice(0,10)}
 function fxOK(){return !matchMedia('(prefers-reduced-motion: reduce)').matches}
 
-/* ==== СТИЛИ FX ВНЕДРЯЮТСЯ ИЗ КОДА (не зависят от style.css) ==== */
-function injectFXCSS(){
- if(document.getElementById('fx-css'))return;
- const st=document.createElement('style');st.id='fx-css';
- st.textContent=`
-#boot{position:fixed;inset:0;z-index:300;background:#05070a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .3s}
-#boot.off{opacity:0;pointer-events:none}
-.b-lines{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;color:#ff8a95;text-align:left;line-height:2;text-shadow:0 0 8px rgba(255,45,67,.5)}
-.b-lines div{opacity:0;animation:bline .16s both}
-@keyframes bline{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-.b-bar{width:min(240px,60vw);height:4px;background:#1a2026;border-radius:4px;overflow:hidden}
-.b-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8a0d18,#ff2d43);box-shadow:0 0 12px #ff2d43;animation:bfill .85s .12s both}
-@keyframes bfill{to{width:100%}}
-.b-skip{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.3em;color:#4d565c;text-transform:uppercase}
-body.booted .h-title{animation:rise .45s both}
-body.booted .h-status{animation:rise .5s .04s both}
-body.booted .modbtn{animation:rise .5s both}
-body.booted .modbtn:nth-child(2){animation-delay:.07s}
-body.booted .modbtn:nth-child(3){animation-delay:.14s}
-@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.reticle{position:fixed;z-index:140;width:96px;height:96px;margin:-48px 0 0 -48px;pointer-events:none}
-.reticle i{position:absolute;width:26px;height:26px;border:3px solid #ff2d43;filter:drop-shadow(0 0 8px rgba(255,45,67,.9));transition:transform .2s cubic-bezier(.2,1.2,.4,1)}
-.reticle i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0;transform:translate(-34px,-34px)}
-.reticle i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0;transform:translate(34px,-34px)}
-.reticle i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0;transform:translate(-34px,34px)}
-.reticle i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0;transform:translate(34px,34px)}
-.reticle.go i{transform:translate(0,0)}
-.reticle b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;color:#ff2d43;text-shadow:0 0 8px rgba(255,45,67,.8);opacity:0;transition:opacity .12s .12s}
-.reticle.go b{opacity:1}
-.scanline{position:fixed;left:0;right:0;top:0;height:40vh;z-index:139;pointer-events:none;opacity:0;
-background:linear-gradient(180deg,transparent,rgba(255,45,67,.20) 42%,rgba(255,140,160,.40) 50%,rgba(255,45,67,.20) 58%,transparent)}
-.scanline.go{animation:scan .5s ease-out both}
-@keyframes scan{0%{opacity:1;transform:translateY(-45vh)}100%{opacity:0;transform:translateY(115vh)}}
-.view.reveal .wrap{animation:reveal .45s cubic-bezier(.3,.9,.4,1) both}
-@keyframes reveal{from{clip-path:inset(0 0 100% 0);opacity:.35}to{clip-path:inset(0 0 0 0);opacity:1}}
-.eye{transition:box-shadow .2s}
-.eye.flare{box-shadow:0 0 44px rgba(255,45,67,1),0 0 130px rgba(255,45,67,.65),inset 0 0 26px rgba(255,130,130,.95)}
-`;
- document.head.appendChild(st);
-}
-
-/* ==== FX-ДВИЖОК: угли, разряды-награды, вспышки ==== */
+/* ==== FX-ДВИЖОК v2: угли, разряды-награды, вспышки ==== */
 let fxCv=null,fxCtx=null,parts=[],bolts=[],flash=0,distFlash=0,loopOn=false,nextDist=0;
 function ensureCanvas(){
  if(fxCv)return;
@@ -156,12 +115,12 @@ function runBoot(done){
 function fxTarget(x,y,done){
  const r=document.createElement('div');r.className='reticle';
  r.style.left=x+'px';r.style.top=y+'px';
- r.innerHTML='<i></i><i></i><i></i><i></i><b>LOCK</b>';
+ r.innerHTML='<i></i><i></i><i></i><i></i><b></b>';
  document.body.appendChild(r);
  const sc=document.createElement('div');sc.className='scanline';document.body.appendChild(sc);
  requestAnimationFrame(()=>{r.classList.add('go');sc.classList.add('go');});
- setTimeout(done,160);
- setTimeout(()=>{r.remove();sc.remove();},800);
+ setTimeout(done,130);
+ setTimeout(()=>{r.remove();sc.remove();},650);
 }
 
 /* ---- навигация ---- */
@@ -173,6 +132,7 @@ function showView(v,ev,nofx){
   view.classList.add('on');
   void view.offsetWidth;
   view.classList.add('reveal');
+  setTimeout(()=>view.classList.remove('reveal'),600);
   document.querySelectorAll('#nav button[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   if(v==='train')renderTrain();
   if(v==='measure')renderMeasure();
@@ -182,7 +142,7 @@ function showView(v,ev,nofx){
  };
  if(nofx||!fxOK()){apply();return;}
  let x=innerWidth/2,y=innerHeight/2;
- if(ev&&ev.currentTarget){const rc=ev.currentTarget.getBoundingClientRect();x=rc.left+rc.width/2;y=rc.top+rc.height/2;}
+ if(ev&&ev.currentTarget){const r=ev.currentTarget.getBoundingClientRect();x=r.left+r.width/2;y=r.top+r.height/2;}
  fxTarget(x,y,apply);
 }
 function renderHome(){
@@ -279,7 +239,6 @@ function ghStatus(){
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 window.addEventListener('online',()=>{if(GH.token&&localStorage.getItem(PKEY))doSync(false)});
 (function init(){
- injectFXCSS();
  const t=document.getElementById('gh-token');
  if(t)t.value=GH.token||'';
  const o=document.getElementById('gh-owner'); if(o&&GH.owner)o.value=GH.owner;
