@@ -1,10 +1,24 @@
-/* IRON WORLD · РАЗДЕЛ «ПИТАНИЕ»: рендер памятки из данных FOOD */
+/* IRON WORLD · РАЗДЕЛ «ПИТАНИЕ»: рендер памятки из пакета активной персоны */
 
+function curPack(){
+ try{
+  const PK=(typeof PACKS!=='undefined')?PACKS:null;
+  if(!PK)return null;
+  return (ME&&PK[ME.pack])||PK.default||null;
+ }catch(e){return null}
+}
 function renderFood(){
- document.getElementById('fmacros').innerHTML=MACROS.map(m=>
-  `<div class="fm ${m.cls}"><b>${m.v}</b><span>${m.l}</span><i style="width:${m.w}%"></i></div>`).join('');
- document.getElementById('foodMeals').innerHTML=FOOD.map(f=>`
-  <div class="fmeal ${f.cls}">
+ const pk=curPack();
+ const MAC=(pk&&pk.MACROS)?pk.MACROS:(typeof MACROS!=='undefined'?MACROS:[]);
+ const FD=(pk&&pk.FOOD)?pk.FOOD:(typeof FOOD!=='undefined'?FOOD:[]);
+ const fm=document.getElementById('fmacros');
+ const fw=document.getElementById('foodMeals');
+ if(!fm||!fw)return;
+ fm.innerHTML=MAC.map(m=>
+  `<div class="fm ${m.cls||''}"><b>${m.v}</b><span>${m.l}</span><i style="width:${m.w||100}%"></i></div>`).join('');
+ fw.innerHTML=`<div class="empty" style="padding:4px 0 14px">ПАКЕТ: ${ME?ME.pack:'—'} · приёмов: ${FD.length}</div>`+
+  FD.map(f=>`
+  <div class="fmeal ${f.cls||''}">
    <span class="fn">${f.fn}</span>
    <p class="fgoal"><b>Цель:</b> ${f.goal}</p>
    ${f.items.map(it=>`<div class="frow"><span class="nm">${it.n}${it.h?` <u>${it.h}</u>`:''}${it.t||''}</span><span class="qt">${it.q}</span></div>`).join('')}
