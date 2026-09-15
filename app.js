@@ -139,12 +139,26 @@ function renderProfile(){
    <div class="sh"><span class="d">${esc(p.name)}</span>${p.id===ME.id?'<span class="dl up">АКТИВНЫЙ</span>':'<span class="dl eq">НЕАКТИВНЫЙ</span>'}</div>
    <ul>
     <li><span class="n">Записей в журнале</span><span class="w">${countFor(p)}</span></li>
-    <li><span class="n">Пакет программ</span><span class="w">${esc(p.pack||'default')}</span></li>
    </ul>
-   ${p.id===ME.id?`<div class="pf-themes"><span class="pf-lab">Тема:</span>${TH_LIST.map(t=>`<button class="ob-th ${ME.theme===t?'on':''}" style="background:${TH_SW[t]}" title="${t}" onclick="setTheme('${t}')"></button>`).join('')}</div>`
-    :`<div class="mact" style="justify-content:flex-start;margin-top:10px"><button class="ghost" onclick="switchPersona('${p.id}')">Открыть профиль</button></div>`}
+   ${p.id===ME.id?`
+    <div class="pf-themes"><span class="pf-lab">Пакет:</span>${Object.keys(PACKS).map(k=>`<button class="ob-pk ${ME.pack===k?'on':''}" onclick="setPack('${k}')">${esc(PACKS[k].label||k)}</button>`).join('')}</div>
+    <div class="pf-themes"><span class="pf-lab">Тема:</span>${TH_LIST.map(t=>`<button class="ob-th ${ME.theme===t?'on':''}" style="background:${TH_SW[t]}" title="${t}" onclick="setTheme('${t}')"></button>`).join('')}</div>`
+   :`<div class="mact" style="justify-content:flex-start;margin-top:10px"><button class="ghost" onclick="switchPersona('${p.id}')">Открыть профиль</button></div>`}
   </div>`).join('')+
   `<div class="actions"><button class="ghost" onclick="onboardCreate(false)">+ Добавить профиль</button></div>`;
+}
+function setPack(k){
+ if(!ME||!PACKS[k])return;
+ ME.pack=k;
+ const p=personaById(ME.id);
+ if(p){
+  p.pack=k;
+  if(k==='oksana'&&!p.stats)p.stats='FEMALE · 153 CM · 50 Y';
+  savePersonas();
+ }
+ applyPack(PACKS[k]);
+ renderProfile();
+ toast('[OK] ПАКЕТ: '+(PACKS[k].label||k).toUpperCase());
 }
 
 /* ==== FX-ДВИЖОК ==== */
