@@ -1,4 +1,4 @@
-const C='ironlog-v18';
+const C='ironlog-v19';
 const FILES=['./','./index.html','./style.css','./data.js','./app.js','./train.js','./measure.js','./food.js','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',e=>{
