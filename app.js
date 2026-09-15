@@ -13,88 +13,108 @@ function fmtDate(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('
 function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0]}`:iso}
 function todayISO(){return new Date().toISOString().slice(0,10)}
 
-/* ==== МОЛНИИ ГЛАВНОГО ЭКРАНА (Terminator FX) ==== */
-let storm=null;
-function startStorm(){
- if(storm)return;
- const host=document.getElementById('view-home');
- if(!host)return;
- if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
- let cv=document.getElementById('storm');
- if(!cv){cv=document.createElement('canvas');cv.id='storm';host.appendChild(cv);}
- const ctx=cv.getContext('2d');
- function size(){const dpr=Math.min(devicePixelRatio||1,2);cv.width=host.clientWidth*dpr;cv.height=host.clientHeight*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);}
- size();
- const onRs=()=>size();
- addEventListener('resize',onRs);
- let bolts=[],flash=0,next=performance.now()+500,raf=0,run=true;
- function bolt(x,y,angle,len,width,depth){
-  const pts=[[x,y]];let cx=x,cy=y,a=angle;
-  const steps=(8+Math.random()*10)|0;
-  for(let i=0;i<steps;i++){
-   a+=(Math.random()-.5)*1.15;
-   const s=len/steps;
-   cx+=Math.cos(a)*s;cy+=Math.sin(a)*s;
-   pts.push([cx,cy]);
-   if(depth>0&&Math.random()<.16)bolt(cx,cy,a+(Math.random()<.5?-1:1)*(.6+Math.random()*.8),len*.35,width*.5,depth-1);
-  }
-  bolts.push({pts,w:width,life:1});
- }
- function strike(){
-  const w=host.clientWidth,h=host.clientHeight;
-  bolt(w*(.12+Math.random()*.76),-12,Math.PI/2+(Math.random()-.5)*.7,h*(.45+Math.random()*.5),2.6,2);
-  if(Math.random()<.35)setTimeout(()=>{if(run)bolt(w*(.12+Math.random()*.76),-12,Math.PI/2+(Math.random()-.5)*.7,h*(.4+Math.random()*.45),2,2)},70+Math.random()*90);
-  flash=1;
-  const wrap=host.querySelector('.wrap');
-  if(wrap){wrap.style.transform=`translate(${(Math.random()-.5)*5}px,${(Math.random()-.5)*4}px)`;setTimeout(()=>{wrap.style.transform=''},100);}
- }
- function frame(t){
-  if(!run)return;
-  const w=host.clientWidth,h=host.clientHeight;
-  ctx.clearRect(0,0,w,h);
-  if(t>=next){strike();next=t+900+Math.random()*2600;}
-  if(flash>0){
-   ctx.fillStyle=`rgba(110,165,255,${(flash*0.11).toFixed(3)})`;
-   ctx.fillRect(0,0,w,h);
-   flash-=0.06;
-  }
-  bolts=bolts.filter(b=>b.life>0);
-  for(const b of bolts){
-   ctx.shadowColor='rgba(80,150,255,.95)';
-   ctx.shadowBlur=16*b.life;
-   ctx.strokeStyle=`rgba(185,220,255,${b.life.toFixed(3)})`;
-   ctx.lineWidth=b.w;
-   ctx.beginPath();
-   b.pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
-   ctx.stroke();
-   ctx.strokeStyle=`rgba(255,255,255,${(b.life*.9).toFixed(3)})`;
-   ctx.lineWidth=b.w*.4;
-   ctx.stroke();
-   b.life-=0.085;
-  }
-  ctx.shadowBlur=0;
-  raf=requestAnimationFrame(frame);
- }
- raf=requestAnimationFrame(frame);
- storm={stop(){run=false;cancelAnimationFrame(raf);removeEventListener('resize',onRs);bolts=[];flash=0;ctx.clearRect(0,0,cv.width,cv.height);}};
+/* ==== FX-ДВИЖОК: молнии из ядра (Terminator) ==== */
+let fxCv=null,fxCtx=null,bolts=[],flash=0,loopOn=false,nextAmbient=0;
+function fxOK(){return !matchMedia('(prefers-reduced-motion: reduce)').matches}
+function ensureCanvas(){
+ if(fxCv)return;
+ fxCv=document.createElement('canvas');fxCv.id='storm';
+ fxCv.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:130;mix-blend-mode:screen';
+ document.body.appendChild(fxCv);
+ fxFctx=fxCv.getContext('2d');fxCtx=fxCv.getContext('2d');
+ fxSize();
+ addEventListener('resize',fxSize);
 }
-function stopStorm(){if(storm){storm.stop();storm=null}}
-document.addEventListener('visibilitychange',()=>{
- if(document.hidden)stopStorm();
- else if(document.body.dataset.view==='home')startStorm();
-});
+function fxSize(){const dpr=Math.min(devicePixelRatio||1,2);fxCv.width=innerWidth*dpr;fxCv.height=innerHeight*dpr;fxCtx.setTransform(dpr,0,0,dpr,0,0);}
+function bolt(x,y,angle,len,width,depth){
+ const pts=[[x,y]];let cx=x,cy=y,a=angle;
+ const steps=(8+Math.random()*10)|0;
+ for(let i=0;i<steps;i++){
+  a+=(Math.random()-.5)*1.15;
+  const s=len/steps;
+  cx+=Math.cos(a)*s;cy+=Math.sin(a)*s;
+  pts.push([cx,cy]);
+  if(depth>0&&Math.random()<.16)bolt(cx,cy,a+(Math.random()<.5?-1:1)*(.6+Math.random()*.8),len*.35,width*.5,depth-1);
+ }
+ bolts.push({pts,w:width,life:1});
+}
+function shake(){
+ const w=document.querySelector('.view.on .wrap');
+ if(!w)return;
+ w.style.transform=`translate(${(Math.random()-.5)*5}px,${(Math.random()-.5)*4}px)`;
+ setTimeout(()=>{w.style.transform=''},100);
+}
+/* фоновая молния: бьёт ИЗ КРАСНОГО ШАРА вниз веером */
+function ambientStrike(){
+ const eye=document.querySelector('#view-home .eye');
+ let x=innerWidth/2,y=110;
+ if(eye){const r=eye.getBoundingClientRect();if(r.width){x=r.left+r.width/2;y=r.top+r.height/2;}}
+ const n=1+(Math.random()<.4?1:0);
+ for(let i=0;i<n;i++){
+  bolt(x,y,Math.PI/2+(Math.random()-.5)*1.9,(innerHeight-y)*(0.5+Math.random()*0.6),2.4,2);
+ }
+ flash=Math.max(flash,0.9);
+ shake();
+}
+/* взрыв-переход: веер разрядов во все стороны из точки + мощная вспышка */
+function stormBurst(x,y){
+ ensureCanvas();
+ for(let i=0;i<4;i++){
+  bolt(x,y,(Math.PI*2/4)*i+Math.random()*.9,Math.max(innerWidth,innerHeight)*(0.35+Math.random()*.4),2.6,2);
+ }
+ setTimeout(()=>{if(fxCv)bolt(x,y,Math.random()*Math.PI*2,Math.max(innerWidth,innerHeight)*.3,2,2)},60);
+ flash=1.6;
+ shake();
+ kick();
+}
+function fxLoop(t){
+ if(document.hidden){loopOn=false;fxCtx.clearRect(0,0,innerWidth,innerHeight);return;}
+ fxCtx.clearRect(0,0,innerWidth,innerHeight);
+ const homeOn=document.body.dataset.view==='home';
+ if(homeOn&&t>=nextAmbient){ambientStrike();nextAmbient=t+1000+Math.random()*2400;}
+ if(flash>0){ /* вспышка НА ВЕСЬ ЭКРАН */
+  fxCtx.fillStyle=`rgba(110,165,255,${(Math.min(flash,1.6)*0.11).toFixed(3)})`;
+  fxCtx.fillRect(0,0,innerWidth,innerHeight);
+  flash-=0.07;
+ }
+ bolts=bolts.filter(b=>b.life>0);
+ for(const b of bolts){
+  fxCtx.shadowColor='rgba(80,150,255,.95)';
+  fxCtx.shadowBlur=16*b.life;
+  fxCtx.strokeStyle=`rgba(185,220,255,${b.life.toFixed(3)})`;
+  fxCtx.lineWidth=b.w;
+  fxCtx.beginPath();
+  b.pts.forEach((p,i)=>i?fxCtx.lineTo(p[0],p[1]):fxCtx.moveTo(p[0],p[1]));
+  fxCtx.stroke();
+  fxCtx.strokeStyle=`rgba(255,255,255,${(b.life*.9).toFixed(3)})`;
+  fxCtx.lineWidth=b.w*.4;
+  fxCtx.stroke();
+  b.life-=0.085;
+ }
+ fxCtx.shadowBlur=0;
+ if(homeOn||bolts.length||flash>0){requestAnimationFrame(fxLoop);}
+ else{loopOn=false;fxCtx.clearRect(0,0,innerWidth,innerHeight);}
+}
+function kick(){if(!loopOn){loopOn=true;requestAnimationFrame(fxLoop);}}
 
-/* ---- навигация: запуск всегда с главного экрана ---- */
-function showView(v){
- document.body.dataset.view=v;
- document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
- document.getElementById('view-'+v).classList.add('on');
- document.querySelectorAll('#nav button[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
- if(v==='train')renderTrain();
- if(v==='measure')renderMeasure();
- if(v==='home'){renderHome();startStorm();}else{stopStorm();}
- scrollTo({top:0});
- checkReminder();
+/* ---- навигация: старт с главного, переход сквозь разряд ---- */
+function showView(v,ev,nofx){
+ const apply=()=>{
+  document.body.dataset.view=v;
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  document.getElementById('view-'+v).classList.add('on');
+  document.querySelectorAll('#nav button[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  if(v==='train')renderTrain();
+  if(v==='measure')renderMeasure();
+  if(v==='home'){renderHome();nextAmbient=performance.now()+450;kick();}
+  scrollTo({top:0});
+  checkReminder();
+ };
+ if(nofx||!fxOK()){apply();return;}
+ let x=innerWidth/2,y=innerHeight/2;
+ if(ev&&ev.currentTarget){const r=ev.currentTarget.getBoundingClientRect();x=r.left+r.width/2;y=r.top+r.height/2;}
+ stormBurst(x,y);
+ setTimeout(apply,90);
 }
 function renderHome(){
  const last=S.sessions.length?[...S.sessions].sort((a,b)=>b.ts-a.ts)[0]:null;
@@ -186,7 +206,7 @@ function ghStatus(){
   `статус: <b>подключено</b> · ${GH.owner}/${GH.repo} · ${localStorage.getItem(PKEY)?'есть несинхронизированные данные — жду сеть':'всё синхронизировано'}`;
 }
 
-/* ---- старт: всегда с главного экрана ---- */
+/* ---- старт ---- */
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 window.addEventListener('online',()=>{if(GH.token&&localStorage.getItem(PKEY))doSync(false)});
 (function init(){
@@ -197,5 +217,5 @@ window.addEventListener('online',()=>{if(GH.token&&localStorage.getItem(PKEY))do
  ghStatus();
  if(GH.token&&localStorage.getItem(PKEY))doSync(false);
  checkReminder();
- showView('home');
+ showView('home',null,true);
 })();
