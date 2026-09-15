@@ -1,4 +1,4 @@
-/* IRON WORLD · ЯДРО v6: персоны, темы, хранилище, навигация, boot, FX, GitHub-синк */
+/* IRON WORLD · ЯДРО v7: персоны, темы, пакеты, хранилище, навигация, boot, FX, GitHub-синк */
 
 /* ==== ПЕРСОНЫ ==== */
 const P_LIST='ironlog_personas', P_CUR='ironlog_persona', LEGACY='ironlog_v1', LEGACY_FLAG='ironlog_legacy_migrated';
@@ -24,6 +24,7 @@ const TH_SW={
  'tiffany-noir':'linear-gradient(135deg,#17c3bc 50%,#081114 50%)',
  'tiffany-audrey':'linear-gradient(135deg,#0abab5 50%,#f2f6f5 50%)',
  'rose-champagne':'linear-gradient(135deg,#ff7a9c 50%,#120d14 50%)'};
+if(typeof window.applyPack!=='function'){window.applyPack=function(){/* data.js без паков — работаем на базовом контенте */};}
 let FXC=THEMES.terminator.fx;
 function applyTheme(t){
  document.body.dataset.theme=t;
@@ -37,6 +38,7 @@ function setTheme(t){
  toast('[OK] ТЕМА: '+t.toUpperCase());
 }
 
+/* ==== ХРАНИЛИЩЕ ==== */
 function load(){try{const o=JSON.parse(localStorage.getItem(KEYC));if(o){if(!o.sessions)o.sessions=[];if(!o.measures)o.measures=[];if(!('reminder' in o))o.reminder=null;return o}}catch(e){}return{sessions:[],measures:[],reminder:null}}
 function saveS(){localStorage.setItem(KEYC,JSON.stringify(S))}
 function loadGH(){try{return JSON.parse(localStorage.getItem(GHKC))||{}}catch(e){return{}}}
@@ -56,12 +58,10 @@ function onboardShell(html){
  document.body.appendChild(b);
  return b;
 }
-function themePickerHTML(sel){
- return `<div class="ob-themes">${TH_LIST.map(t=>`<button class="ob-th ${t===sel?'on':''}" data-t="${t}" style="background:${TH_SW[t]}" title="${t}"></button>`).join('')}</div>`;
-}
 function onboardCreate(adopt){
  let chosenPack='default';
- let chosenTheme=(PACKS.default&&PACKS.default.theme)||'terminator';
+ let chosenTheme=((typeof PACKS!=='undefined'?PACKS:{})[chosenPack]||{}).theme||'terminator';
+ const PK=(typeof PACKS!=='undefined')?PACKS:{default:{label:'базовый'}};
  const b=onboardShell(`
   <div class="ob-title">IRON <span>WORLD</span></div>
   <div class="ob-sub">persona setup · создание профиля</div>
@@ -69,14 +69,14 @@ function onboardCreate(adopt){
   <label class="ob-lab">Имя оператора</label>
   <input id="ob-name" class="ob-in" maxlength="18" placeholder="ALEX / ОКСАНА / …">
   <label class="ob-lab">Пакет программ</label>
-  <div class="ob-packs">${Object.keys(PACKS).map(k=>`<button class="ob-pk ${k===chosenPack?'on':''}" data-p="${k}">${esc(PACKS[k].label||k)}</button>`).join('')}</div>
+  <div class="ob-packs">${Object.keys(PK).map(k=>`<button class="ob-pk ${k===chosenPack?'on':''}" data-p="${k}">${esc(PK[k].label||k)}</button>`).join('')}</div>
   <label class="ob-lab">Тема оформления</label>
   <div class="ob-themes">${TH_LIST.map(t=>`<button class="ob-th ${t===chosenTheme?'on':''}" data-t="${t}" style="background:${TH_SW[t]}" title="${t}"></button>`).join('')}</div>
   <div class="mact" style="justify-content:center;margin-top:16px"><button id="ob-go">Создать профиль</button></div>`);
  b.querySelectorAll('.ob-pk').forEach(pk=>pk.onclick=()=>{
   chosenPack=pk.dataset.p;
   b.querySelectorAll('.ob-pk').forEach(x=>x.classList.toggle('on',x===pk));
-  const dt=(PACKS[chosenPack]&&PACKS[chosenPack].theme)||'terminator';
+  const dt=(PK[chosenPack]&&PK[chosenPack].theme)||'terminator';
   chosenTheme=dt;
   b.querySelectorAll('.ob-th').forEach(x=>x.classList.toggle('on',x.dataset.t===dt));
  });
@@ -148,7 +148,7 @@ function renderProfile(){
   `<div class="actions"><button class="ghost" onclick="onboardCreate(false)">+ Добавить профиль</button></div>`;
 }
 function setPack(k){
- if(!ME||!PACKS[k])return;
+ if(!ME||typeof PACKS==='undefined'||!PACKS[k])return;
  ME.pack=k;
  const p=personaById(ME.id);
  if(p){
@@ -287,6 +287,7 @@ function showView(v,ev,nofx){
   if(v==='measure')renderMeasure();
   if(v==='home')renderHome();
   if(v==='profile')renderProfile();
+  if(v==='food')renderFood();
   scrollTo({top:0});
   checkReminder();
  };
@@ -341,14 +342,14 @@ function buildTrainCSV(){
  });
  return rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');
 }
+function METRICS_HEADER(){return ['Дата',...METRICS.map(mt=>mt.l+'_'+mt.u)]}
 function buildMeasCSV(){
- const rows=METRICS_HEADER();
+ const rows=[METRICS_HEADER()];
  [...S.measures].sort((a,b)=>a.ts-b.ts).forEach(m=>{
   rows.push([fmtDateFull(m.date),...METRICS.map(mt=>m.v[mt.k])]);
  });
  return rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');
 }
-function METRICS_HEADER(){return ['Дата',...METRICS.map(mt=>mt.l+'_'+mt.u)]}
 let syncT=null;
 function scheduleSync(){
  if(!GH.token)return;
