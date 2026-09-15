@@ -101,7 +101,10 @@ function startApp(pid){
  localStorage.setItem(P_CUR,pid);
  KEYC='ironlog_d_'+pid; GHKC='ironlog_gh_'+pid; VKEYC='ironlog_v_'+pid; PKEYC='ironlog_p_'+pid;
  S=load(); GH=loadGH(); cur=1;
- applyPack(PACKS[ME.pack]||PACKS.default);
+ try{
+  const PK=(typeof PACKS!=='undefined')?PACKS:null;
+  if(PK&&typeof applyPack==='function')applyPack(PK[ME.pack]||PK.default);
+ }catch(e){}
  applyTheme(ME.theme||'terminator');
  const t=document.getElementById('gh-token');
  if(t)t.value=GH.token||'';
