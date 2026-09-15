@@ -40,7 +40,7 @@ function bolt(x,y,angle,len,width,depth){
  }
  bolts.push({pts,w:width,life:1});
 }
-function eyeFlare(){const e=document.querySelector('.eye');if(e){e.classList.add('flare');setTimeout(()=>e.classList.remove('flare'),450);}}
+function eyeFlare(){const w=document.querySelector('.eye-wrap');if(w){w.classList.add('flare');setTimeout(()=>w.classList.remove('flare'),450);}}
 function fireReward(x,y,pr){
  if(!fxOK())return;
  ensureCanvas();
