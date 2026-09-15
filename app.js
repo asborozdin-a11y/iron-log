@@ -1,6 +1,6 @@
 /* IRON WORLD · ЯДРО: хранилище, навигация, главный экран, GitHub-синк */
 
-const KEY='ironlog_v1', VKEY='ironlog_view', GHKEY='ironlog_gh', PKEY='ironlog_pending';
+const KEY='ironlog_v1', GHKEY='ironlog_gh', PKEY='ironlog_pending';
 let S=load(), cur=1, GH=loadGH();
 
 function load(){try{const o=JSON.parse(localStorage.getItem(KEY));if(o){if(!o.sessions)o.sessions=[];if(!o.measures)o.measures=[];if(!('reminder' in o))o.reminder=null;return o}}catch(e){}return{sessions:[],measures:[],reminder:null}}
@@ -13,13 +13,12 @@ function fmtDate(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('
 function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0]}`:iso}
 function todayISO(){return new Date().toISOString().slice(0,10)}
 
-/* ---- навигация ---- */
+/* ---- навигация: запуск всегда с главного экрана ---- */
 function showView(v){
  document.body.dataset.view=v;
  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
  document.getElementById('view-'+v).classList.add('on');
  document.querySelectorAll('#nav button[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
- localStorage.setItem(VKEY,v);
  if(v==='train')renderTrain();
  if(v==='measure')renderMeasure();
  if(v==='home')renderHome();
@@ -116,7 +115,7 @@ function ghStatus(){
   `статус: <b>подключено</b> · ${GH.owner}/${GH.repo} · ${localStorage.getItem(PKEY)?'есть несинхронизированные данные — жду сеть':'всё синхронизировано'}`;
 }
 
-/* ---- старт ---- */
+/* ---- старт: всегда с главного экрана ---- */
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 window.addEventListener('online',()=>{if(GH.token&&localStorage.getItem(PKEY))doSync(false)});
 (function init(){
@@ -127,5 +126,5 @@ window.addEventListener('online',()=>{if(GH.token&&localStorage.getItem(PKEY))do
  ghStatus();
  if(GH.token&&localStorage.getItem(PKEY))doSync(false);
  checkReminder();
- showView(localStorage.getItem(VKEY)||'home');
+ showView('home');
 })();
