@@ -305,3 +305,8 @@ background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var
 .ob-pk{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
 padding:9px 13px;border-radius:8px;cursor:pointer;background:var(--ghost-1);border:1px solid var(--line-2);color:var(--mut)}
 .ob-pk.on{color:#fff;border-color:var(--red);background:linear-gradient(180deg,var(--btn-1),var(--btn-2));box-shadow:0 0 12px var(--red-glow-soft)}
+
+/* ==== кнопка профилей на главном экране ==== */
+.home-chip{position:fixed;top:10px;right:12px;z-index:45;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;
+padding:8px 12px;border-radius:8px;cursor:pointer;color:var(--mut);background:var(--ghost-1);border:1px solid var(--line-2);text-transform:uppercase}
+.home-chip:hover{color:var(--txt);border-color:var(--red);box-shadow:0 0 12px var(--red-glow-soft)}
