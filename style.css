@@ -29,11 +29,15 @@ filter:drop-shadow(0 0 5px rgba(255,45,67,.55))}
 .modbtn.food .ico svg{stroke:var(--amber);filter:drop-shadow(0 0 5px rgba(255,180,0,.55))}
 .modbtn.meas .ico svg{stroke:var(--cyan);filter:drop-shadow(0 0 5px rgba(90,209,255,.55))}
 
-#view-home{padding-top:6vh;text-align:center}
-.eye{width:74px;height:74px;margin:0 auto 14px;border-radius:50%;
+#view-home{padding-top:max(96px,10vh);text-align:center}
+.eye-wrap{position:relative;width:74px;height:74px;margin:0 auto 14px}
+.eye-wrap::before{content:'';position:absolute;left:50%;top:50%;width:230px;height:230px;transform:translate(-50%,-50%);
+background:radial-gradient(circle,rgba(255,45,67,.50) 0%,rgba(255,45,67,.26) 32%,rgba(255,45,67,.10) 52%,transparent 72%);
+pointer-events:none;opacity:.85;transition:opacity .2s,transform .2s}
+.eye{position:relative;width:74px;height:74px;border-radius:50%;
 background:radial-gradient(circle at 37% 34%,#fff 0%,#ff5566 17%,#d1001a 44%,#4a0009 78%,#150003 100%);
-box-shadow:0 0 26px rgba(255,45,67,.85),0 0 70px rgba(255,45,67,.35),inset 0 0 18px rgba(0,0,0,.8);animation:eye 3s ease-in-out infinite}
-@keyframes eye{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.04);filter:brightness(1.15)}}
+box-shadow:inset 0 0 18px rgba(0,0,0,.8);animation:eye 3s ease-in-out infinite}
+@keyframes eye{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 .h-title{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(30px,8vw,52px);letter-spacing:.1em;text-transform:uppercase}
 .h-title span{color:var(--red);text-shadow:0 0 22px rgba(255,45,67,.6)}
 .h-sub{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.3em;color:var(--mut2);text-transform:uppercase;margin-top:8px}
