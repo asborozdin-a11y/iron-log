@@ -1,7 +1,8 @@
-/* IRON WORLD · ЯДРО v8: персоны, пресеты, PIN, темы, пакеты, boot, FX, GitHub-синк */
+/* IRON WORLD · ЯДРО v9: персоны, PIN, темы, пакеты, boot, FX, приватный синк */
 
 /* ==== ПЕРСОНЫ ==== */
 const P_LIST='ironlog_personas', P_CUR='ironlog_persona', LEGACY='ironlog_v1', LEGACY_FLAG='ironlog_legacy_migrated';
+const OLD_REPO='iron-log';
 let PERSONAS=loadPersonas(), ME=null;
 let KEYC=LEGACY, GHKC='ironlog_gh', VKEYC='ironlog_view', PKEYC='ironlog_pending';
 let S={sessions:[],measures:[],reminder:null}, cur=1, GH={};
@@ -10,8 +11,12 @@ function loadPersonas(){try{return JSON.parse(localStorage.getItem(P_LIST))||[]}
 function savePersonas(){localStorage.setItem(P_LIST,JSON.stringify(PERSONAS))}
 function personaById(id){return PERSONAS.find(p=>p.id===id)}
 function esc(s){return String(s===undefined||s===null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function slugName(s){
+ const map={'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'c','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'};
+ return String(s||'').toLowerCase().split('').map(ch=>map[ch]!==undefined?map[ch]:ch).join('').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'persona';
+}
 
-/* ==== ПРЕСЕТЫ ПРОФИЛЕЙ ==== */
+/* ==== ПРЕСЕТЫ ==== */
 const PRESETS=[
  {key:'alex',name:'ALEX',desc:'мужской пакет · terminator',pack:'default',theme:'terminator',stats:'MALE · 186 CM · 40 Y'},
  {key:'ksy', name:'KSY', desc:'женский пакет · tiffany noir',pack:'oksana',theme:'tiffany-noir',stats:'FEMALE · 153 CM · 50 Y'}
@@ -41,7 +46,7 @@ function setTheme(t){
  toast('[OK] ТЕМА: '+t.toUpperCase());
 }
 
-/* ==== PIN (уровень 1: хэш SHA-256 с солью) ==== */
+/* ==== PIN ==== */
 function randSalt(){const a=new Uint8Array(8);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,'0')).join('')}
 async function pinHashFn(pin,salt){
  try{const d=new TextEncoder().encode(salt+':'+pin);const h=await crypto.subtle.digest('SHA-256',d);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
@@ -112,7 +117,7 @@ function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.spl
 function todayISO(){return new Date().toISOString().slice(0,10)}
 function fxOK(){return !matchMedia('(prefers-reduced-motion: reduce)').matches}
 
-/* ==== ОНБОРДИНГ: пресеты + новый профиль + PIN ==== */
+/* ==== ОНБОРДИНГ ==== */
 function onboardShell(html){
  const old=document.getElementById('onboard'); if(old)old.remove();
  const b=document.createElement('div');b.id='onboard';
@@ -236,7 +241,7 @@ function startApp(pid){
  const t=document.getElementById('gh-token');
  if(t)t.value=GH.token||'';
  const o=document.getElementById('gh-owner'); if(o)o.value=GH.owner||'asborozdin-a11y';
- const r=document.getElementById('gh-repo'); if(r)r.value=GH.repo||'iron-log';
+ const r=document.getElementById('gh-repo'); if(r)r.value=GH.repo||'iron-data';
  ghStatus();
  if(GH.token&&localStorage.getItem(PKEYC))doSync(false);
  checkReminder();
@@ -425,7 +430,7 @@ function renderHome(){
  document.getElementById('ms-meas').textContent=lm&&lm.v.w?`последний: ${fmtDate(lm.date)} · ${lm.v.w} кг`:'история пропорций';
 }
 
-/* ==== GitHub sync ==== */
+/* ==== GitHub sync: приватное хранилище, файлы по именам персон ==== */
 function b64utf8(s){const b=new TextEncoder().encode(s);let bin='';for(let i=0;i<b.length;i++)bin+=String.fromCharCode(b[i]);return btoa(bin)}
 async function ghPut(path,content){
  const url=`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`;
@@ -443,6 +448,15 @@ async function ghPut(path,content){
    const r2=await fetch(url,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify(body)});
    if(!r2.ok)throw r2.status;
  } else if(!r.ok)throw r.status;
+}
+async function ghDelete(owner,repo,path){
+ const h={'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github+json'};
+ const g=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{headers:h});
+ if(g.status===404)return true;
+ if(!g.ok)return false;
+ const j=await g.json();
+ const d=await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`,{method:'DELETE',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify({message:'purge: moved to private storage',sha:j.sha})});
+ return d.ok;
 }
 function csvEsc(v){v=(v===undefined||v===null)?'':String(v);return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 function buildTrainCSV(){
@@ -478,9 +492,10 @@ function scheduleSync(){
 async function doSync(manual){
  if(!GH.token){if(manual)toast('[!] СНАЧАЛА ПОДКЛЮЧИ ТОКЕН');return;}
  if(!navigator.onLine){if(manual)toast('[!] НЕТ СЕТИ — СИНК ПОЗЖЕ');return;}
+ const sl=slugName(ME?ME.name:'persona');
  try{
-  await ghPut('trainings.csv',buildTrainCSV());
-  await ghPut('measures.csv',buildMeasCSV());
+  await ghPut(`trainings-${sl}.csv`,buildTrainCSV());
+  await ghPut(`measures-${sl}.csv`,buildMeasCSV());
   localStorage.removeItem(PKEYC);
   toast('[CLOUD] GITHUB: ТАБЛИЦЫ ОБНОВЛЕНЫ');
  }catch(e){
@@ -489,10 +504,19 @@ async function doSync(manual){
  }
  ghStatus();
 }
+async function purgePublic(){
+ if(!GH.token){toast('[!] СНАЧАЛА ПОДКЛЮЧИ ТОКЕН');return;}
+ if(!confirm('Удалить trainings.csv и measures.csv из публичного репозитория '+OLD_REPO+'? Данные уже в приватном хранилище и локально.'))return;
+ let ok=0,fail=0;
+ for(const path of ['trainings.csv','measures.csv']){
+  try{ if(await ghDelete(GH.owner||'asborozdin-a11y',OLD_REPO,path)) ok++; else fail++; }catch(e){fail++;}
+ }
+ toast(fail?`[CLOUD] УДАЛЕНО ${ok}, ОШИБОК ${fail} (удали вручную на GitHub)`:'[CLOUD] ПУБЛИЧНЫЕ ТАБЛИЦЫ УДАЛЕНЫ');
+}
 function ghSave(){
  GH={token:document.getElementById('gh-token').value.trim(),
      owner:document.getElementById('gh-owner').value.trim()||'asborozdin-a11y',
-     repo:document.getElementById('gh-repo').value.trim()||'iron-log'};
+     repo:document.getElementById('gh-repo').value.trim()||'iron-data'};
  localStorage.setItem(GHKC,JSON.stringify(GH));
  toast('[OK] НАСТРОЙКИ СОХРАНЕНЫ');
  ghStatus();
@@ -500,8 +524,9 @@ function ghSave(){
 }
 function ghStatus(){
  const el=document.getElementById('gh-status'); if(!el)return;
+ const sl=slugName(ME?ME.name:'persona');
  el.innerHTML=!GH.token?'статус: <b>не подключено</b> — вставь токен один раз':
-  `статус: <b>подключено</b> · ${GH.owner}/${GH.repo} · ${localStorage.getItem(PKEYC)?'есть несинхронизированные данные — жду сеть':'всё синхронизировано'}`;
+  `статус: <b>подключено</b> · ${GH.owner}/${GH.repo}<br>файлы: trainings-${sl}.csv · measures-${sl}.csv<br>${localStorage.getItem(PKEYC)?'есть несинхронизированные данные — жду сеть':'всё синхронизировано'}`;
 }
 
 /* ==== СТАРТ ==== */
