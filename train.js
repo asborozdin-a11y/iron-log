@@ -544,8 +544,8 @@ function ghRestore(){
  var sl=slugName(ME?ME.name:'persona');
  ghGet('trainings-'+sl+'.csv').then(function(tTxt){
   return ghGet('measures-'+sl+'.csv').then(function(mTxt){
-   var ses=tTxt?parseTrainCSV(tTxt):[];
-   var mes=mTxt?parseMeasCSV(mTxt):[];
+      var ses=(tTxt?parseTrainCSV(tTxt):[]).map(sanitizeSession).filter(function(x){return x;});
+   var mes=(mTxt?parseMeasCSV(mTxt):[]).map(sanitizeMeasure).filter(function(x){return x;});
    if(!ses.length&&!mes.length){toast('[!] В ОБЛАКЕ ПУСТО');return;}
    if(!confirm('Восстановить из облака: тренировок '+ses.length+', замеров '+mes.length+'. Локальные записи не удаляются — будет слияние.'))return;
    
