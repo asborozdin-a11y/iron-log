@@ -222,8 +222,8 @@ function sanitizeSession(s){
    if(!e || typeof e!=='object') return null;
    return {
     key: String(e.key||'').slice(0,80),
-    name: esc(String(e.name||'Упражнение').slice(0,120)),
-    note: esc(String(e.note||'').slice(0,200)),
+    name: String(e.name||'Упражнение').slice(0,120),
+    note: String(e.note||'').slice(0,200),
     sets: Array.isArray(e.sets)?e.sets.slice(0,12).map(p=>[num(p&&p[0]),num(p&&p[1])]):[]
    };
   }).filter(Boolean);
@@ -234,8 +234,8 @@ function sanitizeSession(s){
    const exDef = d && d.ex && d.ex[i] ? d.ex[i] : null;
    return {
     key: exKey(exDef?exDef.n:'ex-'+i),
-    name: esc(exDef?exDef.n:'Упражнение '+(i+1)),
-    note: esc(exDef?(exDef.note||''):''),
+    name: String(exDef?exDef.n:'Упражнение '+(i+1)).slice(0,120),
+    note: String(exDef?(exDef.note||''):'').slice(0,200),
     sets: Array.isArray(sets)?sets.slice(0,12).map(p=>[num(p&&p[0]),num(p&&p[1])]):[]
    };
   });
@@ -243,7 +243,7 @@ function sanitizeSession(s){
  const cardio = s.cardio && typeof s.cardio==='object' ? {done:!!s.cardio.done, min:num(s.cardio.min)} : null;
  return {
   ts:s.ts, v:2, packId, dayId,
-  dayTitle: esc(String(s.dayTitle||'День '+dayId).slice(0,60)),
+  dayTitle: String(s.dayTitle||'День '+dayId).slice(0,60),
   ex, cardio
  };
 }
