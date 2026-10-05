@@ -482,11 +482,27 @@ function parseMeasCSV(text){
 }
 function ghGet(path){
  return fetch('https://api.github.com/repos/'+GH.owner+'/'+GH.repo+'/contents/'+path,{
-  headers:{'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github.raw+json'}
+  headers:{'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github+json'}
  }).then(function(r){
   if(r.status===404)return null;
   if(!r.ok)throw r.status;
   return r.text();
+ }).then(function(txt){
+  if(txt===null)return null;
+  var t=String(txt).trim();
+  if(t.charAt(0)==='{'){
+   try{
+    var j=JSON.parse(t);
+    if(j&&j.content){
+     var bin=atob(j.content.replace(/\s/g,''));
+     var bytes=new Uint8Array(bin.length);
+     for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+     return new TextDecoder('utf-8').decode(bytes);
+    }
+    return null;
+   }catch(e){return txt;}
+  }
+  return txt;
  });
 }
 function ghRestore(){
