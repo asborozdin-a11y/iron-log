@@ -533,18 +533,34 @@ function renderHome(){
 
 /* ==== GitHub ==== */
 function b64utf8(s){const b=new TextEncoder().encode(s);let bin='';for(let i=0;i<b.length;i++)bin+=String.fromCharCode(b[i]);return btoa(bin)}
+async function ghSha(path){
+ const r=await fetch('https://api.github.com/repos/'+GH.owner+'/'+GH.repo+'/git/trees/HEAD?recursive=1',{
+  headers:{'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github+json'}
+ });
+ if(!r.ok)throw r.status;
+ const j=await r.json();
+ const f=(j.tree||[]).find(function(x){return x.path===path;});
+ return f?f.sha:null;
+}
 async function ghPut(path,content){
- const url=`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`;
+ const base='https://api.github.com/repos/'+GH.owner+'/'+GH.repo+'/contents/'+path;
  const h={'Authorization':'Bearer '+GH.token,'Accept':'application/vnd.github+json'};
- let sha=null;const g=await fetch(url,{headers:h});
- if(g.ok)sha=(await g.json()).sha; else if(g.status!==404)throw g.status;
+ let sha=null;
+ const g=await fetch(base,{headers:h});
+ if(g.ok){
+  const gt=await g.text();
+  try{sha=JSON.parse(gt).sha||null;}catch(e){sha=null;}
+  if(!sha){try{sha=await ghSha(path);}catch(e){}}
+ } else if(g.status!==404)throw g.status;
  const body={message:'sync: auto-update '+path,content:b64utf8(content)};
  if(sha)body.sha=sha;
- const r=await fetch(url,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const r=await fetch(base,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify(body)});
  if(r.status===409){
-  const g2=await fetch(url,{headers:h}); if(!g2.ok)throw g2.status;
-  body.sha=(await g2.json()).sha;
-  const r2=await fetch(url,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  sha=null;
+  try{sha=await ghSha(path);}catch(e){}
+  if(!sha)throw 409;
+  const body2={message:'sync: auto-update '+path,content:b64utf8(content),sha:sha};
+  const r2=await fetch(base,{method:'PUT',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify(body2)});
   if(!r2.ok)throw r2.status;
  } else if(!r.ok)throw r.status;
 }
