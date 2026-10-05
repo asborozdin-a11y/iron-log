@@ -405,3 +405,9 @@ body{ padding-bottom: calc(16px + var(--safe-b)); }
 #toast{ bottom: calc(20px + var(--safe-b)); }
 #update-banner{ bottom: calc(72px + var(--safe-b)); }
 #restwidget{ bottom: calc(128px + var(--safe-b)); }
+
+/* ==== Путь А: AA-контраст подсказок и явное унаследованное значение ==== */
+.srow input::placeholder,.mcell input::placeholder{color:var(--mut2);opacity:1}
+.empty{color:var(--mut2)}
+.srow input[data-inherited="true"]{color:var(--mut2);border-style:dashed}
+.srow input[data-inherited="true"]:focus{color:var(--txt);border-style:solid}
