@@ -1,0 +1,15 @@
+{
+  "name": "IRON WORLD",
+  "short_name": "IRON",
+  "description": "Журнал силовых тренировок, замеров и питания",
+  "start_url": "./",
+  "id": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0d10",
+  "theme_color": "#0a0d10",
+  "icons": [
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+  ]
+}

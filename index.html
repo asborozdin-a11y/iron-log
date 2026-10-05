@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0d10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>IRON WORLD // Тренировки · Питание · Замеры</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-view="home">
+
+<!-- ========== ГЛАВНЫЙ ЭКРАН ========== -->
+<section id="view-home" class="view">
+ <button class="home-chip" onclick="showView('profile',event)" aria-label="Профили">⚙ Профиль</button>
+ <div class="wrap">
+  <div class="eye-wrap"><div class="eye"></div></div>
+  <div class="h-title">IRON <span>WORLD</span></div>
+  <div class="h-sub">Cyberdyne Training OS · v4.6</div>
+  <div class="h-status" id="hstatus"></div>
+  <div class="h-select">▸ Select module ◂</div>
+  <div class="mods">
+   <button class="modbtn" onclick="showView('train',event)">
+    <span class="ico"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg></span>
+    <span><b>Тренировки</b><small id="ms-train">журнал силовых · 3 дня</small></span></button>
+   <button class="modbtn meas" onclick="showView('measure',event)">
+    <span class="ico"><svg viewBox="0 0 24 24"><rect x="2.5" y="9" width="19" height="6.5" rx="1.2"/><path d="M7 9v3M11 9v3M15 9v3M19 9v3"/></svg></span>
+    <span><b>Замеры тела</b><small id="ms-meas">история пропорций</small></span></button>
+   <button class="modbtn food" onclick="showView('food',event)">
+    <span class="ico"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M16.5 3v18"/><path d="M16.5 3c3 3.5 3 8 0 11"/></svg></span>
+    <span><b>Питание</b><small>памятка · 4 приёма · 2650 ккал</small></span></button>
+  </div>
+ </div>
+</section>
+
+<!-- ========== ВЕРХНЯЯ НАВИГАЦИЯ ========== -->
+<nav class="nav" id="nav">
+ <button class="home" onclick="showView('home',event)" title="Меню" aria-label="Главное меню"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+ <button data-v="train" onclick="showView('train',event)" aria-label="Тренировки"><svg viewBox="0 0 24 24"><path d="M1.5 12h3M19.5 12h3M5.5 7v10M18.5 7v10M8.5 9.5v5M15.5 9.5v5M5.5 12h13"/></svg><span class="txt">Тренировки</span></button>
+ <button data-v="measure" onclick="showView('measure',event)" aria-label="Замеры"><svg viewBox="0 0 24 24"><rect x="2.5" y="9" width="19" height="6.5" rx="1.2"/><path d="M7 9v3M11 9v3M15 9v3M19 9v3"/></svg><span class="txt">Замеры</span></button>
+ <button data-v="food" onclick="showView('food',event)" aria-label="Питание"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v4a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M16.5 3v18"/><path d="M16.5 3c3 3.5 3 8 0 11"/></svg><span class="txt">Питание</span></button>
+ <button data-v="profile" onclick="showView('profile',event)" title="Профили" aria-label="Профили"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"/></svg><span class="txt">Профиль</span></button>
+</nav>
+
+<!-- ========== МОДУЛЬ 01: ТРЕНИРОВКИ ========== -->
+<section id="view-train" class="view">
+ <div class="wrap">
+  <header class="pg"><div class="hud">MODULE · STRENGTH LOG</div><h1>IRON <span>LOG</span></h1></header>
+  <div class="tabs" id="tabs"></div>
+  <div class="dayhead" id="dayhead"></div>
+  <div id="workout"></div>
+  <div class="actions">
+   <button onclick="save()">Сохранить в журнал</button>
+   <button class="ghost" onclick="clearInputs()">Сброс полей</button>
+  </div>
+
+  <details class="secd" id="secJ">
+   <summary class="sec">Журнал <span>//</span> история</summary>
+   <div class="secb">
+    <div class="actions" style="margin:0 0 10px">
+     <button class="ghost" onclick="exportJ()">Экспорт JSON</button>
+     <button class="ghost" onclick="fileIn.click()">Импорт JSON</button>
+     <button class="ghost" onclick="clearJ()">Очистить</button>
+     <input type="file" id="fileIn" accept=".json,application/json" hidden>
+    </div>
+    <div id="journal"></div>
+   </div>
+  </details>
+
+  <details class="secd" id="secC">
+   <summary class="sec">Cloud <span>//</span> github sync</summary>
+   <div class="secb">
+    <div class="ex cloud">
+     <h3>Авто-синхронизация таблиц</h3>
+     <div class="meta">настроил один раз — после каждого сохранения таблицы обновляются в приватном хранилище</div>
+     <div class="sets" style="margin-top:10px">
+      <div class="srow one"><span class="lab">ТОКЕН</span><input type="password" id="gh-token" placeholder="github_pat_…" autocomplete="off"></div>
+      <div class="srow"><span class="lab">РЕПО</span><input type="text" id="gh-owner" value="asborozdin-a11y"><input type="text" id="gh-repo" value="iron-data"></div>
+     </div>
+     <div class="actions" style="margin:12px 0 0">
+      <button class="ghost" onclick="ghSave()">Сохранить и подключить</button>
+      <button class="ghost" onclick="doSync(true)">Синхронизировать сейчас</button>
+      <button class="ghost" onclick="purgePublic()">Удалить старые публичные таблицы</button>       <button class="ghost" onclick="ghRestore()">Восстановить из облака</button>
+     </div>
+     <details class="help">
+      <summary>Приватное хранилище и токен (2 минуты)</summary>
+      <ol>
+       <li>GitHub → <code>New repository</code> → имя <code>iron-data</code> → вид <b>Private</b> → Create.</li>
+       <li>Settings → Developer settings → Fine-grained tokens → твой токен → Repository access → добавь <code>iron-data</code> (оставь <code>iron-log</code> до очистки).</li>
+       <li>Permissions → Repository permissions → <code>Contents</code>: <code>Read and write</code>.</li>
+       <li>В приложении: поле РЕПО = <code>iron-data</code> → «Сохранить и подключить» → «Синхронизировать сейчас».</li>
+       <li>Когда таблицы появятся в iron-data — нажми «Удалить старые публичные таблицы».</li>
+      </ol>
+      <p style="margin-top:8px">Файлы данных именуются по профилю: <code>trainings-alex.csv</code>, <code>measures-ksy.csv</code>. Токен хранится только на этом устройстве и уходит только на api.github.com.</p>
+     </details>
+     <div class="meta" id="gh-status" style="margin-top:10px"></div>
+    </div>
+   </div>
+  </details>
+ </div>
+</section>
+
+<!-- ========== МОДУЛЬ 02: ПИТАНИЕ ========== -->
+<section id="view-food" class="view">
+ <div class="wrap">
+  <header class="pg"><div class="hud">MODULE · FUEL PROTOCOL</div><h1>ПЛАН <span>ПИТАНИЯ</span></h1></header>
+  <div class="fmacros" id="fmacros"></div>
+  <div id="foodMeals"></div>
+ </div>
+</section>
+
+<!-- ========== МОДУЛЬ 03: ЗАМЕРЫ ========== -->
+<section id="view-measure" class="view">
+ <svg class="body-bg" viewBox="0 0 200 400" aria-hidden="true">
+  <defs><g id="half">
+   <path d="M100,40 C91,40 83,45 77,51 C65,58 56,69 55,83 C54,95 59,104 62,112 C59,126 57,140 61,152 C63,161 69,168 74,166 C78,164 78,158 76,152 C73,142 75,131 78,123 C75,117 71,111 69,103 C68,97 68,92 70,88 C66,102 64,116 66,130 C68,142 74,150 76,160 C78,172 76,184 74,194 C72,212 70,232 74,250 C76,264 80,274 80,288 C78,306 76,324 80,340 C82,354 86,364 86,378 L86,394 L97,394"/>
+   <path class="detail" d="M74,92 C84,101 94,104 100,104"/>
+   <path class="detail" d="M86,146 L100,146"/><path class="detail" d="M86,160 L100,160"/><path class="detail" d="M86,174 L100,174"/>
+  </g></defs>
+  <circle cx="100" cy="26" r="15"/>
+  <use href="#half"/><use href="#half" transform="translate(200,0) scale(-1,1)"/>
+  <path class="detail" d="M100,104 L100,186"/>
+ </svg>
+ <div class="wrap mz">
+  <header class="pg"><div class="hud">MODULE · BODY METRICS</div><h1>ЗАМЕРЫ <span>ТЕЛА</span></h1></header>
+  <div class="ex">
+   <h3>Новый замер</h3>
+   <div class="meta">порядок: сверху вниз · сантиметры мягкой лентой, утром натощак</div>
+   <div class="mdate"><label for="m-date">Дата замера:</label><input type="date" id="m-date"></div>
+   <div class="mgrid" id="mform"></div>
+  </div>
+  <div class="actions"><button onclick="saveMeasure()">Сохранить замер</button></div>
+
+  <div class="ex remind">
+   <h3>Напоминание о замере</h3>
+   <div class="meta" id="rem-status">не настроено</div>
+   <div class="actions" style="margin:10px 0 0">
+    <button class="ghost" onclick="openRem()">Настроить</button>
+    <button class="ghost" onclick="remOff()">Выключить</button>
+   </div>
+  </div>
+
+  <h2 class="sec">История <span>//</span> динамика</h2>
+  <div id="mhist"></div>
+ </div>
+</section>
+
+<!-- ========== МОДУЛЬ 04: ПРОФИЛИ ========== -->
+<section id="view-profile" class="view">
+ <div class="wrap">
+  <header class="pg"><div class="hud">MODULE · PERSONA</div><h1>ПРОФИ<span>ЛИ</span></h1></header>
+  <div id="profileBody"></div>
+ </div>
+</section>
+
+<!-- ========== ПОПАП: настройка напоминания ========== -->
+<div class="modal" id="remModal" role="dialog" aria-modal="true" aria-labelledby="remModalTitle">
+ <div class="mbox">
+  <div class="mtitle" id="remModalTitle">Напоминание о замере</div>
+  <div class="mrow"><label for="rem-date">Дата начала</label><input type="date" id="rem-date"></div>
+  <div class="mrow"><label for="rem-time">Время</label><input type="time" id="rem-time"></div>
+  <div class="mrow"><label for="rem-repeat">Цикличность</label>
+   <select id="rem-repeat">
+    <option value="none">разово</option>
+    <option value="daily">ежедневно</option>
+    <option value="weekly">еженедельно</option>
+    <option value="monthly">ежемесячно</option>
+   </select></div>
+  <div class="mact">
+   <button class="ghost" onclick="closeRem()">Отмена</button>
+   <button onclick="saveRem()">Сохранить</button>
+  </div>
+ </div>
+</div>
+
+<!-- ========== ПОПАП: сработка напоминания ========== -->
+<div class="modal" id="remAlert" role="alertdialog" aria-modal="true" aria-labelledby="remAlertTitle">
+ <div class="mbox">
+  <div class="mtitle red" id="remAlertTitle">Пора сделать замер!</div>
+  <p class="mtext">Сработало напоминание расписания. Замер утром натощак даёт самые точные цифры — лента и 60 секунд времени.</p>
+  <div class="mact">
+   <button class="ghost" onclick="snoozeRem()">Позже (1 ч)</button>
+   <button onclick="goMeasure()">Замериться</button>
+  </div>
+ </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- порядок важен: данные → разделы → ядро -->
+<script defer src="data.js"></script>
+<script defer src="train.js"></script>
+<script defer src="measure.js"></script>
+<script defer src="food.js"></script>
+<script defer src="app.js"></script>
+</body>
+</html>
