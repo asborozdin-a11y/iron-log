@@ -1,4 +1,4 @@
-/* IRON WORLD · ТРЕНИРОВКИ P2-fix: склейка строк вместо вложенных шаблонов */
+/* IRON WORLD · ТРЕНИРОВКИ v2.7: черновик по ключам, таймер на метке, wake-lock в Кардио */
 
 function tabs(){
  var h='';
@@ -10,9 +10,10 @@ function tabs(){
 }
 function setDay(id){cur=id;renderTrain()}
 
-/* ==== черновики ==== */
+/* ==== черновики (по ключам упражнений, тост один раз на черновик) ==== */
 function debounce(fn,ms){var t=null;var f=function(){clearTimeout(t);t=setTimeout(fn,ms);};f.flush=function(){clearTimeout(t);fn();};return f}
 function DRAFT_KEY(){return ME?('ironlog_draft_'+ME.id+'_'+cur):'ironlog_draft_x'}
+var draftToastForKey='';
 function saveDraft(){
  if(!ME)return;
  try{
@@ -26,7 +27,7 @@ function saveDraft(){
     var r=document.querySelector('input[data-e="'+i+'"][data-s="'+k+'"][data-f="r"]');
     row.push([w?w.value:'', r?r.value:'']);
    }
-   data.push(row);
+   data.push({key:exKey(d.ex[i].n), sets:row});
   }
   var ckDone=document.getElementById('ck-done'), ckMin=document.getElementById('ck-min');
   localStorage.setItem(DRAFT_KEY(),JSON.stringify({ex:data, cardio:{done:ckDone?ckDone.checked:false, min:ckMin?ckMin.value:''}}));
@@ -35,37 +36,41 @@ function saveDraft(){
 var saveDraftDebounced = debounce(saveDraft, 400);
 function restoreDraft(){
  if(!ME)return false;
- var raw = localStorage.getItem(DRAFT_KEY());
+ var raw=localStorage.getItem(DRAFT_KEY());
  if(!raw)return false;
  try{
-  var data = JSON.parse(raw);
+  var data=JSON.parse(raw);
   if(!data||!Array.isArray(data.ex))return false;
   var d=null;for(var q=0;q<DAYS.length;q++){if(DAYS[q].id===cur)d=DAYS[q];}
+  if(!d)return false;
   var any=false;
-  for(var i=0;i<data.ex.length;i++){
-   if(!d||!d.ex[i])continue;
-   var sets=data.ex[i];
-   for(var k=0;k<sets.length;k++){
-    var pair=sets[k];
+  for(var n=0;n<data.ex.length;n++){
+   var item=data.ex[n];
+   if(!item||!item.key||!Array.isArray(item.sets))continue;
+   var idx=-1;
+   for(var i=0;i<d.ex.length;i++){if(exKey(d.ex[i].n)===item.key){idx=i;break;}}
+   if(idx<0)continue;
+   for(var k=0;k<item.sets.length;k++){
+    var pair=item.sets[k];
     if(!Array.isArray(pair))continue;
-    var w=document.querySelector('input[data-e="'+i+'"][data-s="'+k+'"][data-f="w"]');
-    var r=document.querySelector('input[data-e="'+i+'"][data-s="'+k+'"][data-f="r"]');
+    var w=document.querySelector('input[data-e="'+idx+'"][data-s="'+k+'"][data-f="w"]');
+    var r=document.querySelector('input[data-e="'+idx+'"][data-s="'+k+'"][data-f="r"]');
     if(w&&pair[0]!==''){w.value=pair[0];w.dataset.inherited='false';any=true;}
     if(r&&pair[1]!==''){r.value=pair[1];r.dataset.inherited='false';}
    }
   }
-  if(data.cardio && typeof data.cardio==='object'){
+  if(data.cardio&&typeof data.cardio==='object'){
    var ckDone=document.getElementById('ck-done'), ckMin=document.getElementById('ck-min');
    if(ckDone){ckDone.checked=!!data.cardio.done; if(data.cardio.done)any=true;}
-   if(ckMin && data.cardio.min!==''){ckMin.value=data.cardio.min; ckMin.dataset.inherited='false';}
+   if(ckMin&&data.cardio.min!==''){ckMin.value=data.cardio.min; ckMin.dataset.inherited='false';}
   }
-  if(any) toast('[<<] ВОССТАНОВЛЕН НЕЗАВЕРШЁННЫЙ ВВОД');
+  if(any&&draftToastForKey!==DRAFT_KEY()){toast('[<<] ВОССТАНОВЛЕН НЕЗАВЕРШЁННЫЙ ВВОД');draftToastForKey=DRAFT_KEY();}
   return any;
  }catch(e){return false}
 }
 function dropDraft(){if(!ME)return;try{localStorage.removeItem(DRAFT_KEY());}catch(e){}}
 
-/* ==== ТАЙМЕР ОТДЫХА (абсолютная метка: не врёт при погасшем экране) ==== */
+/* ==== ТАЙМЕР ОТДЫХА (абсолютная метка) ==== */
 var restTimer={endsAt:0,total:0,iv:null};
 var restAC=null;
 function restParse(str){var m=String(str||'').match(/(\d+)/);return m?+m[1]:0}
@@ -143,24 +148,18 @@ document.addEventListener('visibilitychange',function(){
  if(!document.hidden&&restTimer.iv)tickRest();
 });
 
-/* ==== WAKE LOCK ==== */
+/* ==== WAKE LOCK (чип живёт в блоке Кардио, не fixed) ==== */
 var wl=null, wlEnabled=(localStorage.getItem('ironlog_wl')!=='0');
 function keepAwake(on){
- var p = on&&!wl&&navigator.wakeLock ? navigator.wakeLock.request('screen').then(function(l){wl=l;updateWlChip();}).catch(function(){wl=null;updateWlChip();})
-       : (!on&&wl ? wl.release().then(function(){wl=null;updateWlChip();}).catch(function(){wl=null;updateWlChip();}) : Promise.resolve());
- return p;
+ if(on&&!wl&&navigator.wakeLock){navigator.wakeLock.request('screen').then(function(l){wl=l;updateWlChip();}).catch(function(){wl=null;updateWlChip();});}
+ else if(!on&&wl){wl.release().then(function(){wl=null;updateWlChip();}).catch(function(){wl=null;updateWlChip();});}
 }
 function updateWlChip(){var c=document.getElementById('wl-chip');if(c)c.textContent=wl?'☀ экран: не гаснет':'☀ экран: как обычно';}
 function toggleWake(){wlEnabled=!wlEnabled;try{localStorage.setItem('ironlog_wl',wlEnabled?'1':'0');}catch(e){}keepAwake(wlEnabled&&document.body.dataset.view==='train');}
-function ensureWakeChip(){
- var c=document.getElementById('wl-chip');
- if(!c){c=document.createElement('button');c.id='wl-chip';c.className='copybtn';c.onclick=toggleWake;document.body.appendChild(c);}
- updateWlChip();
-}
 new MutationObserver(function(){
  var inTrain=document.body.dataset.view==='train';
- if(inTrain){ensureWakeChip();if(wlEnabled)keepAwake(true);}
- else{keepAwake(false);var c=document.getElementById('wl-chip');if(c)c.remove();}
+ if(inTrain){if(wlEnabled)keepAwake(true);}
+ else{keepAwake(false);}
 }).observe(document.body,{attributes:true,attributeFilter:['data-view']});
 document.addEventListener('visibilitychange',function(){
  if(!document.hidden&&wlEnabled&&document.body.dataset.view==='train')keepAwake(true);
@@ -189,7 +188,7 @@ function sparkline(points){
 function renderVolChart(){
  var host=document.getElementById('volchart');
  if(!host){
-    host=document.createElement('div');host.id='volchart';
+  host=document.createElement('div');host.id='volchart';
   var anchor=document.querySelector('#view-train .actions');
   if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(host,anchor.nextSibling); else return;
  }
@@ -250,12 +249,13 @@ function renderTrain(){
  var pcMin=(pc&&pc.min!=='')?pc.min:null;
  html+='<div class="ex cardio"><h3>Кардио <u style="text-decoration:none;color:var(--mut);font-weight:500">(заминка)</u></h3>'
   +'<div class="meta">низкая интенсивность · пульс 110–130 · после силовой</div>'
+  +'<div class="ex-btns"><button class="copybtn" id="wl-chip" onclick="toggleWake()">☀ экран: …</button></div>'
   +'<label class="ckrow"><input type="checkbox" id="ck-done" '+((pc&&pc.done)?'checked':'')+'><span>выполнено</span></label>'
   +'<div class="sets"><div class="srow one"><span class="lab">МИНУТЫ</span>'
   +'<input type="number" step="1" min="0" inputmode="numeric" id="ck-min" placeholder="'+(pcMin?pcMin:'мин')+'" value="">'
   +'</div></div></div>';
  document.getElementById('workout').innerHTML=html;
- ensureWakeChip();
+ updateWlChip();
  restoreDraft();
  journal();
 }
@@ -419,7 +419,8 @@ document.getElementById('fileIn').addEventListener('change',function(e){
  }).catch(function(){toast('[!] НЕ ЧИТАЕТСЯ ФАЙЛ');e.target.value='';});
 });
 function clearJ(){if(confirm('Удалить все тренировки журнала? (замеры останутся)')){S.sessions=[];if(saveS()){renderTrain();toast('ЖУРНАЛ ОЧИЩЕН');scheduleSync();}}}
-/* ==== ВОССТАНОВЛЕНИЕ ИЗ ОБЛАКА (CSV обратно в журнал) ==== */
+
+/* ==== ВОССТАНОВЛЕНИЕ ИЗ ОБЛАКА ==== */
 function csvSplit(line){
  var out=[],cur='',q=false;
  for(var i=0;i<line.length;i++){
@@ -472,7 +473,6 @@ function parseMeasCSV(text){
  var lines=text.split(/\r?\n/).filter(function(l){return l.trim()!=='';});
  if(lines.length<2)return [];
  var head=csvSplit(lines[0]);
- /* ключи берём из ЗАГОЛОВКА файла, ища совпадения во всех паках */
  var cols=[];
  for(var h=1;h<head.length;h++){
   var lab=head[h].trim();
@@ -533,8 +533,12 @@ function ghGet(path){
      for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
      return new TextDecoder('utf-8').decode(bytes);
     }
+    if(j&&j.size&&j.size>1048576)throw new Error('ФАЙЛ >1МБ — ИСПОЛЬЗУЙ ЭКСПОРТ/ИМПОРТ JSON');
     return null;
-   }catch(e){return txt;}
+   }catch(e){
+    if(String(e.message||'').indexOf('>1МБ')>=0)throw e;
+    return txt;
+   }
   }
   return txt;
  });
@@ -544,39 +548,26 @@ function ghRestore(){
  var sl=slugName(ME?ME.name:'persona');
  ghGet('trainings-'+sl+'.csv').then(function(tTxt){
   return ghGet('measures-'+sl+'.csv').then(function(mTxt){
-      var ses=(tTxt?parseTrainCSV(tTxt):[]).map(sanitizeSession).filter(function(x){return x;});
+   var ses=(tTxt?parseTrainCSV(tTxt):[]).map(sanitizeSession).filter(function(x){return x;});
    var mes=(mTxt?parseMeasCSV(mTxt):[]).map(sanitizeMeasure).filter(function(x){return x;});
    if(!ses.length&&!mes.length){toast('[!] В ОБЛАКЕ ПУСТО');return;}
    if(!confirm('Восстановить из облака: тренировок '+ses.length+', замеров '+mes.length+'. Локальные записи не удаляются — будет слияние.'))return;
-   
-   /* Дедупликация по естественному ключу, а не по миллисекундам */
    var localSessionKeys={};
-   S.sessions.forEach(function(x){
-    var key=x.dayId+'|'+Math.floor(x.ts/60000); /* день + минута */
-    localSessionKeys[key]=true;
-   });
-   
+   S.sessions.forEach(function(x){localSessionKeys[x.dayId+'|'+Math.floor(x.ts/60000)]=true;});
    var localMeasureDates={};
-   S.measures.forEach(function(x){
-    localMeasureDates[x.date]=true;
-   });
-   
+   S.measures.forEach(function(x){localMeasureDates[x.date]=true;});
    var addS=0,addM=0;
    ses.forEach(function(s){
     var key=s.dayId+'|'+Math.floor(s.ts/60000);
-    if(localSessionKeys[key])return; /* уже есть локально */
-    localSessionKeys[key]=true; /* защита от дублей внутри самого CSV */
-    S.sessions.push(s);
-    addS++;
+    if(localSessionKeys[key])return;
+    localSessionKeys[key]=true;
+    S.sessions.push(s);addS++;
    });
-   
    mes.forEach(function(m){
-    if(localMeasureDates[m.date])return; /* уже есть локально */
+    if(localMeasureDates[m.date])return;
     localMeasureDates[m.date]=true;
-    S.measures.push(m);
-    addM++;
+    S.measures.push(m);addM++;
    });
-   
    S.sessions.sort(function(a,b){return a.ts-b.ts;});
    S.measures.sort(function(a,b){return a.ts-b.ts;});
    if(!saveS()){toast('[!] ОШИБКА СОХРАНЕНИЯ');return;}
