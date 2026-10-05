@@ -189,9 +189,9 @@ function sparkline(points){
 function renderVolChart(){
  var host=document.getElementById('volchart');
  if(!host){
-  host=document.createElement('div');host.id='volchart';
-  var j=document.getElementById('journal');
-  if(j&&j.parentNode)j.parentNode.insertBefore(host,j); else return;
+    host=document.createElement('div');host.id='volchart';
+  var anchor=document.querySelector('#view-train .actions');
+  if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(host,anchor.nextSibling); else return;
  }
  var asc=S.sessions.slice().sort(function(a,b){return a.ts-b.ts;});
  var pts=[];
