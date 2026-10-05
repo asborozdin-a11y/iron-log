@@ -382,7 +382,7 @@ padding:12px 18px;text-align:center;box-shadow:0 0 30px var(--red-glow);transiti
 .rt-btns button{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;padding:8px 14px;border-radius:8px;cursor:pointer;
 background:var(--ghost-1);border:1px solid var(--line-2);color:var(--mut);min-height:40px}
 .rt-btns button:hover{color:var(--txt);border-color:var(--red)}
-#wl-chip{position:fixed;top:54px;right:10px;z-index:41;margin:0}
+#wl-chip{min-height:44px}
 .charts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
 @media(max-width:520px){.charts{grid-template-columns:1fr}}
 .chart{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
