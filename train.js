@@ -65,8 +65,9 @@ function restoreDraft(){
 }
 function dropDraft(){if(!ME)return;try{localStorage.removeItem(DRAFT_KEY());}catch(e){}}
 
-/* ==== ТАЙМЕР ОТДЫХА ==== */
-var restTimer={left:0,total:0,iv:null};
+/* ==== ТАЙМЕР ОТДЫХА (абсолютная метка: не врёт при погасшем экране) ==== */
+var restTimer={endsAt:0,total:0,iv:null};
+var restAC=null;
 function restParse(str){var m=String(str||'').match(/(\d+)/);return m?+m[1]:0}
 function restWidget(){
  var w=document.getElementById('restwidget');
@@ -78,6 +79,16 @@ function restWidget(){
  }
  return w;
 }
+function restBeep(){
+ try{
+  if(!restAC)return;
+  if(restAC.state==='suspended')restAC.resume();
+  var o=restAC.createOscillator(),g=restAC.createGain();
+  o.connect(g);g.connect(restAC.destination);
+  o.frequency.value=880;g.gain.value=0.15;
+  o.start();o.stop(restAC.currentTime+0.18);
+ }catch(e){}
+}
 function startRestFor(i){
  var d=null;for(var q=0;q<DAYS.length;q++){if(DAYS[q].id===cur)d=DAYS[q];}
  var e=d&&d.ex&&d.ex[i]; if(!e)return;
@@ -87,29 +98,40 @@ function startRestFor(i){
 }
 function startRest(sec,label){
  stopRest();
- restTimer.total=sec;restTimer.left=sec;
+ restTimer.total=sec;
+ restTimer.endsAt=Date.now()+sec*1000;
  var w=restWidget();
  w.querySelector('#rt-label').textContent=esc(label||'ОТДЫХ');
  w.classList.add('on');
+ try{
+  if(!restAC)restAC=new (window.AudioContext||window.webkitAudioContext)();
+  if(restAC.state==='suspended')restAC.resume();
+ }catch(e){}
+ restTimer.iv=setInterval(tickRest,250);
  tickRest();
- restTimer.iv=setInterval(function(){
-  restTimer.left--;
-  if(restTimer.left<=0)finishRest(); else tickRest();
- },1000);
 }
 function tickRest(){
+ if(!restTimer.iv)return;
  var w=document.getElementById('restwidget'); if(!w)return;
- var left=Math.max(restTimer.left,0);
+ var leftMs=Math.max(0,restTimer.endsAt-Date.now());
+ var left=Math.ceil(leftMs/1000);
  var mm=String(Math.floor(left/60));if(mm.length<2)mm='0'+mm;
  var ss=String(left%60);if(ss.length<2)ss='0'+ss;
  w.querySelector('#rt-time').textContent=mm+':'+ss;
- var p=restTimer.total?left/restTimer.total:0;
- w.querySelector('#rt-bar i').style.width=(p*100)+'%';
+ var p=restTimer.total?leftMs/1000/restTimer.total:0;
+ w.querySelector('#rt-bar i').style.width=(Math.max(0,Math.min(1,p))*100)+'%';
+ if(left<=0)finishRest();
 }
-function addRest(sec){if(!restTimer.iv)return;restTimer.left+=sec;restTimer.total+=sec;tickRest();}
+function addRest(sec){
+ if(!restTimer.iv)return;
+ restTimer.endsAt+=sec*1000;
+ restTimer.total+=sec;
+ tickRest();
+}
 function finishRest(){
  stopRest();
  try{if(navigator.vibrate)navigator.vibrate([250,120,250]);}catch(e){}
+ restBeep();
  toast('[T] ОТДЫХ ОКОНЧЕН — РАБОТАТЬ!');
  eyeFlare();
 }
@@ -117,6 +139,9 @@ function stopRest(){
  if(restTimer.iv){clearInterval(restTimer.iv);restTimer.iv=null;}
  var w=document.getElementById('restwidget'); if(w)w.classList.remove('on');
 }
+document.addEventListener('visibilitychange',function(){
+ if(!document.hidden&&restTimer.iv)tickRest();
+});
 
 /* ==== WAKE LOCK ==== */
 var wl=null, wlEnabled=(localStorage.getItem('ironlog_wl')!=='0');
