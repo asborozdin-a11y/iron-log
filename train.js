@@ -514,15 +514,35 @@ function ghRestore(){
    var mes=mTxt?parseMeasCSV(mTxt):[];
    if(!ses.length&&!mes.length){toast('[!] В ОБЛАКЕ ПУСТО');return;}
    if(!confirm('Восстановить из облака: тренировок '+ses.length+', замеров '+mes.length+'. Локальные записи не удаляются — будет слияние.'))return;
+   
+   /* Дедупликация по естественному ключу, а не по миллисекундам */
+   var localSessionKeys={};
+   S.sessions.forEach(function(x){
+    var key=x.dayId+'|'+Math.floor(x.ts/60000); /* день + минута */
+    localSessionKeys[key]=true;
+   });
+   
+   var localMeasureDates={};
+   S.measures.forEach(function(x){
+    localMeasureDates[x.date]=true;
+   });
+   
    var addS=0,addM=0;
    ses.forEach(function(s){
-    var dup=S.sessions.some(function(x){return x.ts===s.ts&&x.dayId===s.dayId&&vol(x)===vol(s);});
-    if(!dup){S.sessions.push(s);addS++;}
+    var key=s.dayId+'|'+Math.floor(s.ts/60000);
+    if(localSessionKeys[key])return; /* уже есть локально */
+    localSessionKeys[key]=true; /* защита от дублей внутри самого CSV */
+    S.sessions.push(s);
+    addS++;
    });
+   
    mes.forEach(function(m){
-    var dup=S.measures.some(function(x){return x.ts===m.ts;});
-    if(!dup){S.measures.push(m);addM++;}
+    if(localMeasureDates[m.date])return; /* уже есть локально */
+    localMeasureDates[m.date]=true;
+    S.measures.push(m);
+    addM++;
    });
+   
    S.sessions.sort(function(a,b){return a.ts-b.ts;});
    S.measures.sort(function(a,b){return a.ts-b.ts;});
    if(!saveS()){toast('[!] ОШИБКА СОХРАНЕНИЯ');return;}
