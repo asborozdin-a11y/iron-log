@@ -231,10 +231,11 @@ function renderTrain(){
   for(var k=0;k<e.s;k++){
    var p=['',''];
    if(prevRec&&prevRec.sets&&prevRec.sets[k]&&prevRec.sets[k][0]!=='')p=prevRec.sets[k];
-   var hasP=p[0]!=='';
+   var wVal=p[0];
+   var rVal=(p[1]!==undefined&&p[1]!=='')?p[1]:'';
    sets+='<div class="srow"><span class="lab"><b>'+(k+1)+'</b> ПОДХОД</span>'
-    +'<input type="number" step="0.5" min="0" inputmode="decimal" placeholder="'+(hasP?esc(String(p[0])):'вес')+'" data-e="'+i+'" data-s="'+k+'" data-f="w" data-inherited="'+(hasP?'true':'false')+'" value="">'
-    +'<input type="number" step="1" min="0" inputmode="numeric" placeholder="'+(hasP?esc(String(p[1]||'–')):'повт')+'" data-e="'+i+'" data-s="'+k+'" data-f="r" data-inherited="'+(hasP?'true':'false')+'" value="">'
+    +'<input type="number" step="0.5" min="0" inputmode="decimal" placeholder="вес" data-e="'+i+'" data-s="'+k+'" data-f="w" data-inherited="'+(wVal!==''?'true':'false')+'" value="'+esc(String(wVal))+'">'
+    +'<input type="number" step="1" min="0" inputmode="numeric" placeholder="повт" data-e="'+i+'" data-s="'+k+'" data-f="r" data-inherited="'+(rVal!==''?'true':'false')+'" value="'+esc(String(rVal))+'">'
     +'</div>';
   }
   html+='<div class="ex '+(e.ss?'ss':'')+'">'
