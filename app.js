@@ -34,6 +34,27 @@ const TH_SW={
  'tiffany-audrey':'linear-gradient(135deg,#0abab5 50%,#f2f6f5 50%)',
  'rose-champagne':'linear-gradient(135deg,#ff7a9c 50%,#120d14 50%)'};
 if(typeof window.applyPack!=='function'){window.applyPack=function(){};}
+/* Единая схема замеров для ВСЕХ профилей: 9 метрик.
+   Каждый заполняет только свои поля, остальные оставляет пустыми.
+   METRICS паков больше не влияют на хранилище и CSV. */
+var METRICS_UNIFIED=[
+ {k:'w',l:'Вес',u:'кг',rule:'dn'},
+ {k:'neck',l:'Шея',u:'см',rule:'up'},
+ {k:'chest',l:'Грудь',u:'см',rule:'up'},
+ {k:'biceps',l:'Бицепс',u:'см',rule:'up'},
+ {k:'fore',l:'Предплечье',u:'см',rule:'up'},
+ {k:'waist',l:'Талия',u:'см',rule:'dn'},
+ {k:'thigh',l:'Бедро',u:'см',rule:'up'},
+ {k:'calf',l:'Голень',u:'см',rule:'up'},
+ {k:'glute',l:'Ягодицы',u:'см',rule:'up'}
+];
+function applyPack(pk){
+ if(!pk)return;
+ DAYS=pk.DAYS;
+ METRICS=METRICS_UNIFIED;
+ MACROS=pk.MACROS;
+ FOOD=pk.FOOD;
+}
 let FXC=THEMES.terminator.fx;
 function applyTheme(t){document.body.dataset.theme=t;FXC=(THEMES[t]||THEMES.terminator).fx;}
 function setTheme(t){
