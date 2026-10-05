@@ -588,13 +588,34 @@ function buildTrainCSV(){
  });
  return rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');
 }
-function METRICS_HEADER(){return ['Дата',...METRICS.map(mt=>mt.l+'_'+mt.u)]}
-function buildMeasCSV(){
- const rows=[METRICS_HEADER()];
- [...S.measures].sort((a,b)=>a.ts-b.ts).forEach(m=>{
-  rows.push([fmtDateFull(m.date),...METRICS.map(mt=>m.v[mt.k])]);
+/* Объединение метрик: текущий пак (порядок колонок) + все ключи из данных.
+   METRICS — это описание UI, а не схема хранилища. */
+function allMetricDefs(){
+ var seen={},order=[];
+ METRICS.forEach(function(mt){if(!seen[mt.k]){seen[mt.k]=mt;order.push(mt.k);}});
+ S.measures.forEach(function(m){
+  Object.keys(m.v||{}).forEach(function(k){
+   if(seen[k])return;
+   var def=null;
+   if(typeof PACKS!=='undefined'){
+    Object.keys(PACKS).forEach(function(pk){
+     (PACKS[pk].METRICS||[]).forEach(function(mt){if(mt.k===k&&!def)def=mt;});
+    });
+   }
+   seen[k]=def||{k:k,l:k,u:''};
+   order.push(k);
+  });
  });
- return rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');
+ return order.map(function(k){return seen[k];});
+}
+function METRICS_HEADER(){return ['Дата'].concat(allMetricDefs().map(function(mt){return mt.l+'_'+mt.u;}))}
+function buildMeasCSV(){
+ var defs=allMetricDefs();
+ var rows=[METRICS_HEADER()];
+ [...S.measures].sort((a,b)=>a.ts-b.ts).forEach(function(m){
+  rows.push([fmtDateFull(m.date)].concat(defs.map(function(mt){return m.v[mt.k];})));
+ });
+ return rows.map(function(r){return r.map(csvEsc).join(',');}).join('\r\n');
 }
 let syncT=null;
 function scheduleSync(){
