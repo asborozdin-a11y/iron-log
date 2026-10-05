@@ -393,3 +393,15 @@ background:var(--ghost-1);border:1px solid var(--line-2);color:var(--mut);min-he
 .ch-head i.up{color:var(--green)}.ch-head i.dn{color:var(--bad)}
 .spark{width:100%;height:54px;color:var(--cyan);display:block}
 #volchart .spark{color:var(--red)}
+
+/* ==== P1-fix: безопасные зоны + стек нижних плашек без перекрытия ==== */
+:root{
+ --safe-b: env(safe-area-inset-bottom, 0px);
+ --safe-t: env(safe-area-inset-top, 0px);
+}
+body{ padding-bottom: calc(16px + var(--safe-b)); }
+.nav{ padding-top: calc(6px + var(--safe-t)); }
+#wl-chip{ top: calc(54px + var(--safe-t)); }
+#toast{ bottom: calc(20px + var(--safe-b)); }
+#update-banner{ bottom: calc(72px + var(--safe-b)); }
+#restwidget{ bottom: calc(128px + var(--safe-b)); }
