@@ -447,10 +447,21 @@ function parseMeasCSV(text){
  var lines=text.split(/\r?\n/).filter(function(l){return l.trim()!=='';});
  if(lines.length<2)return [];
  var head=csvSplit(lines[0]);
- var idx={};
- for(var i=0;i<METRICS.length;i++){
-  var lab=METRICS[i].l+'_'+METRICS[i].u;
-  for(var h=0;h<head.length;h++){if(head[h].trim()===lab){idx[METRICS[i].k]=h;break;}}
+ /* ключи берём из ЗАГОЛОВКА файла, ища совпадения во всех паках */
+ var cols=[];
+ for(var h=1;h<head.length;h++){
+  var lab=head[h].trim();
+  if(!lab)continue;
+  var key=null;
+  if(typeof PACKS!=='undefined'){
+   Object.keys(PACKS).forEach(function(pk){
+    (PACKS[pk].METRICS||[]).forEach(function(mt){
+     if(!key&&(mt.l+'_'+mt.u)===lab)key=mt.k;
+    });
+   });
+  }
+  if(!key)key='x_'+lab.toLowerCase().replace(/[^a-zа-яё0-9]+/g,'_');
+  cols.push({idx:h,key:key});
  }
  var out=[];
  for(var n=1;n<lines.length;n++){
@@ -470,12 +481,10 @@ function parseMeasCSV(text){
   }
   if(!iso)continue;
   var v={};
-  for(var m=0;m<METRICS.length;m++){
-   var mt=METRICS[m];var ci=idx[mt.k];
-   if(ci===undefined){v[mt.k]='';continue;}
-   var cell=(r[ci]||'').trim();
-   v[mt.k]=cell===''?'':+cell;
-  }
+  cols.forEach(function(c){
+   var cell=(r[c.idx]||'').trim();
+   v[c.key]=cell===''?'':+cell;
+  });
   out.push({ts:new Date(+iso.slice(0,4),+iso.slice(5,7)-1,+iso.slice(8,10),8,0).getTime(),date:iso,v:v});
  }
  return out;
