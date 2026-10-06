@@ -271,18 +271,38 @@ function sanitizeMeasure(m){
 }
 
 /* ==== ОНБОРДИНГ ==== */
-let onboardTrapCleanup = null;
+let onboardKbCleanup=null;
 function onboardShell(html){
  const old=document.getElementById('onboard'); if(old)old.remove();
  if(onboardTrapCleanup){try{onboardTrapCleanup();}catch(e){} onboardTrapCleanup=null;}
+ if(onboardKbCleanup){try{onboardKbCleanup();}catch(e){} onboardKbCleanup=null;}
  const b=document.createElement('div');b.id='onboard';
  b.setAttribute('role','dialog');b.setAttribute('aria-modal','true');b.setAttribute('aria-label','Настройка профиля');
  b.innerHTML=`<div class="ob-box">${html}</div>`;
  document.body.appendChild(b);
  onboardTrapCleanup = trapFocus(b, null);
+ onboardKbCleanup = bindKeyboardFit(b);
  const origRemove = b.remove.bind(b);
- b.remove = function(){ if(onboardTrapCleanup){try{onboardTrapCleanup();}catch(e){} onboardTrapCleanup=null;} return origRemove(); };
+ b.remove = function(){
+  if(onboardTrapCleanup){try{onboardTrapCleanup();}catch(e){} onboardTrapCleanup=null;}
+  if(onboardKbCleanup){try{onboardKbCleanup();}catch(e){} onboardKbCleanup=null;}
+  return origRemove();
+ };
  return b;
+}
+/* держит активное поле в видимой зоне при открытой клавиатуре */
+function bindKeyboardFit(box){
+ if(!window.visualViewport)return function(){};
+ const vv=window.visualViewport;
+ const onCh=function(){
+  setTimeout(function(){
+   const el=box.contains(document.activeElement)?document.activeElement:box.querySelector('input');
+   if(el&&el.scrollIntoView)el.scrollIntoView({block:'center',behavior:'smooth'});
+  },120);
+ };
+ vv.addEventListener('resize',onCh);
+ vv.addEventListener('scroll',onCh);
+ return function(){vv.removeEventListener('resize',onCh);vv.removeEventListener('scroll',onCh);};
 }
 function onboardCreate(adopt){
  const PK=(typeof PACKS!=='undefined')?PACKS:{default:{label:'базовый'}};
