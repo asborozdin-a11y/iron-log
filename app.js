@@ -1,4 +1,4 @@
-/* IRON WORLD · ЯДРО v55: полный файл (v48 + авто-день + клавиатура PIN + автовход) */
+/* IRON WORLD · ЯДРО v57: мотивация — streak, тумблер FX, boot раз в сутки */
 
 const P_LIST='ironlog_personas', P_CUR='ironlog_persona', LEGACY='ironlog_v1', LEGACY_FLAG='ironlog_legacy_migrated';
 const OLD_REPO='iron-log';
@@ -34,7 +34,6 @@ const TH_SW={
  'tiffany-audrey':'linear-gradient(135deg,#0abab5 50%,#f2f6f5 50%)',
  'rose-champagne':'linear-gradient(135deg,#ff7a9c 50%,#120d14 50%)'};
 
-/* ==== ЕДИНАЯ СХЕМА ЗАМЕРОВ (9 метрик) ==== */
 var METRICS_UNIFIED=[
  {k:'w',l:'Вес',u:'кг',rule:'dn'},
  {k:'neck',l:'Шея',u:'см',rule:'up'},
@@ -85,12 +84,10 @@ function trapFocus(box, onEscape){
   else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
  };
  box.addEventListener('keydown',onKey);
- return function(){
-  box.removeEventListener('keydown',onKey);
- };
+ return function(){ box.removeEventListener('keydown',onKey); };
 }
 
-/* ==== ОНБОРДИНГ-ОБОЛОЧКА + подгонка под клавиатуру ==== */
+/* ==== ОНБОРДИНГ-ОБОЛОЧКА + клавиатура ==== */
 let onboardTrapCleanup = null;
 let onboardKbCleanup = null;
 function bindKeyboardFit(box){
@@ -249,7 +246,39 @@ function vol(s){let v=0;(s.ex||[]).forEach(e=>{(e.sets||[]).forEach(([w,r])=>{v+
 function fmtDate(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0].slice(2)}`:iso}
 function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0]}`:iso}
 function todayISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-function fxOK(){return !matchMedia('(prefers-reduced-motion: reduce)').matches}
+function fxOK(){return !matchMedia('(prefers-reduced-motion: reduce)').matches && localStorage.getItem('ironlog_fxoff')!=='1'}
+function toggleFx(){
+ var wasOff=localStorage.getItem('ironlog_fxoff')==='1';
+ if(wasOff){try{localStorage.removeItem('ironlog_fxoff');}catch(e){}}
+ else{
+  try{localStorage.setItem('ironlog_fxoff','1');}catch(e){}
+  loopOn=false;
+  if(fxCv&&fxCtx)fxCtx.clearRect(0,0,innerWidth,innerHeight);
+ }
+ renderProfile();
+ toast('[OK] ЭФФЕКТЫ: '+(wasOff?'ВКЛЮЧЕНЫ':'ВЫКЛЮЧЕНЫ'));
+}
+
+/* ==== СЕРИЯ (streak) ==== */
+function streakStats(){
+ var set={};
+ S.sessions.forEach(function(s){
+  var d=new Date(s.ts);
+  set[new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()]=1;
+ });
+ var list=Object.keys(set).map(Number).sort(function(a,b){return b-a;});
+ var now=Date.now();
+ var week=0;
+ list.forEach(function(t){if(now-t<=7*86400000)week++;});
+ function weekStart(t){var d=new Date(t);var day=(d.getDay()+6)%7;return new Date(d.getFullYear(),d.getMonth(),d.getDate()-day).getTime();}
+ var curW=weekStart(now);
+ if(!set[curW]&&!list.length===false&&list.length&&weekStart(list[0])!==curW)curW-=7*86400000;
+ if(!list.length)curW=weekStart(now);
+ else if(weekStart(list[0])!==curW)curW-=7*86400000;
+ var weeks=0;
+ while(set[curW]){weeks++;curW-=7*86400000;}
+ return {week:week,weeks:weeks};
+}
 
 /* ==== ВАЛИДАЦИЯ ==== */
 const num = v => (v === '' || v === null || v === undefined) ? '' : (Number.isFinite(+v) ? +v : '');
@@ -442,6 +471,7 @@ function renderProfile(){
    ${p.id===ME.id?`
     <div class="pf-themes"><span class="pf-lab">Пакет:</span>${Object.keys(PACKS).map(k=>`<button class="ob-pk ${ME.pack===k?'on':''}" onclick="setPack('${k}')">${esc(PACKS[k].label||k)}</button>`).join('')}</div>
     <div class="pf-themes"><span class="pf-lab">Тема:</span>${TH_LIST.map(t=>`<button class="ob-th ${ME.theme===t?'on':''}" style="background:${TH_SW[t]}" title="${t}" onclick="setTheme('${t}')"></button>`).join('')}</div>
+    <div class="pf-themes"><span class="pf-lab">Эффекты:</span><button class="ob-pk on" onclick="toggleFx()">${localStorage.getItem('ironlog_fxoff')==='1'?'выкл':'вкл'}</button></div>
     <div class="pf-themes"><span class="pf-lab">PIN:</span><button class="ob-pk on" onclick="pinSetup()">${ME.pinHash?'сменить':'установить'}</button>${ME.pinHash?`<button class="ob-pk" onclick="pinRemove()">снять</button>`:''}</div>`
    :`<div class="mact" style="justify-content:flex-start;margin-top:10px"><button class="ghost" onclick="switchPersona('${p.id}')">Открыть профиль</button></div>`}
   </div>`).join('')+
@@ -521,8 +551,13 @@ function fxLoop(t){
 function kick(){if(!loopOn&&fxOK()){loopOn=true;requestAnimationFrame(fxLoop);}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)loopOn=false;else kick();});
 
-/* ==== BOOT ==== */
+/* ==== BOOT: только первый запуск за сутки ==== */
 function runBoot(done){
+ const bkey='ironlog_boot_'+(ME?ME.id:'x');
+ const today=todayISO();
+ let lastB='';try{lastB=localStorage.getItem(bkey)||'';}catch(e){}
+ if(lastB===today||!fxOK()){document.body.classList.add('booted');done&&done();return;}
+ try{localStorage.setItem(bkey,today);}catch(e){}
  const b=document.createElement('div');b.id='boot';
  const lines=['> CYBERDYNE TACTICAL CORE · ONLINE',
   `> PERSONA: ${ME?ME.name:'—'}`,
@@ -585,10 +620,12 @@ addEventListener('popstate', e=>{
 function renderHome(){
  const last=S.sessions.length?[...S.sessions].sort((a,b)=>b.ts-a.ts)[0]:null;
  const lm=S.measures.length?[...S.measures].sort((a,b)=>b.ts-a.ts)[0]:null;
+ const st=streakStats();
  document.getElementById('hstatus').innerHTML=
   `OPERATOR: <b>${esc(ME.name)}</b>${ME.stats?` · <b>${esc(ME.stats)}</b>`:''}<br>`+
   `SESSIONS: <b>${S.sessions.length}</b>${last?` · LAST: <b>${new Date(last.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})} · ${vol(last).toLocaleString('ru-RU')} кг</b>`:''}<br>`+
   `MEASURES: <b>${S.measures.length}</b>${lm&&lm.v.w?` · LAST WEIGHT: <b>${lm.v.w} кг</b>`:''}<br>`+
+  `STREAK: <b>${st.week}</b> за 7 дней · <b>${st.weeks}</b> нед подряд<br>`+
   `CLOUD: <b>${GH.token?'SYNC ON':'SYNC OFF'}</b>`;
  document.getElementById('ms-train').textContent=last?`последняя: ${new Date(last.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})} · ${vol(last).toLocaleString('ru-RU')} кг`:'журнал силовых · 3 дня';
  document.getElementById('ms-meas').textContent=lm&&lm.v.w?`последний: ${fmtDate(lm.date)} · ${lm.v.w} кг`:'история пропорций';
@@ -814,7 +851,7 @@ function goMeasure(){
 }
 setInterval(checkReminder,30000);
 
-/* ==== SW + баннер обновления ==== */
+/* ==== SW + баннер ==== */
 function registerSW(){
  if(!('serviceWorker' in navigator)) return;
  navigator.serviceWorker.register('sw.js').then(reg=>{
