@@ -121,19 +121,31 @@ function onboardShell(html){
  };
  return b;
 }
-
+/* принудительное обновление: сносит SW и кэши, тянет код из сети */
+async function forceUpdate(){
+ toast('[>] ТЯНУ СВЕЖИЙ КОД…');
+ try{
+  const regs=await navigator.serviceWorker.getRegistrations();
+  await Promise.all(regs.map(r=>r.unregister()));
+ }catch(e){}
+ try{
+  const keys=await caches.keys();
+  await Promise.all(keys.map(k=>caches.delete(k)));
+ }catch(e){}
+ setTimeout(function(){location.reload();},300);
+}
 function pinGate(p,done){
  const b=onboardShell(`<div class="ob-title">IRON <span>WORLD</span></div>
   <div class="ob-sub"><span class="ob-lock">[PIN]</span> профиль ${esc(p.name)} защищён</div>
   <label class="ob-lab">Введите PIN-код</label>
   <div class="pin-row"><input id="gate-pin" class="pin-in" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"></div>
-  <div class="mact" style="justify-content:center;margin-top:16px"><button id="gate-go">Войти</button></div>`);
+  <div class="mact" style="justify-content:center;margin-top:16px"><button class="ghost" id="gate-upd">Обновить</button><button id="gate-go">Войти</button></div>`);
  const go=async()=>{
   const ok=await pinVerify(b.querySelector('#gate-pin').value.trim(),p);
   if(ok){sessionStorage.setItem('ironlog_unlocked_'+p.id,'1');b.remove();done();}
   else{toast('[!] НЕВЕРНЫЙ PIN');const el=b.querySelector('#gate-pin');el.value='';el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),350);}
  };
- b.querySelector('#gate-go').onclick=go;
+ b.querySelector('#gate-go').onclick=go;  b.querySelector('#gate-upd').onclick=forceUpdate;
  const gin=b.querySelector('#gate-pin');
  let gateBusy=false;
  gin.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
