@@ -109,8 +109,16 @@ function pinGate(p,done){
   else{toast('[!] НЕВЕРНЫЙ PIN');const el=b.querySelector('#gate-pin');el.value='';el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),350);}
  };
  b.querySelector('#gate-go').onclick=go;
- b.querySelector('#gate-pin').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
-}
+ const gin=b.querySelector('#gate-pin');
+ let gateBusy=false;
+ gin.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+ gin.addEventListener('input',()=>{
+  if(gateBusy)return;
+  if(gin.value.trim().length===4){
+   gateBusy=true;
+   go().finally(()=>{gateBusy=false;});
+  }
+ });
 function pinSetup(){
  const b=onboardShell(`<div class="ob-title">IRON <span>WORLD</span></div>
   <div class="ob-sub">PIN профиля ${esc(ME.name)}</div>
