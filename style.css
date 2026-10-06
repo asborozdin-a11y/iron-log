@@ -498,3 +498,9 @@ input:not([type="checkbox"]),select{min-height:44px}
 
 /* ==== v56: полоса сохранения возвращена в поток, ничего не перекрывает ==== */
 .actions.primary{position:static;left:auto;right:auto;bottom:auto;margin:12px 0;padding:0;background:none}
+
+/* ==== v57: PR-строка на карточке упражнения ==== */
+.prline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:6px 0 2px;
+ color:var(--cyan);font:600 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.02em}
+.prline b{font-size:14px}
+.prline .spark{width:90px;height:28px;flex:0 0 90px}
