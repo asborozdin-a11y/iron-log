@@ -470,3 +470,10 @@ body{ padding-bottom:calc(72px + var(--safe-b)); }
 .srow input{min-height:48px;text-align:center;font-size:20px}
 /* тихая плашка черновика вместо тоста */
 #draftplate{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 10px;padding:10px 12px;border:1px dashed var(--line-2);border-radius:10px;color:var(--mut2);font:500 12px/1.4 'JetBrains Mono',monospace}
+
+/* ==== v51: дробные значения видны в степпере целиком ==== */
+.stp{grid-template-columns:40px 1fr 40px;gap:4px}
+.stp input{min-width:0}
+.stp-b{min-height:48px;font-size:20px}
+.srow input{font-size:17px;letter-spacing:0;font-variant-numeric:tabular-nums;padding:0 2px}
+.srow input::placeholder{font-size:15px;letter-spacing:0}
