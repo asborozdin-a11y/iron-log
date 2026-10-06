@@ -504,3 +504,18 @@ input:not([type="checkbox"]),select{min-height:44px}
  color:var(--cyan);font:600 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.02em}
 .prline b{font-size:14px}
 .prline .spark{width:90px;height:28px;flex:0 0 90px}
+
+/* ==== v58: переключатель дней — строка над навигацией, выезд снизу ==== */
+#tabs{position:fixed;left:0;right:0;bottom:calc(64px + var(--safe-b));margin:0;
+ display:flex;gap:6px;padding:6px 8px;z-index:98;
+ background:linear-gradient(180deg,var(--card) 0%,var(--card2) 100%);
+ border-top:1px solid var(--line)}
+#tabs button{flex:1 1 0;min-height:44px;font:700 12px/1 'JetBrains Mono',monospace;letter-spacing:.08em;
+ background:var(--ghost-1);border:1px solid var(--line-2);border-radius:10px;color:var(--mut2);cursor:pointer}
+#tabs button.on{background:linear-gradient(180deg,var(--btn-1),var(--red));border-color:var(--red);color:#fff;box-shadow:0 0 14px var(--red-glow)}
+@keyframes tabsUp{from{transform:translateY(calc(100% + 64px))}to{transform:translateY(0)}}
+#view-train.on #tabs{animation:tabsUp .32s cubic-bezier(.2,.9,.3,1)}
+body{padding-bottom:calc(124px + var(--safe-b))}
+#toast{bottom:calc(128px + var(--safe-b))}
+#update-banner{bottom:calc(176px + var(--safe-b))}
+#restwidget{bottom:calc(232px + var(--safe-b))}
