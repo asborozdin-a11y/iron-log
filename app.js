@@ -1,4 +1,4 @@
-/* IRON WORLD · ЯДРО v48: P0+P1+P2 + фикс bicep→biceps + дедуп колонок + чистый startApp */
+/* IRON WORLD · ЯДРО v55: полный файл (v48 + авто-день + клавиатура PIN + автовход) */
 
 const P_LIST='ironlog_personas', P_CUR='ironlog_persona', LEGACY='ironlog_v1', LEGACY_FLAG='ironlog_legacy_migrated';
 const OLD_REPO='iron-log';
@@ -34,9 +34,7 @@ const TH_SW={
  'tiffany-audrey':'linear-gradient(135deg,#0abab5 50%,#f2f6f5 50%)',
  'rose-champagne':'linear-gradient(135deg,#ff7a9c 50%,#120d14 50%)'};
 
-/* ==== ЕДИНАЯ СХЕМА ЗАМЕРОВ для всех профилей (9 метрик) ====
-   METRICS паков больше не влияют на хранилище и CSV.
-   Каждый заполняет только свои поля, остальные оставляет пустыми. */
+/* ==== ЕДИНАЯ СХЕМА ЗАМЕРОВ (9 метрик) ==== */
 var METRICS_UNIFIED=[
  {k:'w',l:'Вес',u:'кг',rule:'dn'},
  {k:'neck',l:'Шея',u:'см',rule:'up'},
@@ -48,9 +46,6 @@ var METRICS_UNIFIED=[
  {k:'calf',l:'Голень',u:'см',rule:'up'},
  {k:'glute',l:'Ягодицы',u:'см',rule:'up'}
 ];
-/* applyPack здесь перезаписывает старую версию из data.js,
-   потому что app.js грузится после data.js. Для чистоты старую
-   applyPack из data.js можно удалить — поведение не изменится. */
 if(typeof window.applyPack!=='function'){window.applyPack=function(){};}
 let FXC=THEMES.terminator.fx;
 function applyPack(pk){
@@ -75,10 +70,9 @@ async function pinHashFn(pin,salt){
 }
 async function pinVerify(pin,p){return !!(p&&p.pinHash)&&(await pinHashFn(pin,p.pinSalt||''))===p.pinHash}
 
-/* ==== ФОКУС-ТРАП (чистая версия, без мёртвой карты) ==== */
+/* ==== ФОКУС-ТРАП ==== */
 function trapFocus(box, onEscape){
  if(!box) return function(){};
- const prev=document.activeElement;
  const sel='button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
  const nodes=function(){return [...box.querySelectorAll(sel)].filter(n=>!n.disabled&&n.offsetParent!==null);};
  setTimeout(function(){try{const f=nodes();f[0]&&f[0].focus({preventScroll:true});}catch(e){}},50);
@@ -93,8 +87,42 @@ function trapFocus(box, onEscape){
  box.addEventListener('keydown',onKey);
  return function(){
   box.removeEventListener('keydown',onKey);
-  try{prev&&prev.focus&&prev.focus({preventScroll:true});}catch(e){}
  };
+}
+
+/* ==== ОНБОРДИНГ-ОБОЛОЧКА + подгонка под клавиатуру ==== */
+let onboardTrapCleanup = null;
+let onboardKbCleanup = null;
+function bindKeyboardFit(box){
+ if(!window.visualViewport)return function(){};
+ const vv=window.visualViewport;
+ const onCh=function(){
+  setTimeout(function(){
+   const el=box.contains(document.activeElement)?document.activeElement:box.querySelector('input');
+   if(el&&el.scrollIntoView)el.scrollIntoView({block:'center',behavior:'smooth'});
+  },120);
+ };
+ vv.addEventListener('resize',onCh);
+ vv.addEventListener('scroll',onCh);
+ return function(){vv.removeEventListener('resize',onCh);vv.removeEventListener('scroll',onCh);};
+}
+function onboardShell(html){
+ const old=document.getElementById('onboard'); if(old)old.remove();
+ if(onboardTrapCleanup){try{onboardTrapCleanup();}catch(e){} onboardTrapCleanup=null;}
+ if(onboardKbCleanup){try{onboardKbCleanup();}catch(e){} onboardKbCleanup=null;}
+ const b=document.createElement('div');b.id='onboard';
+ b.setAttribute('role','dialog');b.setAttribute('aria-modal','true');b.setAttribute('aria-label','Настройка профиля');
+ b.innerHTML=`<div class="ob-box">${html}</div>`;
+ document.body.appendChild(b);
+ onboardTrapCleanup = trapFocus(b, null);
+ onboardKbCleanup = bindKeyboardFit(b);
+ const origRemove = b.remove.bind(b);
+ b.remove = function(){
+  if(onboardTrapCleanup){try{onboardTrapCleanup();}catch(e){} onboardTrapCleanup=null;}
+  if(onboardKbCleanup){try{onboardKbCleanup();}catch(e){} onboardKbCleanup=null;}
+  return origRemove();
+ };
+ return b;
 }
 
 function pinGate(p,done){
@@ -119,6 +147,7 @@ function pinGate(p,done){
    go().finally(()=>{gateBusy=false;});
   }
  });
+}
 function pinSetup(){
  const b=onboardShell(`<div class="ob-title">IRON <span>WORLD</span></div>
   <div class="ob-sub">PIN профиля ${esc(ME.name)}</div>
@@ -154,7 +183,7 @@ function pinRemove(){
  };
 }
 
-/* ==== ХРАНИЛИЩЕ: миграция тренировок + замеров ==== */
+/* ==== ХРАНИЛИЩЕ ==== */
 function migrate(S){
  let changed=false;
  if(Array.isArray(S.sessions) && S.sessions.length){
@@ -179,7 +208,6 @@ function migrate(S){
  }
  return {changed, data:S};
 }
-/* переименование ключа бицепса: старые данные лежат в v.bicep */
 function migrateMeasures(D){
  var changed=false;
  (D.measures||[]).forEach(function(m){
@@ -210,7 +238,6 @@ function saveS(){
 function loadGH(){try{return JSON.parse(localStorage.getItem(GHKC))||{}}catch(e){return{}}}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 function lastOf(day){return [...S.sessions].reverse().find(s=>s.dayId===day)}
-/* следующий день ротации после последней тренировки */
 function nextDayId(){
  if(typeof DAYS==='undefined'||!DAYS||!DAYS.length)return 1;
  if(!S.sessions.length)return DAYS[0].id;
@@ -224,7 +251,7 @@ function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.spl
 function todayISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function fxOK(){return !matchMedia('(prefers-reduced-motion: reduce)').matches}
 
-/* ==== ВАЛИДАЦИЯ (хранилище хранит СЫРЫЕ данные, esc() только на выводе) ==== */
+/* ==== ВАЛИДАЦИЯ ==== */
 const num = v => (v === '' || v === null || v === undefined) ? '' : (Number.isFinite(+v) ? +v : '');
 function validPackIds(){return (typeof PACKS!=='undefined')?Object.keys(PACKS):['default']}
 function validDayIds(){
@@ -279,39 +306,6 @@ function sanitizeMeasure(m){
 }
 
 /* ==== ОНБОРДИНГ ==== */
-let onboardKbCleanup=null;
-function onboardShell(html){
- const old=document.getElementById('onboard'); if(old)old.remove();
- if(onboardTrapCleanup){try{onboardTrapCleanup();}catch(e){} onboardTrapCleanup=null;}
- if(onboardKbCleanup){try{onboardKbCleanup();}catch(e){} onboardKbCleanup=null;}
- const b=document.createElement('div');b.id='onboard';
- b.setAttribute('role','dialog');b.setAttribute('aria-modal','true');b.setAttribute('aria-label','Настройка профиля');
- b.innerHTML=`<div class="ob-box">${html}</div>`;
- document.body.appendChild(b);
- onboardTrapCleanup = trapFocus(b, null);
- onboardKbCleanup = bindKeyboardFit(b);
- const origRemove = b.remove.bind(b);
- b.remove = function(){
-  if(onboardTrapCleanup){try{onboardTrapCleanup();}catch(e){} onboardTrapCleanup=null;}
-  if(onboardKbCleanup){try{onboardKbCleanup();}catch(e){} onboardKbCleanup=null;}
-  return origRemove();
- };
- return b;
-}
-/* держит активное поле в видимой зоне при открытой клавиатуре */
-function bindKeyboardFit(box){
- if(!window.visualViewport)return function(){};
- const vv=window.visualViewport;
- const onCh=function(){
-  setTimeout(function(){
-   const el=box.contains(document.activeElement)?document.activeElement:box.querySelector('input');
-   if(el&&el.scrollIntoView)el.scrollIntoView({block:'center',behavior:'smooth'});
-  },120);
- };
- vv.addEventListener('resize',onCh);
- vv.addEventListener('scroll',onCh);
- return function(){vv.removeEventListener('resize',onCh);vv.removeEventListener('scroll',onCh);};
-}
 function onboardCreate(adopt){
  const PK=(typeof PACKS!=='undefined')?PACKS:{default:{label:'базовый'}};
  let params=null;
@@ -410,7 +404,7 @@ function onboardSelect(){
  b.querySelector('#ob-add').onclick=()=>{b.remove();onboardCreate(false);};
 }
 
-/* ==== СТАРТ (схлопнутый: одна функция, hash читается сам) ==== */
+/* ==== СТАРТ ==== */
 function startApp(pid){
  ME=personaById(pid);
  localStorage.setItem(P_CUR,pid);
@@ -425,7 +419,6 @@ function startApp(pid){
  const o=document.getElementById('gh-owner'); if(o)o.value=GH.owner||'asborozdin-a11y';
  const r=document.getElementById('gh-repo'); if(r)r.value=GH.repo||'iron-data';
  ghStatus();
- /* отложенный синк — через setTimeout, чтобы train.js (ghGet) был гарантированно загружен */
  if(GH.token&&localStorage.getItem(PKEYC))setTimeout(function(){if(GH.token&&localStorage.getItem(PKEYC))doSync(false);},0);
  checkReminder();
  if(fxOK()){ensureCanvas();initParts();nextDist=performance.now()+6000;kick();}
@@ -557,7 +550,7 @@ function fxTarget(x,y,done){
  setTimeout(()=>{r.remove();sc.remove();},650);
 }
 
-/* ==== НАВИГАЦИЯ с History API ==== */
+/* ==== НАВИГАЦИЯ ==== */
 const VALID_VIEWS = ['home','train','measure','food','profile'];
 function showView(v, ev, opts){
  opts = opts || {};
@@ -658,7 +651,6 @@ function buildTrainCSV(){
  });
  return rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');
 }
-/* объединение метрик: текущий пак + всё из данных; дедуп по ключу И по метке */
 function allMetricDefs(){
  var seen={},seenLabel={},order=[];
  METRICS.forEach(function(mt){if(!seen[mt.k]&&!seenLabel[mt.l+'_'+mt.u]){seen[mt.k]=mt;seenLabel[mt.l+'_'+mt.u]=1;order.push(mt.k);}});
@@ -699,7 +691,6 @@ async function doSync(manual){
  if(!GH.token){if(manual)toast('[!] СНАЧАЛА ПОДКЛЮЧИ ТОКЕН');return;}
  if(!navigator.onLine){if(manual)toast('[!] НЕТ СЕТИ — СИНК ПОЗЖЕ');return;}
  const sl=slugName(ME?ME.name:'persona');
- /* защита: не затираем облако пустым локальным журналом */
  if(!S.sessions.length&&!S.measures.length){
   let cloudHas=false;
   try{
@@ -823,7 +814,7 @@ function goMeasure(){
 }
 setInterval(checkReminder,30000);
 
-/* ==== SW registration + баннер обновления ==== */
+/* ==== SW + баннер обновления ==== */
 function registerSW(){
  if(!('serviceWorker' in navigator)) return;
  navigator.serviceWorker.register('sw.js').then(reg=>{
