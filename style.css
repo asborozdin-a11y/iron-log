@@ -411,3 +411,31 @@ body{ padding-bottom: calc(16px + var(--safe-b)); }
 .empty{color:var(--mut2)}
 .srow input[data-inherited="true"]{color:var(--mut2);border-style:dashed}
 .srow input[data-inherited="true"]:focus{color:var(--txt);border-style:solid}
+
+/* ==== ПЛАСТ ЗАЛ · Подшаг 1: нижняя навигация + закреплённая кнопка ==== */
+
+/* Нижняя навигация */
+.nav{
+ position:fixed; top:auto; bottom:0; left:0; right:0; margin:0;
+ padding-bottom:calc(8px + var(--safe-b));
+ border-top:1px solid var(--line); border-bottom:0;
+ background:linear-gradient(180deg,var(--card) 0%,var(--bg) 100%);
+ z-index:100;
+}
+body{ padding-bottom:calc(72px + var(--safe-b)); }
+
+/* Закреплённая кнопка действия над навигацией */
+.actions.primary{
+ position:fixed; left:0; right:0; bottom:calc(64px + var(--safe-b));
+ margin:0; padding:10px 12px;
+ background:linear-gradient(180deg, transparent 0%, var(--bg) 35%);
+ z-index:99;
+}
+
+/* Разводка --red и --bad в terminator (--bad теперь оранжево-алый, не фирменный красный) */
+[data-theme="terminator"]{ --bad:#ff6b52; }
+
+/* Остальные плашки теперь считают от нижней навигации */
+#toast{ bottom:calc(80px + var(--safe-b)); }
+#update-banner{ bottom:calc(128px + var(--safe-b)); }
+#restwidget{ bottom:calc(184px + var(--safe-b)); }
