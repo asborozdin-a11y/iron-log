@@ -341,7 +341,7 @@ function renderTrain(){
  document.getElementById('workout').innerHTML=html;
  var act=document.querySelector('#view-train .actions');
  if(act)act.classList.add('primary');
- updateWlChip();
+ updateWlChip();  dockTabs();
  var restored=restoreDraft();
  var plate=document.getElementById('draftplate');
  if(restored){draftPlate();}
@@ -511,6 +511,16 @@ document.getElementById('fileIn').addEventListener('change',function(e){
  }).catch(function(){toast('[!] НЕ ЧИТАЕТСЯ ФАЙЛ');e.target.value='';});
 });
 function clearJ(){if(confirm('Удалить все тренировки журнала? (замеры останутся)')){S.sessions=[];if(saveS()){renderTrain();toast('ЖУРНАЛ ОЧИЩЕН');scheduleSync();}}}
+
+/* ==== стыковка ленты дней к навигации по факту, а не на глаз ==== */
+function dockTabs(){
+ var nav=document.getElementById('nav');
+ if(!nav)return;
+ document.documentElement.style.setProperty('--nav-h',nav.offsetHeight+'px');
+}
+addEventListener('resize',function(){dockTabs();});
+addEventListener('orientationchange',function(){setTimeout(dockTabs,150);});
+dockTabs();
 
 /* ==== ВОССТАНОВЛЕНИЕ ИЗ ОБЛАКА ==== */
 function csvSplit(line){
