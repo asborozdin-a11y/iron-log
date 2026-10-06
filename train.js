@@ -1,4 +1,4 @@
-/* IRON WORLD · ТРЕНИРОВКИ v50: степперы, тихий черновик, enter-фокус */
+/* IRON WORLD · ТРЕНИРОВКИ v57: PR-строка с мини-графиком на карточке */
 
 function tabs(){
  var h='';
@@ -10,7 +10,7 @@ function tabs(){
 }
 function setDay(id){cur=id;renderTrain()}
 
-/* ==== черновики (без тостов: тихая плашка вместо попапа) ==== */
+/* ==== черновики ==== */
 function debounce(fn,ms){var t=null;var f=function(){clearTimeout(t);t=setTimeout(fn,ms);};f.flush=function(){clearTimeout(t);fn();};return f}
 function DRAFT_KEY(){return ME?('ironlog_draft_'+ME.id+'_'+cur):'ironlog_draft_x'}
 function saveDraft(){
@@ -76,22 +76,9 @@ function draftPlate(){
 }
 function dropDraftAndRender(){dropDraft();renderTrain();toast('ЧЕРНОВИК ОЧИЩЕН');}
 
-/* ==== СТЕППЕРЫ: делегированные кнопки ± ==== */
-/* ✓ = подход выполнен: сразу стартует таймер отдыха упражнения */
-document.addEventListener('click',function(e){
- var b=e.target&&e.target.closest?e.target.closest('.setok'):null;
- if(!b)return;
- var i=+b.dataset.e;
- var d=null;for(var q=0;q<DAYS.length;q++){if(DAYS[q].id===cur)d=DAYS[q];}
- var ex=d&&d.ex&&d.ex[i]; if(!ex)return;
- var sec=restParse(ex.rest);
- if(!sec){toast('[!] ДЛЯ ЭТОГО УПРАЖНЕНИЯ ОТДЫХ НЕ ЗАДАН');return;}
- startRest(sec,ex.n);
- b.classList.add('on');
-});
+/* ==== СТЕППЕРЫ ==== */
 document.addEventListener('click',function(e){
  var b=e.target&&e.target.closest?e.target.closest('.stp-b'):null;
-
  if(!b)return;
  var inp=document.querySelector('input[data-e="'+b.dataset.e+'"][data-s="'+b.dataset.s+'"][data-f="'+b.dataset.f+'"]');
  if(!inp)return;
@@ -103,7 +90,6 @@ document.addEventListener('click',function(e){
  try{if(navigator.vibrate)navigator.vibrate(8);}catch(err){}
  saveDraftDebounced();
 });
-/* Enter переводит фокус на следующее поле */
 document.addEventListener('keydown',function(e){
  if(e.key!=='Enter')return;
  var t=e.target;
@@ -112,8 +98,20 @@ document.addEventListener('keydown',function(e){
  var idx=all.indexOf(t);
  if(idx>=0&&idx<all.length-1){e.preventDefault();all[idx+1].focus();}
 });
+/* ✓ = подход выполнен: старт таймера отдыха */
+document.addEventListener('click',function(e){
+ var b=e.target&&e.target.closest?e.target.closest('.setok'):null;
+ if(!b)return;
+ var i=+b.dataset.e;
+ var d=null;for(var q=0;q<DAYS.length;q++){if(DAYS[q].id===cur)d=DAYS[q];}
+ var ex=d&&d.ex&&d.ex[i]; if(!ex)return;
+ var sec=restParse(ex.rest);
+ if(!sec){toast('[!] ДЛЯ ЭТОГО УПРАЖНЕНИЯ ОТДЫХ НЕ ЗАДАН');return;}
+ startRest(sec,ex.n);
+ b.classList.add('on');
+});
 
-/* ==== ТАЙМЕР ОТДЫХА (абсолютная метка) ==== */
+/* ==== ТАЙМЕР ОТДЫХА ==== */
 var restTimer={endsAt:0,total:0,iv:null};
 var restAC=null;
 function restParse(str){var m=String(str||'').match(/(\d+)/);return m?+m[1]:0}
@@ -246,7 +244,32 @@ function renderVolChart(){
   +sparkline(pts.slice(-12))+'</div>';
 }
 
-/* ==== рендер тренировки (степперы + плашка черновика) ==== */
+/* ==== PR по упражнению ==== */
+function exStats(key){
+ var best=null, series=[];
+ for(var n=0;n<S.sessions.length;n++){
+  var s=S.sessions[n];
+  var exs=s.ex||[];
+  for(var i=0;i<exs.length;i++){
+   if(exs[i].key!==key)continue;
+   var top=null;
+   var sets=exs[i].sets||[];
+   for(var k=0;k<sets.length;k++){
+    var st=sets[k];
+    if(st[0]==='')continue;
+    if(!top||+st[0]>+top[0])top=st;
+   }
+   if(!top)continue;
+   series.push({t:s.ts,v:+top[0]});
+   if(!best||+top[0]>+best.w)best={w:+top[0],r:top[1],ts:s.ts};
+  }
+ }
+ series.sort(function(a,b){return a.t-b.t;});
+ return {best:best,series:series};
+}
+function e1rm(w,r){r=+r||0;return r>1?Math.round(w*(1+r/30)):Math.round(w);}
+
+/* ==== рендер тренировки ==== */
 function renderTrain(){
  tabs();
  var d=null;
@@ -267,6 +290,11 @@ function renderTrain(){
   if(prev&&prev.ex){for(var z=0;z<prev.ex.length;z++){if(prev.ex[z].key===key){prevRec=prev.ex[z];break;}}}
   var hasAny=false;
   if(prevRec&&prevRec.sets){for(var y=0;y<prevRec.sets.length;y++){if(prevRec.sets[y]&&prevRec.sets[y][0]!==''){hasAny=true;break;}}}
+  var stt=exStats(key);
+  var prline='';
+  if(stt.best){
+   prline='<div class="prline"><span>PR <b>'+stt.best.w+'</b> × '+(stt.best.r||'–')+' · '+new Date(stt.best.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})+' · e1RM ≈ '+e1rm(stt.best.w,stt.best.r)+'</span>'+(stt.series.length>1?sparkline(stt.series.slice(-10)):'')+'</div>';
+  }
   var btns='';
   if(hasAny)btns+='<button class="copybtn" onclick="copyPrev('+i+')">&lt;&lt; прошлый раз</button>';
   if(restParse(e.rest))btns+='<button class="copybtn" onclick="startRestFor('+i+')">⏱ '+esc(e.rest)+'</button>';
@@ -293,6 +321,7 @@ function renderTrain(){
   html+='<div class="ex '+(e.ss?'ss':'')+'">'
    +'<h3>'+esc(e.n)+'</h3>'
    +'<div class="meta"><b>'+e.s+' × '+esc(e.r)+'</b> · отдых '+esc(e.rest)+'</div>'
+   +prline
    +'<div class="note">'+esc(e.note||'')+'</div>'
    +'<div class="ex-btns">'+btns+'</div>'
    +'<div class="sets">'+sets+'</div>'
