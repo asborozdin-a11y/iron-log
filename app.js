@@ -1,4 +1,4 @@
-/* IRON WORLD · ЯДРО v11 P1: P0 + History API + фокус-трапы + SW баннер */
+/* IRON WORLD · ЯДРО v48: P0+P1+P2 + фикс bicep→biceps + дедуп колонок + чистый startApp */
 
 const P_LIST='ironlog_personas', P_CUR='ironlog_persona', LEGACY='ironlog_v1', LEGACY_FLAG='ironlog_legacy_migrated';
 const OLD_REPO='iron-log';
@@ -33,10 +33,10 @@ const TH_SW={
  'tiffany-noir':'linear-gradient(135deg,#17c3bc 50%,#081114 50%)',
  'tiffany-audrey':'linear-gradient(135deg,#0abab5 50%,#f2f6f5 50%)',
  'rose-champagne':'linear-gradient(135deg,#ff7a9c 50%,#120d14 50%)'};
-if(typeof window.applyPack!=='function'){window.applyPack=function(){};}
-/* Единая схема замеров для ВСЕХ профилей: 9 метрик.
-   Каждый заполняет только свои поля, остальные оставляет пустыми.
-   METRICS паков больше не влияют на хранилище и CSV. */
+
+/* ==== ЕДИНАЯ СХЕМА ЗАМЕРОВ для всех профилей (9 метрик) ====
+   METRICS паков больше не влияют на хранилище и CSV.
+   Каждый заполняет только свои поля, остальные оставляет пустыми. */
 var METRICS_UNIFIED=[
  {k:'w',l:'Вес',u:'кг',rule:'dn'},
  {k:'neck',l:'Шея',u:'см',rule:'up'},
@@ -48,6 +48,11 @@ var METRICS_UNIFIED=[
  {k:'calf',l:'Голень',u:'см',rule:'up'},
  {k:'glute',l:'Ягодицы',u:'см',rule:'up'}
 ];
+/* applyPack здесь перезаписывает старую версию из data.js,
+   потому что app.js грузится после data.js. Для чистоты старую
+   applyPack из data.js можно удалить — поведение не изменится. */
+if(typeof window.applyPack!=='function'){window.applyPack=function(){};}
+let FXC=THEMES.terminator.fx;
 function applyPack(pk){
  if(!pk)return;
  DAYS=pk.DAYS;
@@ -55,7 +60,6 @@ function applyPack(pk){
  MACROS=pk.MACROS;
  FOOD=pk.FOOD;
 }
-let FXC=THEMES.terminator.fx;
 function applyTheme(t){document.body.dataset.theme=t;FXC=(THEMES[t]||THEMES.terminator).fx;}
 function setTheme(t){
  if(!ME)return; ME.theme=t;
@@ -63,6 +67,7 @@ function setTheme(t){
  applyTheme(t);renderProfile(); toast('[OK] ТЕМА: '+t.toUpperCase());
 }
 
+/* ==== PIN ==== */
 function randSalt(){const a=new Uint8Array(8);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,'0')).join('')}
 async function pinHashFn(pin,salt){
  try{const d=new TextEncoder().encode(salt+':'+pin);const h=await crypto.subtle.digest('SHA-256',d);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
@@ -70,36 +75,28 @@ async function pinHashFn(pin,salt){
 }
 async function pinVerify(pin,p){return !!(p&&p.pinHash)&&(await pinHashFn(pin,p.pinSalt||''))===p.pinHash}
 
-/* ==== ФОКУС-ТРАП: Tab зацикливается внутри модалки, Esc закрывает ==== */
-let _activeTraps = new Map();
+/* ==== ФОКУС-ТРАП (чистая версия, без мёртвой карты) ==== */
 function trapFocus(box, onEscape){
- if(!box) return ()=>{};
- const id = 'trap_'+Math.random().toString(36).slice(2);
- const prev = document.activeElement;
- const sel = 'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
- const nodes = () => [...box.querySelectorAll(sel)].filter(n => !n.disabled && n.offsetParent !== null);
- const first = () => nodes()[0];
- const last = () => {const n=nodes(); return n[n.length-1];};
- setTimeout(()=>{try{first() && first().focus({preventScroll:true});}catch(e){}}, 50);
- const onKey = e => {
-  if(e.key === 'Escape' && onEscape){ e.preventDefault(); onEscape(); return; }
-  if(e.key !== 'Tab') return;
-  const f = nodes(); if(!f.length) return;
-  const firstEl = f[0], lastEl = f[f.length-1];
-  if(e.shiftKey && document.activeElement === firstEl){ e.preventDefault(); lastEl.focus(); }
-  else if(!e.shiftKey && document.activeElement === lastEl){ e.preventDefault(); firstEl.focus(); }
+ if(!box) return function(){};
+ const prev=document.activeElement;
+ const sel='button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
+ const nodes=function(){return [...box.querySelectorAll(sel)].filter(n=>!n.disabled&&n.offsetParent!==null);};
+ setTimeout(function(){try{const f=nodes();f[0]&&f[0].focus({preventScroll:true});}catch(e){}},50);
+ const onKey=function(e){
+  if(e.key==='Escape'&&onEscape){e.preventDefault();onEscape();return;}
+  if(e.key!=='Tab')return;
+  const f=nodes();if(!f.length)return;
+  const first=f[0],last=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
  };
- box.addEventListener('keydown', onKey);
- const cleanup = () => {
-  box.removeEventListener('keydown', onKey);
-  _activeTraps.delete(id);
-  try{ prev && prev.focus && prev.focus({preventScroll:true}); }catch(e){}
+ box.addEventListener('keydown',onKey);
+ return function(){
+  box.removeEventListener('keydown',onKey);
+  try{prev&&prev.focus&&prev.focus({preventScroll:true});}catch(e){}
  };
- _activeTraps.set(id, cleanup);
- return cleanup;
 }
 
-/* ==== PIN ==== */
 function pinGate(p,done){
  const b=onboardShell(`<div class="ob-title">IRON <span>WORLD</span></div>
   <div class="ob-sub"><span class="ob-lock">[PIN]</span> профиль ${esc(p.name)} защищён</div>
@@ -149,7 +146,7 @@ function pinRemove(){
  };
 }
 
-/* ==== ХРАНИЛИЩЕ ==== */
+/* ==== ХРАНИЛИЩЕ: миграция тренировок + замеров ==== */
 function migrate(S){
  let changed=false;
  if(Array.isArray(S.sessions) && S.sessions.length){
@@ -174,6 +171,15 @@ function migrate(S){
  }
  return {changed, data:S};
 }
+/* переименование ключа бицепса: старые данные лежат в v.bicep */
+function migrateMeasures(D){
+ var changed=false;
+ (D.measures||[]).forEach(function(m){
+  if(!m||!m.v)return;
+  if(m.v.bicep!==undefined&&m.v.biceps===undefined){m.v.biceps=m.v.bicep;delete m.v.bicep;changed=true;}
+ });
+ return changed;
+}
 function load(){
  try{
   const o = JSON.parse(localStorage.getItem(KEYC));
@@ -182,7 +188,8 @@ function load(){
    if(!Array.isArray(o.measures))o.measures=[];
    if(!('reminder' in o))o.reminder=null;
    const m = migrate(o);
-   if(m.changed){ try{localStorage.setItem(KEYC,JSON.stringify(m.data));}catch(e){} }
+   const mm = migrateMeasures(m.data);
+   if(m.changed||mm){ try{localStorage.setItem(KEYC,JSON.stringify(m.data));}catch(e){} }
    return m.data;
   }
  }catch(e){}
@@ -201,7 +208,7 @@ function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.spl
 function todayISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function fxOK(){return !matchMedia('(prefers-reduced-motion: reduce)').matches}
 
-/* ==== ВАЛИДАЦИЯ ==== */
+/* ==== ВАЛИДАЦИЯ (хранилище хранит СЫРЫЕ данные, esc() только на выводе) ==== */
 const num = v => (v === '' || v === null || v === undefined) ? '' : (Number.isFinite(+v) ? +v : '');
 function validPackIds(){return (typeof PACKS!=='undefined')?Object.keys(PACKS):['default']}
 function validDayIds(){
@@ -255,7 +262,7 @@ function sanitizeMeasure(m){
  return {ts:m.ts, date:m.date, v};
 }
 
-/* ==== ОНБОРДИНГ (с трапом фокуса) ==== */
+/* ==== ОНБОРДИНГ ==== */
 let onboardTrapCleanup = null;
 function onboardShell(html){
  const old=document.getElementById('onboard'); if(old)old.remove();
@@ -367,6 +374,7 @@ function onboardSelect(){
  b.querySelector('#ob-add').onclick=()=>{b.remove();onboardCreate(false);};
 }
 
+/* ==== СТАРТ (схлопнутый: одна функция, hash читается сам) ==== */
 function startApp(pid){
  ME=personaById(pid);
  localStorage.setItem(P_CUR,pid);
@@ -381,10 +389,16 @@ function startApp(pid){
  const o=document.getElementById('gh-owner'); if(o)o.value=GH.owner||'asborozdin-a11y';
  const r=document.getElementById('gh-repo'); if(r)r.value=GH.repo||'iron-data';
  ghStatus();
- if(GH.token&&localStorage.getItem(PKEYC))doSync(false);
+ /* отложенный синк — через setTimeout, чтобы train.js (ghGet) был гарантированно загружен */
+ if(GH.token&&localStorage.getItem(PKEYC))setTimeout(function(){if(GH.token&&localStorage.getItem(PKEYC))doSync(false);},0);
  checkReminder();
  if(fxOK()){ensureCanvas();initParts();nextDist=performance.now()+6000;kick();}
- runBoot(()=>showView('home',null,{nofx:true, nohistory:true}));
+ const hashView=(location.hash||'').replace('#','');
+ runBoot(function(){
+  const target=(hashView&&VALID_VIEWS.indexOf(hashView)>=0)?hashView:'home';
+  showView(target,null,{nofx:true,nohistory:true});
+  try{history.replaceState({v:target},'','#'+target);}catch(e){}
+ });
 }
 
 /* ==== ПРОФИЛИ ==== */
@@ -485,7 +499,7 @@ function runBoot(done){
   `> PERSONA: ${ME?ME.name:'—'}`,
   `> THEME: ${(ME&&ME.theme||'terminator').toUpperCase()}`,
   `> SECURITY: ${ME&&ME.pinHash?'PIN LOCK ON':'OPEN'}`,
-  `> SCHEMA: v2`,
+  `> SCHEMA: v2 · METRICS: 9`,
   `> MUSCLE DB: ${S.sessions.length} SESSIONS LOADED`,
   `> CLOUD LINK: ${GH.token?'SYNC ON':'SYNC OFF'}`];
  b.innerHTML=`<div class="b-lines">${lines.map((l,i)=>`<div style="animation-delay:${i*100}ms">${l}</div>`).join('')}</div>
@@ -496,7 +510,6 @@ function runBoot(done){
  b.addEventListener('pointerdown',finish);
  setTimeout(finish,1100);
 }
-
 function fxTarget(x,y,done){
  const r=document.createElement('div');r.className='reticle';
  r.style.left=x+'px';r.style.top=y+'px';
@@ -512,7 +525,7 @@ function fxTarget(x,y,done){
 const VALID_VIEWS = ['home','train','measure','food','profile'];
 function showView(v, ev, opts){
  opts = opts || {};
- if(!VALID_VIEWS.includes(v)) v = 'home';
+ if(VALID_VIEWS.indexOf(v)<0) v = 'home';
  const apply = () => {
   document.body.dataset.view = v;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('on','reveal'));
@@ -536,7 +549,7 @@ function showView(v, ev, opts){
  fxTarget(x,y, apply);
 }
 addEventListener('popstate', e=>{
- const v = (e.state && e.state.v && VALID_VIEWS.includes(e.state.v)) ? e.state.v : 'home';
+ const v = (e.state && e.state.v && VALID_VIEWS.indexOf(e.state.v)>=0) ? e.state.v : 'home';
  showView(v, null, {fromPop:true, nofx:true, nohistory:true});
 });
 
@@ -552,7 +565,7 @@ function renderHome(){
  document.getElementById('ms-meas').textContent=lm&&lm.v.w?`последний: ${fmtDate(lm.date)} · ${lm.v.w} кг`:'история пропорций';
 }
 
-/* ==== GitHub ==== */
+/* ==== GitHub sync ==== */
 function b64utf8(s){const b=new TextEncoder().encode(s);let bin='';for(let i=0;i<b.length;i++)bin+=String.fromCharCode(b[i]);return btoa(bin)}
 async function ghSha(path){
  const r=await fetch('https://api.github.com/repos/'+GH.owner+'/'+GH.repo+'/git/trees/HEAD?recursive=1',{
@@ -609,11 +622,10 @@ function buildTrainCSV(){
  });
  return rows.map(r=>r.map(csvEsc).join(',')).join('\r\n');
 }
-/* Объединение метрик: текущий пак (порядок колонок) + все ключи из данных.
-   METRICS — это описание UI, а не схема хранилища. */
+/* объединение метрик: текущий пак + всё из данных; дедуп по ключу И по метке */
 function allMetricDefs(){
- var seen={},order=[];
- METRICS.forEach(function(mt){if(!seen[mt.k]){seen[mt.k]=mt;order.push(mt.k);}});
+ var seen={},seenLabel={},order=[];
+ METRICS.forEach(function(mt){if(!seen[mt.k]&&!seenLabel[mt.l+'_'+mt.u]){seen[mt.k]=mt;seenLabel[mt.l+'_'+mt.u]=1;order.push(mt.k);}});
  S.measures.forEach(function(m){
   Object.keys(m.v||{}).forEach(function(k){
    if(seen[k])return;
@@ -623,7 +635,10 @@ function allMetricDefs(){
      (PACKS[pk].METRICS||[]).forEach(function(mt){if(mt.k===k&&!def)def=mt;});
     });
    }
-   seen[k]=def||{k:k,l:k,u:''};
+   def=def||{k:k,l:k,u:''};
+   var lab=def.l+'_'+def.u;
+   if(seenLabel[lab])return;
+   seen[k]=def;seenLabel[lab]=1;
    order.push(k);
   });
  });
@@ -648,7 +663,7 @@ async function doSync(manual){
  if(!GH.token){if(manual)toast('[!] СНАЧАЛА ПОДКЛЮЧИ ТОКЕН');return;}
  if(!navigator.onLine){if(manual)toast('[!] НЕТ СЕТИ — СИНК ПОЗЖЕ');return;}
  const sl=slugName(ME?ME.name:'persona');
- /* ЗАЩИТА: никогда не затираем облако пустым локальным журналом */
+ /* защита: не затираем облако пустым локальным журналом */
  if(!S.sessions.length&&!S.measures.length){
   let cloudHas=false;
   try{
@@ -695,7 +710,7 @@ function ghStatus(){
   `статус: <b>подключено</b> · ${esc(GH.owner)}/${esc(GH.repo)}<br>файлы: trainings-${esc(sl)}.csv · measures-${esc(sl)}.csv<br>${localStorage.getItem(PKEYC)?'есть несинхронизированные данные — жду сеть':'всё синхронизировано'}`;
 }
 
-/* ==== НАПОМИНАНИЯ (с трапом) ==== */
+/* ==== НАПОМИНАНИЯ ==== */
 const REPN={none:'разово',daily:'ежедневно',weekly:'еженедельно',monthly:'ежемесячно'};
 function remBase(){if(!S.reminder)return null;const[d]=(S.reminder.date||'').split('T');const t=S.reminder.time||'08:00';const dt=new Date(d+'T'+t);return isNaN(dt)?null:dt}
 function nextReminder(){
@@ -814,36 +829,10 @@ document.addEventListener('change', e=>{
 addEventListener('pagehide', ()=>{ if(typeof saveDraftDebounced==='function' && saveDraftDebounced.flush) saveDraftDebounced.flush(); });
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden && typeof saveDraftDebounced==='function' && saveDraftDebounced.flush) saveDraftDebounced.flush(); });
 (function init(){
- /* глубокая ссылка: если в URL есть #view — стартуем с него */
- const hashView = (location.hash||'').replace('#','');
  const pid=localStorage.getItem(P_CUR);
  if(!PERSONAS.length){onboardCreate(!!localStorage.getItem(LEGACY));return;}
  if(!pid||!personaById(pid)){onboardSelect();return;}
  const p=personaById(pid);
- if(p.pinHash&&sessionStorage.getItem('ironlog_unlocked_'+pid)!=='1'){pinGate(p,()=>startAppWithHash(pid, hashView));return;}
- startAppWithHash(pid, hashView);
+ if(p.pinHash&&sessionStorage.getItem('ironlog_unlocked_'+pid)!=='1'){pinGate(p,()=>startApp(pid));return;}
+ startApp(pid);
 })();
-function startAppWithHash(pid, hashView){
- ME=personaById(pid);
- localStorage.setItem(P_CUR,pid);
- KEYC='ironlog_d_'+pid; GHKC='ironlog_gh_'+pid; VKEYC='ironlog_v_'+pid; PKEYC='ironlog_p_'+pid;
- S=load(); GH=loadGH(); cur=1;
- try{
-  const PK=(typeof PACKS!=='undefined')?PACKS:null;
-  if(PK&&typeof applyPack==='function')applyPack(PK[ME.pack]||PK.default);
- }catch(e){}
- applyTheme(ME.theme||'terminator');
- const t=document.getElementById('gh-token'); if(t)t.value=GH.token||'';
- const o=document.getElementById('gh-owner'); if(o)o.value=GH.owner||'asborozdin-a11y';
- const r=document.getElementById('gh-repo'); if(r)r.value=GH.repo||'iron-data';
- ghStatus();
- if(GH.token&&localStorage.getItem(PKEYC))doSync(false);
- checkReminder();
- if(fxOK()){ensureCanvas();initParts();nextDist=performance.now()+6000;kick();}
- runBoot(()=>{
-  const target = (hashView && VALID_VIEWS.includes(hashView)) ? hashView : 'home';
-  showView(target, null, {nofx:true, nohistory:true});
-  /* заменим текущую запись истории на валидную */
-  try{ history.replaceState({v:target}, '', '#'+target); }catch(e){}
- });
-}
