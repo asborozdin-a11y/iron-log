@@ -4,11 +4,13 @@ function tabs(){
  var h='';
  for(var i=0;i<DAYS.length;i++){
   var d=DAYS[i];
-  h+='<button class="'+(d.id===cur?'on':'')+'" onclick="setDay('+d.id+')">'+d.t+'</button>';
+    h+='<button class="'+(d.id===cur?'on':'')+'" onclick="setDay('+d.id+')">'+dayLabel(d.t)+'</button>';
  }
  document.getElementById('tabs').innerHTML=h;
 }
 function setDay(id){cur=id;renderTrain()}
+/* метка без дня недели: тренировки по ротации, а не по календарю */
+function dayLabel(t){return String(t||'').replace(/^(ПН|ВТ|СР|ЧТ|ПТ|СБ|ВС)\s*·\s*/,'');}
 
 /* ==== черновики ==== */
 function debounce(fn,ms){var t=null;var f=function(){clearTimeout(t);t=setTimeout(fn,ms);};f.flush=function(){clearTimeout(t);fn();};return f}
@@ -275,7 +277,7 @@ function renderTrain(){
  var d=null;
  for(var q=0;q<DAYS.length;q++){if(DAYS[q].id===cur)d=DAYS[q];}
  if(!d)return;
- document.getElementById('dayhead').textContent='День '+d.id+' · '+d.t+' — '+d.sub;
+ document.getElementById('dayhead').textContent='День '+d.id+' · '+dayLabel(d.t)+' — '+d.sub;
  var prev=lastOf(cur);
  var html='';
  if(d.rules){
@@ -469,7 +471,7 @@ function journal(){
   }
   var c='';
   if(s.cardio)c='<li><span class="n">Кардио</span><span class="w">'+esc(s.cardio.done?(s.cardio.min!==''?s.cardio.min+' мин':'ДА'):'—')+'</span></li>';
-  html+='<div class="ses"><div class="sh"><span class="d">'+new Date(s.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})+' · '+esc(s.dayTitle||'')+'</span>'
+  html+='<div class="ses"><div class="sh"><span class="d">'+new Date(s.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})+' · '+esc(dayLabel(s.dayTitle||''))+'</span>'
    +'<span class="v">ТОННАЖ '+v.toLocaleString('ru-RU')+' кг</span>'+dl+'</div>'
    +'<ul>'+rows+c+'</ul></div>';
  }
@@ -541,7 +543,7 @@ function parseTrainCSV(text){
    var hm=(tm||'00:00').split(':');
    var ts=new Date(yy,+dmy[1]-1,+dmy[0],+hm[0]||0,+hm[1]||0).getTime();
    var dayId=1;
-   for(var q=0;q<DAYS.length;q++){if(DAYS[q].t===dayT){dayId=DAYS[q].id;break;}}
+   for(var q=0;q<DAYS.length;q++){var tt=DAYS[q].t;if(tt===dayT||tt.indexOf(dayT)>=0||dayT.indexOf(tt)>=0){dayId=DAYS[q].id;break;}}
    curS={_k:keyS,ts:ts,v:2,packId:(ME&&ME.pack)||'default',dayId:dayId,dayTitle:dayT,ex:[],cardio:null};
    sessions.push(curS);curEx=null;
   }
