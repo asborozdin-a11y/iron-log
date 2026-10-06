@@ -495,3 +495,6 @@ input:not([type="checkbox"]),select{min-height:44px}
  overflow-y:auto;padding:calc(6vh + var(--safe-t)) 16px calc(24px + var(--safe-b))}
 #onboard .ob-box{margin:0 auto;width:100%;max-width:420px}
 #onboard input{font-size:16px}
+
+/* ==== v56: полоса сохранения возвращена в поток, ничего не перекрывает ==== */
+.actions.primary{position:static;left:auto;right:auto;bottom:auto;margin:12px 0;padding:0;background:none}
