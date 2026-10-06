@@ -485,3 +485,7 @@ body{ padding-bottom:calc(72px + var(--safe-b)); }
  font:700 16px/1 'JetBrains Mono',monospace}
 .setok.on{border-color:var(--green);color:var(--green)}
 input:not([type="checkbox"]),select{min-height:44px}
+
+/* ==== v53: таймер отдыха прячется полностью, ничего не виснет ==== */
+#restwidget{transform:translateX(-50%) translateY(calc(100% + 240px));pointer-events:none}
+#restwidget.on{transform:translateX(-50%) translateY(0);pointer-events:auto}
