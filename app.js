@@ -202,6 +202,14 @@ function saveS(){
 function loadGH(){try{return JSON.parse(localStorage.getItem(GHKC))||{}}catch(e){return{}}}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 function lastOf(day){return [...S.sessions].reverse().find(s=>s.dayId===day)}
+/* следующий день ротации после последней тренировки */
+function nextDayId(){
+ if(typeof DAYS==='undefined'||!DAYS||!DAYS.length)return 1;
+ if(!S.sessions.length)return DAYS[0].id;
+ var last=S.sessions.reduce(function(a,b){return b.ts>a.ts?b:a;});
+ for(var i=0;i<DAYS.length;i++){if(DAYS[i].id===last.dayId)return DAYS[(i+1)%DAYS.length].id;}
+ return DAYS[0].id;
+}
 function vol(s){let v=0;(s.ex||[]).forEach(e=>{(e.sets||[]).forEach(([w,r])=>{v+=(+w||0)*(+r||0)});});return v}
 function fmtDate(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0].slice(2)}`:iso}
 function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0]}`:iso}
@@ -379,7 +387,7 @@ function startApp(pid){
  ME=personaById(pid);
  localStorage.setItem(P_CUR,pid);
  KEYC='ironlog_d_'+pid; GHKC='ironlog_gh_'+pid; VKEYC='ironlog_v_'+pid; PKEYC='ironlog_p_'+pid;
- S=load(); GH=loadGH(); cur=1;
+ S=load(); GH=loadGH(); cur=nextDayId();
  try{
   const PK=(typeof PACKS!=='undefined')?PACKS:null;
   if(PK&&typeof applyPack==='function')applyPack(PK[ME.pack]||PK.default);
