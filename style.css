@@ -519,3 +519,7 @@ body{padding-bottom:calc(124px + var(--safe-b))}
 #toast{bottom:calc(128px + var(--safe-b))}
 #update-banner{bottom:calc(176px + var(--safe-b))}
 #restwidget{bottom:calc(232px + var(--safe-b))}
+
+/* ==== v59: лента дней прижата к навигации без щели ==== */
+.nav{box-sizing:border-box;height:calc(64px + var(--safe-b));padding:8px 8px calc(8px + var(--safe-b));border-top:0}
+#tabs{bottom:calc(64px + var(--safe-b));margin:0}
