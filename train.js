@@ -77,8 +77,21 @@ function draftPlate(){
 function dropDraftAndRender(){dropDraft();renderTrain();toast('ЧЕРНОВИК ОЧИЩЕН');}
 
 /* ==== СТЕППЕРЫ: делегированные кнопки ± ==== */
+/* ✓ = подход выполнен: сразу стартует таймер отдыха упражнения */
+document.addEventListener('click',function(e){
+ var b=e.target&&e.target.closest?e.target.closest('.setok'):null;
+ if(!b)return;
+ var i=+b.dataset.e;
+ var d=null;for(var q=0;q<DAYS.length;q++){if(DAYS[q].id===cur)d=DAYS[q];}
+ var ex=d&&d.ex&&d.ex[i]; if(!ex)return;
+ var sec=restParse(ex.rest);
+ if(!sec){toast('[!] ДЛЯ ЭТОГО УПРАЖНЕНИЯ ОТДЫХ НЕ ЗАДАН');return;}
+ startRest(sec,ex.n);
+ b.classList.add('on');
+});
 document.addEventListener('click',function(e){
  var b=e.target&&e.target.closest?e.target.closest('.stp-b'):null;
+
  if(!b)return;
  var inp=document.querySelector('input[data-e="'+b.dataset.e+'"][data-s="'+b.dataset.s+'"][data-f="'+b.dataset.f+'"]');
  if(!inp)return;
@@ -264,7 +277,7 @@ function renderTrain(){
    var wVal=p[0];
    var rVal=(p[1]!==undefined&&p[1]!=='')?p[1]:'';
    sets+='<div class="srow">'
-    +'<span class="lab"><b>'+(k+1)+'</b> подход</span>'
+    +'<span class="lab"><b>'+(k+1)+'</b> подход<button class="setok" data-e="'+i+'" data-s="'+k+'" aria-label="подход выполнен, старт отдыха">✓</button></span>'
     +'<div class="stp">'
     +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="w" data-d="-1" aria-label="минус вес">−</button>'
     +'<input type="number" step="0.5" min="0" inputmode="decimal" placeholder="вес" data-e="'+i+'" data-s="'+k+'" data-f="w" data-inherited="'+(wVal!==''?'true':'false')+'" value="'+esc(String(wVal))+'" enterkeyhint="next">'
