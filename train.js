@@ -1,4 +1,4 @@
-/* IRON WORLD · ТРЕНИРОВКИ v2.7: черновик по ключам, таймер на метке, wake-lock в Кардио */
+/* IRON WORLD · ТРЕНИРОВКИ v48: фикс случайной копии + резолв метрик через UNIFIED */
 
 function tabs(){
  var h='';
@@ -148,7 +148,7 @@ document.addEventListener('visibilitychange',function(){
  if(!document.hidden&&restTimer.iv)tickRest();
 });
 
-/* ==== WAKE LOCK (чип живёт в блоке Кардио, не fixed) ==== */
+/* ==== WAKE LOCK (чип в блоке Кардио) ==== */
 var wl=null, wlEnabled=(localStorage.getItem('ironlog_wl')!=='0');
 function keepAwake(on){
  if(on&&!wl&&navigator.wakeLock){navigator.wakeLock.request('screen').then(function(l){wl=l;updateWlChip();}).catch(function(){wl=null;updateWlChip();});}
@@ -282,7 +282,7 @@ function copyPrev(i){
   if(wi&&set[0]!==''){wi.value=set[0];wi.dataset.inherited='false';}
   if(ri&&set[1]!==''){ri.value=set[1];ri.dataset.inherited='false';}
  }
- toast('[<<] ПОДСТАВЛЕНО ПО НАЗВАНИЮ УПРАЖНЕНИЯ');
+ toast('[<<] ПОСЛЕДНИЕ ВЕСА ПОДСТАВЛЕНЫ');
  saveDraftDebounced();
 }
 
@@ -303,9 +303,12 @@ function collect(){
 
 function save(){
  var ex=collect();
- var has=false;
- for(var h1=0;h1<ex.length;h1++){for(var h2=0;h2<ex[h1].sets.length;h2++){if(ex[h1].sets[h2][0]!=='')has=true;}}
- if(!has){toast('[!] ЗАПОЛНИ ВЕСА');return}
+ /* защита: пустая форма → тост; только унаследованные значения → confirm про копию */
+ var inputs=[].slice.call(document.querySelectorAll('#workout input[data-f]'));
+ var anyVal=inputs.some(function(i){return i.value!=='';});
+ var touched=inputs.some(function(i){return i.value!==''&&i.dataset.inherited!=='true';});
+ if(!anyVal){toast('[!] ЗАПОЛНИ ВЕСА');return}
+ if(!touched&&!confirm('Ни одно поле не изменено — записать тренировку, идентичную прошлой?'))return;
  var pr=false;
  for(var c1=0;c1<ex.length;c1++){
   var c=ex[c1];var nm=0;
@@ -478,8 +481,10 @@ function parseMeasCSV(text){
  for(var h=1;h<head.length;h++){
   var lab=head[h].trim();
   if(!lab)continue;
+  /* резолв ключа: сначала единая схема (источник истины), потом паки */
   var key=null;
-  if(typeof PACKS!=='undefined'){
+  METRICS_UNIFIED.forEach(function(mt){if(!key&&(mt.l+'_'+mt.u)===lab)key=mt.k;});
+  if(!key&&typeof PACKS!=='undefined'){
    Object.keys(PACKS).forEach(function(pk){
     (PACKS[pk].METRICS||[]).forEach(function(mt){
      if(!key&&(mt.l+'_'+mt.u)===lab)key=mt.k;
