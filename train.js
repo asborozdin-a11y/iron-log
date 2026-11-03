@@ -365,8 +365,10 @@ function renderTrain(){
     +'</div>'
     +'</div>';
   }
-  html+='<div class="ex '+(e.ss?'ss':'')+'">'
+  var exCls=e.sup?'sup':((e.kind||'weight')==='time'?'tm':'');
+  html+='<div class="ex '+exCls+'">'
    +'<h3>'+esc(e.n)+'</h3>'
+   +(e.sup?'<span class="supbadge">СУПЕРСЕТ '+esc(e.sup)+'</span>':'')
    +'<div class="meta"><b>'+e.s+' × '+esc(e.r)+'</b> · отдых '+esc(e.rest)+'</div>'
    +prline
    +'<div class="note">'+esc(e.note||'')+'</div>'
