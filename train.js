@@ -1,15 +1,14 @@
-/* IRON WORLD · ТРЕНИРОВКИ v57: PR-строка с мини-графиком на карточке */
+/* IRON WORLD · ТРЕНИРОВКИ v62: компактный подход + таймер-панель */
 
 function tabs(){
  var h='';
  for(var i=0;i<DAYS.length;i++){
   var d=DAYS[i];
-    h+='<button class="'+(d.id===cur?'on':'')+'" onclick="setDay('+d.id+')">'+dayLabel(d.t)+'</button>';
+  h+='<button class="'+(d.id===cur?'on':'')+'" onclick="setDay('+d.id+')">'+dayLabel(d.t)+'</button>';
  }
  document.getElementById('tabs').innerHTML=h;
 }
 function setDay(id){cur=id;renderTrain()}
-/* метка без дня недели: тренировки по ротации, а не по календарю */
 function dayLabel(t){return String(t||'').replace(/^(ПН|ВТ|СР|ЧТ|ПТ|СБ|ВС)\s*·\s*/,'');}
 
 /* ==== черновики ==== */
@@ -78,6 +77,15 @@ function draftPlate(){
 }
 function dropDraftAndRender(){dropDraft();renderTrain();toast('ЧЕРНОВИК ОЧИЩЕН');}
 
+/* ==== компактный подход: тап раскрывает степперы ==== */
+document.addEventListener('click',function(e){
+ var row=e.target&&e.target.closest?e.target.closest('.srow.compact'):null;
+ if(!row)return;
+ var all=document.querySelectorAll('.srow.expanded');
+ all.forEach(function(r){if(r!==row)r.classList.remove('expanded');});
+ row.classList.toggle('expanded');
+});
+
 /* ==== СТЕППЕРЫ ==== */
 document.addEventListener('click',function(e){
  var b=e.target&&e.target.closest?e.target.closest('.stp-b'):null;
@@ -100,9 +108,9 @@ document.addEventListener('keydown',function(e){
  var idx=all.indexOf(t);
  if(idx>=0&&idx<all.length-1){e.preventDefault();all[idx+1].focus();}
 });
-/* ✓ = подход выполнен: старт таймера отдыха */
+/* ✓ = подход выполнен: старт таймера */
 document.addEventListener('click',function(e){
- var b=e.target&&e.target.closest?e.target.closest('.setok'):null;
+ var b=e.target&&e.target.closest?e.target.closest('.set-ok'):null;
  if(!b)return;
  var i=+b.dataset.e;
  var d=null;for(var q=0;q<DAYS.length;q++){if(DAYS[q].id===cur)d=DAYS[q];}
@@ -113,14 +121,14 @@ document.addEventListener('click',function(e){
  b.classList.add('on');
 });
 
-/* ==== ТАЙМЕР ОТДЫХА ==== */
+/* ==== ТАЙМЕР КАК НИЖНЯЯ ПАНЕЛЬ ==== */
 var restTimer={endsAt:0,total:0,iv:null};
 var restAC=null;
 function restParse(str){var m=String(str||'').match(/(\d+)/);return m?+m[1]:0}
 function restWidget(){
  var w=document.getElementById('restwidget');
  if(!w){
-  w=document.createElement('div');w.id='restwidget';w.setAttribute('role','timer');
+  w=document.createElement('div');w.id='restwidget';w.className='panel';w.setAttribute('role','timer');
   w.innerHTML='<div id="rt-label">ОТДЫХ</div><div id="rt-time">00:00</div><div id="rt-bar"><i></i></div>'
    +'<div class="rt-btns"><button onclick="addRest(30)">+30 сек</button><button onclick="stopRest()">Пропустить</button></div>';
   document.body.appendChild(w);
@@ -151,6 +159,7 @@ function startRest(sec,label){
  var w=restWidget();
  w.querySelector('#rt-label').textContent=esc(label||'ОТДЫХ');
  w.classList.add('on');
+ document.body.classList.add('resting');
  try{
   if(!restAC)restAC=new (window.AudioContext||window.webkitAudioContext)();
   if(restAC.state==='suspended')restAC.resume();
@@ -186,6 +195,7 @@ function finishRest(){
 function stopRest(){
  if(restTimer.iv){clearInterval(restTimer.iv);restTimer.iv=null;}
  var w=document.getElementById('restwidget'); if(w)w.classList.remove('on');
+ document.body.classList.remove('resting');
 }
 document.addEventListener('visibilitychange',function(){
  if(!document.hidden&&restTimer.iv)tickRest();
@@ -246,7 +256,7 @@ function renderVolChart(){
   +sparkline(pts.slice(-12))+'</div>';
 }
 
-/* ==== PR по упражнению ==== */
+/* ==== PR по упражнению (с учётом типа) ==== */
 function exStats(key){
  var best=null, series=[];
  for(var n=0;n<S.sessions.length;n++){
@@ -271,7 +281,7 @@ function exStats(key){
 }
 function e1rm(w,r){r=+r||0;return r>1?Math.round(w*(1+r/30)):Math.round(w);}
 
-/* ==== рендер тренировки ==== */
+/* ==== рендер тренировки (компактный подход) ==== */
 function renderTrain(){
  tabs();
  var d=null;
@@ -294,7 +304,7 @@ function renderTrain(){
   if(prevRec&&prevRec.sets){for(var y=0;y<prevRec.sets.length;y++){if(prevRec.sets[y]&&prevRec.sets[y][0]!==''){hasAny=true;break;}}}
   var stt=exStats(key);
   var prline='';
-  if(stt.best){
+  if(stt.best&&(e.kind||'weight')==='weight'){
    prline='<div class="prline"><span>PR <b>'+stt.best.w+'</b> × '+(stt.best.r||'–')+' · '+new Date(stt.best.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})+' · e1RM ≈ '+e1rm(stt.best.w,stt.best.r)+'</span>'+(stt.series.length>1?sparkline(stt.series.slice(-10)):'')+'</div>';
   }
   var btns='';
@@ -306,17 +316,24 @@ function renderTrain(){
    if(prevRec&&prevRec.sets&&prevRec.sets[k]&&prevRec.sets[k][0]!=='')p=prevRec.sets[k];
    var wVal=p[0];
    var rVal=(p[1]!==undefined&&p[1]!=='')?p[1]:'';
-   sets+='<div class="srow">'
-    +'<span class="lab"><b>'+(k+1)+'</b> подход<button class="setok" data-e="'+i+'" data-s="'+k+'" aria-label="подход выполнен, старт отдыха">✓</button></span>'
+   var unit=(e.kind||'weight')==='time'?'сек':'кг';
+   var unitR=(e.kind||'weight')==='time'?'сек':'повт';
+   sets+='<div class="srow compact" data-e="'+i+'" data-s="'+k+'">'
+    +'<span class="set-num">'+(k+1)+'</span>'
+    +'<span class="set-vals">'+(wVal!==''?wVal+' '+unit:'—')+' × '+(rVal!==''?rVal+' '+unitR:'—')+'</span>'
+    +'<button class="set-ok" data-e="'+i+'" data-s="'+k+'" aria-label="подход выполнен">✓</button>'
+    +'</div>'
+    +'<div class="srow expanded" style="display:none" data-e="'+i+'" data-s="'+k+'">'
+    +'<span class="lab"><b>'+(k+1)+'</b> подход</span>'
     +'<div class="stp">'
     +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="w" data-d="-1" aria-label="минус вес">−</button>'
-    +'<input type="number" step="0.5" min="0" inputmode="decimal" placeholder="вес" data-e="'+i+'" data-s="'+k+'" data-f="w" data-inherited="'+(wVal!==''?'true':'false')+'" value="'+esc(String(wVal))+'" enterkeyhint="next">'
+    +'<input type="number" step="0.5" min="0" inputmode="decimal" placeholder="'+unit+'" data-e="'+i+'" data-s="'+k+'" data-f="w" data-inherited="'+(wVal!==''?'true':'false')+'" value="'+esc(String(wVal))+'" enterkeyhint="next">'
     +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="w" data-d="1" aria-label="плюс вес">+</button>'
     +'</div>'
     +'<div class="stp">'
-    +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="r" data-d="-1" aria-label="минус повторы">−</button>'
-    +'<input type="number" step="1" min="0" inputmode="numeric" placeholder="повт" data-e="'+i+'" data-s="'+k+'" data-f="r" data-inherited="'+(rVal!==''?'true':'false')+'" value="'+esc(String(rVal))+'" enterkeyhint="next">'
-    +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="r" data-d="1" aria-label="плюс повторы">+</button>'
+    +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="r" data-d="-1" aria-label="минус '+unitR+'">−</button>'
+    +'<input type="number" step="1" min="0" inputmode="numeric" placeholder="'+unitR+'" data-e="'+i+'" data-s="'+k+'" data-f="r" data-inherited="'+(rVal!==''?'true':'false')+'" value="'+esc(String(rVal))+'" enterkeyhint="next">'
+    +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="r" data-d="1" aria-label="плюс '+unitR+'">+</button>'
     +'</div>'
     +'</div>';
   }
@@ -341,7 +358,8 @@ function renderTrain(){
  document.getElementById('workout').innerHTML=html;
  var act=document.querySelector('#view-train .actions');
  if(act)act.classList.add('primary');
- updateWlChip();  dockTabs();
+ updateWlChip();
+ dockTabs();
  var restored=restoreDraft();
  var plate=document.getElementById('draftplate');
  if(restored){draftPlate();}
@@ -512,7 +530,7 @@ document.getElementById('fileIn').addEventListener('change',function(e){
 });
 function clearJ(){if(confirm('Удалить все тренировки журнала? (замеры останутся)')){S.sessions=[];if(saveS()){renderTrain();toast('ЖУРНАЛ ОЧИЩЕН');scheduleSync();}}}
 
-/* ==== стыковка ленты дней к навигации по факту, а не на глаз ==== */
+/* ==== стыковка ленты дней ==== */
 function dockTabs(){
  var nav=document.getElementById('nav');
  if(!nav)return;
