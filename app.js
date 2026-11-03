@@ -643,10 +643,11 @@ function renderHome(){
  const nextLabel=nextDayObj?(nextDayObj.t.replace(/^(ПН|ВТ|СР|ЧТ|ПТ|СБ|ВС)\s*·\s*/,'')):'';
  const nextSub=nextDayObj?nextDayObj.sub:'';
  
+ const daysPick=(typeof DAYS!=='undefined'?DAYS:[]).map(function(d){return '<button class="'+(d.id===nextDay?'rec':'')+'" onclick="startDay('+d.id+')">'+esc(dayLabel(d.t))+'</button>';}).join('');
  const todayHtml=`<div class="today-card">
   <h2>Сегодня: ${esc(nextLabel)}</h2>
-  <div class="today-sub">${esc(nextSub)}</div>
-  <button class="today-btn" onclick="showView('train')">Начать тренировку</button>
+  <div class="today-sub">${esc(nextSub)} · рекомендованный день подсвечен</div>
+  <div class="day-pick">${daysPick}</div>
   <div class="today-stats">
    <div class="stat"><b>${st.week}</b><span>за 7 дней</span></div>
    <div class="stat"><b>${lm&&lm.v.w?lm.v.w+' кг':'—'}</b><span>последний вес</span></div>
