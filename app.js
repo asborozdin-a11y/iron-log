@@ -456,6 +456,10 @@ function startApp(pid){
   if(PK&&typeof applyPack==='function')applyPack(PK[ME.pack]||PK.default);
  }catch(e){}
  applyTheme(ME.theme||'terminator');
+ /* навигация с подписями */
+ const navBtns=document.querySelectorAll('#nav button[data-v]');
+ const labels={'home':'Главная','train':'Тренировки','measure':'Замеры','food':'Питание','profile':'Профиль'};
+ navBtns.forEach(b=>{const v=b.dataset.v;b.innerHTML=b.innerHTML+'<span>'+labels[v]+'</span>';});
  const t=document.getElementById('gh-token'); if(t)t.value=GH.token||'';
  const o=document.getElementById('gh-owner'); if(o)o.value=GH.owner||'asborozdin-a11y';
  const r=document.getElementById('gh-repo'); if(r)r.value=GH.repo||'iron-data';
@@ -483,7 +487,7 @@ function renderProfile(){
    ${p.id===ME.id?`
     <div class="pf-themes"><span class="pf-lab">Пакет:</span>${Object.keys(PACKS).map(k=>`<button class="ob-pk ${ME.pack===k?'on':''}" onclick="setPack('${k}')">${esc(PACKS[k].label||k)}</button>`).join('')}</div>
     <div class="pf-themes"><span class="pf-lab">Тема:</span>${TH_LIST.map(t=>`<button class="ob-th ${ME.theme===t?'on':''}" style="background:${TH_SW[t]}" title="${t}" onclick="setTheme('${t}')"></button>`).join('')}</div>
-    <div class="pf-themes"><span class="pf-lab">Эффекты:</span><button class="ob-pk on" onclick="toggleFx()">${localStorage.getItem('ironlog_fxoff')==='1'?'выкл':'вкл'}</button></div>
+       <div class="pf-themes"><span class="pf-lab">Эффекты:</span><button class="ob-pk ${localStorage.getItem('ironlog_fxoff')==='1'?'selected':'on'}" onclick="toggleFx()">${localStorage.getItem('ironlog_fxoff')==='1'?'✓ выкл':'вкл'}</button></div>
     <div class="pf-themes"><span class="pf-lab">PIN:</span><button class="ob-pk on" onclick="pinSetup()">${ME.pinHash?'сменить':'установить'}</button>${ME.pinHash?`<button class="ob-pk" onclick="pinRemove()">снять</button>`:''}</div>`
    :`<div class="mact" style="justify-content:flex-start;margin-top:10px"><button class="ghost" onclick="switchPersona('${p.id}')">Открыть профиль</button></div>`}
   </div>`).join('')+
@@ -633,12 +637,28 @@ function renderHome(){
  const last=S.sessions.length?[...S.sessions].sort((a,b)=>b.ts-a.ts)[0]:null;
  const lm=S.measures.length?[...S.measures].sort((a,b)=>b.ts-a.ts)[0]:null;
  const st=streakStats();
- document.getElementById('hstatus').innerHTML=
-  `OPERATOR: <b>${esc(ME.name)}</b>${ME.stats?` · <b>${esc(ME.stats)}</b>`:''}<br>`+
-  `SESSIONS: <b>${S.sessions.length}</b>${last?` · LAST: <b>${new Date(last.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})} · ${vol(last).toLocaleString('ru-RU')} кг</b>`:''}<br>`+
-  `MEASURES: <b>${S.measures.length}</b>${lm&&lm.v.w?` · LAST WEIGHT: <b>${lm.v.w} кг</b>`:''}<br>`+
-  `STREAK: <b>${st.week}</b> за 7 дней · <b>${st.weeks}</b> нед подряд<br>`+
-  `CLOUD: <b>${GH.token?'SYNC ON':'SYNC OFF'}</b>`;
+ const nextDay=nextDayId();
+ const nextDayObj=(typeof DAYS!=='undefined')?DAYS.find(d=>d.id===nextDay):null;
+ const nextLabel=nextDayObj?(nextDayObj.t.replace(/^(ПН|ВТ|СР|ЧТ|ПТ|СБ|ВС)\s*·\s*/,'')):'';
+ const nextSub=nextDayObj?nextDayObj.sub:'';
+ 
+ const todayHtml=`<div class="today-card">
+  <h2>Сегодня: ${esc(nextLabel)}</h2>
+  <div class="today-sub">${esc(nextSub)}</div>
+  <button class="today-btn" onclick="showView('train')">Начать тренировку</button>
+  <div class="today-stats">
+   <div class="stat"><b>${st.week}</b><span>за 7 дней</span></div>
+   <div class="stat"><b>${lm&&lm.v.w?lm.v.w+' кг':'—'}</b><span>последний вес</span></div>
+   <div class="stat"><b>${last?vol(last).toLocaleString('ru-RU')+' кг':'—'}</b><span>тоннаж</span></div>
+  </div></div>`;
+ 
+ document.getElementById('hstatus').innerHTML=todayHtml+
+  `<div style="font:500 12px/1.6 var(--font-data);color:var(--mut2);margin-top:16px">
+   Тренировок: <b>${S.sessions.length}</b>${last?' · последняя: '+new Date(last.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}):''}<br>
+   Замеров: <b>${S.measures.length}</b>${lm?' · последний: '+fmtDate(lm.date):''}<br>
+   Серия: <b>${st.weeks}</b> нед подряд<br>
+   Облако: <b>${GH.token?'подключено':'не подключено'}</b>
+  </div>`;
  document.getElementById('ms-train').textContent=last?`последняя: ${new Date(last.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})} · ${vol(last).toLocaleString('ru-RU')} кг`:'журнал силовых · 3 дня';
  document.getElementById('ms-meas').textContent=lm&&lm.v.w?`последний: ${fmtDate(lm.date)} · ${lm.v.w} кг`:'история пропорций';
 }
