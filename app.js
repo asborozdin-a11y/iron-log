@@ -251,6 +251,7 @@ function loadGH(){try{return JSON.parse(localStorage.getItem(GHKC))||{}}catch(e)
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 function lastOf(day){return [...S.sessions].reverse().find(s=>s.dayId===day)}
 function nextDayId(){
+ function startDay(id){cur=id;showView('train');}
  if(typeof DAYS==='undefined'||!DAYS||!DAYS.length)return 1;
  if(!S.sessions.length)return DAYS[0].id;
  var last=S.sessions.reduce(function(a,b){return b.ts>a.ts?b:a;});
