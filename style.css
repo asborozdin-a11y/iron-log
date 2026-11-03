@@ -531,3 +531,75 @@ body{padding-bottom:calc(var(--nav-h,64px) + 60px + var(--safe-b))}
 #toast{bottom:calc(var(--nav-h,64px) + 64px + var(--safe-b))}
 #update-banner{bottom:calc(var(--nav-h,64px) + 112px + var(--safe-b))}
 #restwidget{bottom:calc(var(--nav-h,64px) + 168px + var(--safe-b))}
+
+/* ==== v62: Exo 2 + компактный подход + таймер-панель + навигация ==== */
+
+/* === Шрифты === */
+:root{
+ --font-display:'Exo 2',system-ui,sans-serif;
+ --font-data:'JetBrains Mono',ui-monospace,monospace;
+}
+body,h1,h2,h3,h4,button,input,select,textarea,.ob-title,.ob-sub,.ob-lab,.ch-head span,.meta,.note,.lab,.empty,.prline,.ses .sh .d,.ses .sh .v,.dl,#hstatus{
+ font-family:var(--font-display)}
+.spark,.chart b,.ses .sh .v,.prline b,.stp input,.srow input,#rt-time,#rt-label{
+ font-family:var(--font-data)}
+
+/* === Компактная строка подхода === */
+.srow.compact{display:flex;align-items:center;gap:8px;padding:6px 10px;cursor:pointer;
+ background:var(--ghost-1);border:1px solid var(--line-2);border-radius:10px;margin-bottom:4px;
+ font:500 14px/1 var(--font-display);color:var(--txt)}
+.srow.compact .set-num{min-width:20px;color:var(--mut2)}
+.srow.compact .set-vals{flex:1;font-family:var(--font-data);font-size:16px}
+.srow.compact .set-ok{min-width:32px;min-height:32px;padding:0;border-radius:8px;
+ background:var(--ghost-1);border:1px solid var(--line-2);color:var(--mut2);
+ font:700 18px/1 var(--font-display);cursor:pointer}
+.srow.compact .set-ok.on{border-color:var(--green);color:var(--green)}
+.srow.expanded{display:block;padding:10px;background:var(--card);border:1px solid var(--red);border-radius:10px;margin-bottom:4px}
+.srow.expanded .lab{display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px}
+.srow.expanded .stp{display:grid;grid-template-columns:40px 1fr 40px;gap:4px;margin-bottom:6px}
+.srow.expanded .stp:last-child{margin-bottom:0}
+
+/* === Таймер как нижняя панель === */
+#restwidget.panel{position:fixed;left:0;right:0;bottom:0;z-index:101;
+ background:linear-gradient(180deg,var(--card) 0%,var(--bg) 100%);
+ border-top:1px solid var(--line);padding:12px 16px calc(12px + var(--safe-b));
+ transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.9,.3,1)}
+#restwidget.panel.on{transform:translateY(0)}
+#restwidget.panel #rt-label{font-size:14px;color:var(--mut2);margin-bottom:6px}
+#restwidget.panel #rt-time{font-size:32px;text-align:center;margin-bottom:8px}
+#restwidget.panel #rt-bar{height:4px;margin-bottom:10px}
+#restwidget.panel .rt-btns{display:flex;gap:8px}
+#restwidget.panel .rt-btns button{flex:1;min-height:44px;font:700 14px/1 var(--font-display)}
+body.resting #tabs{display:none}
+body.resting{padding-bottom:calc(var(--nav-h,64px) + 140px + var(--safe-b))}
+
+/* === Навигация с подписями === */
+#nav{display:flex;gap:2px;padding:6px 4px}
+#nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+ min-height:56px;padding:4px 2px;font:600 10px/1.2 var(--font-display);letter-spacing:.02em}
+#nav button svg{width:24px;height:24px}
+
+/* === Плитка «Сегодня» на главном === */
+.today-card{margin:0 0 16px;padding:20px 16px;background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);
+ border:1px solid var(--line);border-radius:14px}
+.today-card h2{font:800 24px/1.2 var(--font-display);margin:0 0 4px;color:var(--txt)}
+.today-card .today-sub{font:500 13px/1.4 var(--font-display);color:var(--mut2);margin-bottom:16px}
+.today-card .today-btn{width:100%;min-height:52px;font:700 16px/1 var(--font-display);
+ background:linear-gradient(180deg,var(--btn-1),var(--red));border:0;color:#fff;border-radius:10px;cursor:pointer}
+.today-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.today-stats .stat{text-align:center}
+.today-stats .stat b{display:block;font:700 20px/1.2 var(--font-data);color:var(--txt)}
+.today-stats .stat span{font:500 11px/1.4 var(--font-display);color:var(--mut2)}
+
+/* === Контраст в бирюзовых темах === */
+[data-theme="tiffany-noir"] .nav button.on,
+[data-theme="tiffany-noir"] .today-btn,
+[data-theme="tiffany-audrey"] .nav button.on{
+ background:#0d9488;color:#fff}
+[data-theme="tiffany-noir"] #tabs button.on{
+ background:linear-gradient(180deg,#0d9488,#0f766e);border-color:#0d9488;color:#fff}
+
+/* === Одна залитая кнопка на экран === */
+.actions button:not(.ghost){background:linear-gradient(180deg,var(--btn-1),var(--red))}
+.actions button.ghost{background:var(--ghost-1);border:1px solid var(--line-2);color:var(--txt)}
+.actions button.selected{border-color:var(--green);color:var(--green)}
