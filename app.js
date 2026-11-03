@@ -80,6 +80,10 @@ async function forceUpdate(){
   const keys=await caches.keys();
   await Promise.all(keys.map(k=>caches.delete(k)));
  }catch(e){}
+ try{
+  const files=['style.css','app.js','train.js','measure.js','food.js','data.js','manifest.webmanifest','sw.js'];
+  await Promise.all(files.map(f=>fetch(f+'?r='+Date.now(),{cache:'reload'}).catch(()=>{})));
+ }catch(e){}
  setTimeout(function(){location.reload();},300);
 }
 
