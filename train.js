@@ -1,4 +1,4 @@
-/* IRON WORLD · ТРЕНИРОВКИ v62: компактный подход + таймер-панель */
+/* IRON WORLD · ТРЕНИРОВКИ v62: компактный подход, таймер-панель, типы упражнений */
 
 function tabs(){
  var h='';
@@ -77,14 +77,39 @@ function draftPlate(){
 }
 function dropDraftAndRender(){dropDraft();renderTrain();toast('ЧЕРНОВИК ОЧИЩЕН');}
 
-/* ==== компактный подход: тап раскрывает степперы ==== */
+/* ==== раскрытие компактной строки подхода ==== */
 document.addEventListener('click',function(e){
+ if(e.target&&e.target.closest&&e.target.closest('.set-ok'))return;
  var row=e.target&&e.target.closest?e.target.closest('.srow.compact'):null;
  if(!row)return;
- var all=document.querySelectorAll('.srow.expanded');
- all.forEach(function(r){if(r!==row)r.classList.remove('expanded');});
- row.classList.toggle('expanded');
+ var box=row.nextElementSibling;
+ if(!box||!box.classList.contains('expanded'))return;
+ var open=box.style.display!=='none';
+ document.querySelectorAll('.srow.expanded').forEach(function(b){b.style.display='none';});
+ if(!open)box.style.display='';
 });
+
+/* ==== синхронизация компактной строки с полями ==== */
+function refreshCompactRow(i,k){
+ var compact=document.querySelector('.srow.compact[data-e="'+i+'"][data-s="'+k+'"]');
+ if(!compact)return;
+ var w=document.querySelector('input[data-e="'+i+'"][data-s="'+k+'"][data-f="w"]');
+ var r=document.querySelector('input[data-e="'+i+'"][data-s="'+k+'"][data-f="r"]');
+ var d=null;for(var q=0;q<DAYS.length;q++){if(DAYS[q].id===cur)d=DAYS[q];}
+ var e=d&&d.ex&&d.ex[i];
+ var isTime=e&&(e.kind||'weight')==='time';
+ var unit=isTime?'сек':'кг', unitR=isTime?'сек':'повт';
+ var wv=w?w.value:'', rv=r?r.value:'';
+ var txt=isTime?(rv!==''?rv+' '+unitR:'—'):((wv!==''?wv+' '+unit:'—')+' × '+(rv!==''?rv+' '+unitR:'—'));
+ var sv=compact.querySelector('.set-vals');
+ if(sv)sv.textContent=txt;
+}
+function refreshAllCompacts(){
+ if(typeof DAYS==='undefined')return;
+ var d=null;for(var q=0;q<DAYS.length;q++){if(DAYS[q].id===cur)d=DAYS[q];}
+ if(!d)return;
+ for(var i=0;i<d.ex.length;i++){for(var k=0;k<d.ex[i].s;k++)refreshCompactRow(i,k);}
+}
 
 /* ==== СТЕППЕРЫ ==== */
 document.addEventListener('click',function(e){
@@ -98,6 +123,7 @@ document.addEventListener('click',function(e){
  inp.value=nv<=0?'':nv;
  inp.dataset.inherited='false';
  try{if(navigator.vibrate)navigator.vibrate(8);}catch(err){}
+ refreshCompactRow(+b.dataset.e,+b.dataset.s);
  saveDraftDebounced();
 });
 document.addEventListener('keydown',function(e){
@@ -108,7 +134,7 @@ document.addEventListener('keydown',function(e){
  var idx=all.indexOf(t);
  if(idx>=0&&idx<all.length-1){e.preventDefault();all[idx+1].focus();}
 });
-/* ✓ = подход выполнен: старт таймера */
+/* ✓ = подход выполнен: старт таймера отдыха */
 document.addEventListener('click',function(e){
  var b=e.target&&e.target.closest?e.target.closest('.set-ok'):null;
  if(!b)return;
@@ -121,7 +147,7 @@ document.addEventListener('click',function(e){
  b.classList.add('on');
 });
 
-/* ==== ТАЙМЕР КАК НИЖНЯЯ ПАНЕЛЬ ==== */
+/* ==== ТАЙМЕР ОТДЫХА (нижняя панель) ==== */
 var restTimer={endsAt:0,total:0,iv:null};
 var restAC=null;
 function restParse(str){var m=String(str||'').match(/(\d+)/);return m?+m[1]:0}
@@ -256,7 +282,7 @@ function renderVolChart(){
   +sparkline(pts.slice(-12))+'</div>';
 }
 
-/* ==== PR по упражнению (с учётом типа) ==== */
+/* ==== PR по упражнению (только для весовых) ==== */
 function exStats(key){
  var best=null, series=[];
  for(var n=0;n<S.sessions.length;n++){
@@ -281,7 +307,7 @@ function exStats(key){
 }
 function e1rm(w,r){r=+r||0;return r>1?Math.round(w*(1+r/30)):Math.round(w);}
 
-/* ==== рендер тренировки (компактный подход) ==== */
+/* ==== рендер тренировки ==== */
 function renderTrain(){
  tabs();
  var d=null;
@@ -316,20 +342,22 @@ function renderTrain(){
    if(prevRec&&prevRec.sets&&prevRec.sets[k]&&prevRec.sets[k][0]!=='')p=prevRec.sets[k];
    var wVal=p[0];
    var rVal=(p[1]!==undefined&&p[1]!=='')?p[1]:'';
-   var unit=(e.kind||'weight')==='time'?'сек':'кг';
-   var unitR=(e.kind||'weight')==='time'?'сек':'повт';
+   var isTime=(e.kind||'weight')==='time';
+   var unit=isTime?'сек':'кг';
+   var unitR=isTime?'сек':'повт';
+   var valsTxt=isTime?(rVal!==''?rVal+' '+unitR:'—'):((wVal!==''?wVal+' '+unit:'—')+' × '+(rVal!==''?rVal+' '+unitR:'—'));
    sets+='<div class="srow compact" data-e="'+i+'" data-s="'+k+'">'
     +'<span class="set-num">'+(k+1)+'</span>'
-    +'<span class="set-vals">'+(wVal!==''?wVal+' '+unit:'—')+' × '+(rVal!==''?rVal+' '+unitR:'—')+'</span>'
+    +'<span class="set-vals">'+valsTxt+'</span>'
     +'<button class="set-ok" data-e="'+i+'" data-s="'+k+'" aria-label="подход выполнен">✓</button>'
     +'</div>'
     +'<div class="srow expanded" style="display:none" data-e="'+i+'" data-s="'+k+'">'
     +'<span class="lab"><b>'+(k+1)+'</b> подход</span>'
-    +'<div class="stp">'
-    +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="w" data-d="-1" aria-label="минус вес">−</button>'
-    +'<input type="number" step="0.5" min="0" inputmode="decimal" placeholder="'+unit+'" data-e="'+i+'" data-s="'+k+'" data-f="w" data-inherited="'+(wVal!==''?'true':'false')+'" value="'+esc(String(wVal))+'" enterkeyhint="next">'
-    +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="w" data-d="1" aria-label="плюс вес">+</button>'
-    +'</div>'
+    +(isTime?'':'<div class="stp">'
+     +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="w" data-d="-1" aria-label="минус вес">−</button>'
+     +'<input type="number" step="0.5" min="0" inputmode="decimal" placeholder="'+unit+'" data-e="'+i+'" data-s="'+k+'" data-f="w" data-inherited="'+(wVal!==''?'true':'false')+'" value="'+esc(String(wVal))+'" enterkeyhint="next">'
+     +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="w" data-d="1" aria-label="плюс вес">+</button>'
+     +'</div>')
     +'<div class="stp">'
     +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="r" data-d="-1" aria-label="минус '+unitR+'">−</button>'
     +'<input type="number" step="1" min="0" inputmode="numeric" placeholder="'+unitR+'" data-e="'+i+'" data-s="'+k+'" data-f="r" data-inherited="'+(rVal!==''?'true':'false')+'" value="'+esc(String(rVal))+'" enterkeyhint="next">'
@@ -361,6 +389,7 @@ function renderTrain(){
  updateWlChip();
  dockTabs();
  var restored=restoreDraft();
+ if(restored)refreshAllCompacts();
  var plate=document.getElementById('draftplate');
  if(restored){draftPlate();}
  else if(plate){plate.remove();}
@@ -387,6 +416,7 @@ function copyPrev(i){
   var ri=document.querySelector('input[data-e="'+i+'"][data-s="'+k+'"][data-f="r"]');
   if(wi&&set[0]!==''){wi.value=set[0];wi.dataset.inherited='false';}
   if(ri&&set[1]!==''){ri.value=set[1];ri.dataset.inherited='false';}
+  refreshCompactRow(i,k);
  }
  toast('[<<] ПОСЛЕДНИЕ ВЕСА ПОДСТАВЛЕНЫ');
  saveDraftDebounced();
@@ -454,6 +484,7 @@ function clearInputs(){
  document.querySelectorAll('#workout input').forEach(function(i){if(i.type==='checkbox')i.checked=false;else{i.value='';if(i.dataset)i.dataset.inherited='false';}});
  dropDraft();
  var plate=document.getElementById('draftplate');if(plate)plate.remove();
+ refreshAllCompacts();
  toast('ПОЛЯ ОЧИЩЕНЫ');
 }
 
@@ -530,7 +561,7 @@ document.getElementById('fileIn').addEventListener('change',function(e){
 });
 function clearJ(){if(confirm('Удалить все тренировки журнала? (замеры останутся)')){S.sessions=[];if(saveS()){renderTrain();toast('ЖУРНАЛ ОЧИЩЕН');scheduleSync();}}}
 
-/* ==== стыковка ленты дней ==== */
+/* ==== стыковка ленты дней к навигации ==== */
 function dockTabs(){
  var nav=document.getElementById('nav');
  if(!nav)return;
