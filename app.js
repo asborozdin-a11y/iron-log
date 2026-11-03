@@ -1,4 +1,4 @@
-/* IRON WORLD · ЯДРО v57: мотивация — streak, тумблер FX, boot раз в сутки */
+/* IRON WORLD · ЯДРО v62: Exo 2 + плитка «Сегодня» + навигация с подписями + контраст */
 
 const P_LIST='ironlog_personas', P_CUR='ironlog_persona', LEGACY='ironlog_v1', LEGACY_FLAG='ironlog_legacy_migrated';
 const OLD_REPO='iron-log';
@@ -69,6 +69,20 @@ async function pinHashFn(pin,salt){
 }
 async function pinVerify(pin,p){return !!(p&&p.pinHash)&&(await pinHashFn(pin,p.pinSalt||''))===p.pinHash}
 
+/* ==== ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ==== */
+async function forceUpdate(){
+ toast('[>] ТЯНУ СВЕЖИЙ КОД…');
+ try{
+  const regs=await navigator.serviceWorker.getRegistrations();
+  await Promise.all(regs.map(r=>r.unregister()));
+ }catch(e){}
+ try{
+  const keys=await caches.keys();
+  await Promise.all(keys.map(k=>caches.delete(k)));
+ }catch(e){}
+ setTimeout(function(){location.reload();},300);
+}
+
 /* ==== ФОКУС-ТРАП ==== */
 function trapFocus(box, onEscape){
  if(!box) return function(){};
@@ -87,7 +101,7 @@ function trapFocus(box, onEscape){
  return function(){ box.removeEventListener('keydown',onKey); };
 }
 
-/* ==== ОНБОРДИНГ-ОБОЛОЧКА + клавиатура ==== */
+/* ==== ОНБОРДИНГ-ОБОЛОЧКА ==== */
 let onboardTrapCleanup = null;
 let onboardKbCleanup = null;
 function bindKeyboardFit(box){
@@ -121,19 +135,7 @@ function onboardShell(html){
  };
  return b;
 }
-/* принудительное обновление: сносит SW и кэши, тянет код из сети */
-async function forceUpdate(){
- toast('[>] ТЯНУ СВЕЖИЙ КОД…');
- try{
-  const regs=await navigator.serviceWorker.getRegistrations();
-  await Promise.all(regs.map(r=>r.unregister()));
- }catch(e){}
- try{
-  const keys=await caches.keys();
-  await Promise.all(keys.map(k=>caches.delete(k)));
- }catch(e){}
- setTimeout(function(){location.reload();},300);
-}
+
 function pinGate(p,done){
  const b=onboardShell(`<div class="ob-title">IRON <span>WORLD</span></div>
   <div class="ob-sub"><span class="ob-lock">[PIN]</span> профиль ${esc(p.name)} защищён</div>
@@ -145,7 +147,8 @@ function pinGate(p,done){
   if(ok){sessionStorage.setItem('ironlog_unlocked_'+p.id,'1');b.remove();done();}
   else{toast('[!] НЕВЕРНЫЙ PIN');const el=b.querySelector('#gate-pin');el.value='';el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),350);}
  };
- b.querySelector('#gate-go').onclick=go;  b.querySelector('#gate-upd').onclick=forceUpdate;
+ b.querySelector('#gate-go').onclick=go;
+ b.querySelector('#gate-upd').onclick=forceUpdate;
  const gin=b.querySelector('#gate-pin');
  let gateBusy=false;
  gin.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
@@ -272,6 +275,7 @@ function toggleFx(){
 }
 
 /* ==== СЕРИЯ (streak) ==== */
+function weekStartOf(t){var d=new Date(t);var day=(d.getDay()+6)%7;return new Date(d.getFullYear(),d.getMonth(),d.getDate()-day).getTime();}
 function streakStats(){
  var set={};
  S.sessions.forEach(function(s){
@@ -282,11 +286,8 @@ function streakStats(){
  var now=Date.now();
  var week=0;
  list.forEach(function(t){if(now-t<=7*86400000)week++;});
- function weekStart(t){var d=new Date(t);var day=(d.getDay()+6)%7;return new Date(d.getFullYear(),d.getMonth(),d.getDate()-day).getTime();}
- var curW=weekStart(now);
- if(!set[curW]&&!list.length===false&&list.length&&weekStart(list[0])!==curW)curW-=7*86400000;
- if(!list.length)curW=weekStart(now);
- else if(weekStart(list[0])!==curW)curW-=7*86400000;
+ var curW=weekStartOf(now);
+ if(list.length&&weekStartOf(list[0])!==curW)curW-=7*86400000;
  var weeks=0;
  while(set[curW]){weeks++;curW-=7*86400000;}
  return {week:week,weeks:weeks};
@@ -487,7 +488,7 @@ function renderProfile(){
    ${p.id===ME.id?`
     <div class="pf-themes"><span class="pf-lab">Пакет:</span>${Object.keys(PACKS).map(k=>`<button class="ob-pk ${ME.pack===k?'on':''}" onclick="setPack('${k}')">${esc(PACKS[k].label||k)}</button>`).join('')}</div>
     <div class="pf-themes"><span class="pf-lab">Тема:</span>${TH_LIST.map(t=>`<button class="ob-th ${ME.theme===t?'on':''}" style="background:${TH_SW[t]}" title="${t}" onclick="setTheme('${t}')"></button>`).join('')}</div>
-       <div class="pf-themes"><span class="pf-lab">Эффекты:</span><button class="ob-pk ${localStorage.getItem('ironlog_fxoff')==='1'?'selected':'on'}" onclick="toggleFx()">${localStorage.getItem('ironlog_fxoff')==='1'?'✓ выкл':'вкл'}</button></div>
+    <div class="pf-themes"><span class="pf-lab">Эффекты:</span><button class="ob-pk ${localStorage.getItem('ironlog_fxoff')==='1'?'selected':'on'}" onclick="toggleFx()">${localStorage.getItem('ironlog_fxoff')==='1'?'✓ выкл':'вкл'}</button></div>
     <div class="pf-themes"><span class="pf-lab">PIN:</span><button class="ob-pk on" onclick="pinSetup()">${ME.pinHash?'сменить':'установить'}</button>${ME.pinHash?`<button class="ob-pk" onclick="pinRemove()">снять</button>`:''}</div>`
    :`<div class="mact" style="justify-content:flex-start;margin-top:10px"><button class="ghost" onclick="switchPersona('${p.id}')">Открыть профиль</button></div>`}
   </div>`).join('')+
@@ -567,7 +568,7 @@ function fxLoop(t){
 function kick(){if(!loopOn&&fxOK()){loopOn=true;requestAnimationFrame(fxLoop);}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)loopOn=false;else kick();});
 
-/* ==== BOOT: только первый запуск за сутки ==== */
+/* ==== BOOT ==== */
 function runBoot(done){
  const bkey='ironlog_boot_'+(ME?ME.id:'x');
  const today=todayISO();
