@@ -9,7 +9,6 @@ function tabs(){
  document.getElementById('tabs').innerHTML=h;
 }
 function setDay(id){cur=id;renderTrain()}
-function dayLabel(t){return String(t||'').replace(/^(ПН|ВТ|СР|ЧТ|ПТ|СБ|ВС)\s*·\s*/,'');}
 
 /* ==== черновики ==== */
 function debounce(fn,ms){var t=null;var f=function(){clearTimeout(t);t=setTimeout(fn,ms);};f.flush=function(){clearTimeout(t);fn();};return f}
@@ -25,11 +24,18 @@ function saveDraft(){
    for(var k=0;k<d.ex[i].s;k++){
     var w=document.querySelector('input[data-e="'+i+'"][data-s="'+k+'"][data-f="w"]');
     var r=document.querySelector('input[data-e="'+i+'"][data-s="'+k+'"][data-f="r"]');
-    row.push([w?w.value:'', r?r.value:'']);
+    /* 3-й/4-й элементы: поле унаследовано от прошлой тренировки и не правилось руками */
+    row.push([w?w.value:'', r?r.value:'', w&&w.dataset.inherited==='true'?1:0, r&&r.dataset.inherited==='true'?1:0]);
    }
    data.push({key:exKey(d.ex[i].n), sets:row});
   }
   var ckDone=document.getElementById('ck-done'), ckMin=document.getElementById('ck-min');
+  /* руками ничего не менялось (только подставлены прошлые значения) - черновика нет */
+  var touched=false;
+  for(var q2=0;q2<data.length&&!touched;q2++){for(var k2=0;k2<data[q2].sets.length;k2++){var sp=data[q2].sets[k2];if((sp[0]!==''&&sp[2]!==1)||(sp[1]!==''&&sp[3]!==1)){touched=true;break;}}}
+  if(ckDone&&ckDone.checked!==(ckDone.dataset.def==='1'))touched=true;
+  if(ckMin&&ckMin.value!=='')touched=true;
+  if(!touched){localStorage.removeItem(DRAFT_KEY());return;}
   localStorage.setItem(DRAFT_KEY(),JSON.stringify({ex:data, cardio:{done:ckDone?ckDone.checked:false, min:ckMin?ckMin.value:''}}));
  }catch(e){}
 }
@@ -55,13 +61,13 @@ function restoreDraft(){
     if(!Array.isArray(pair))continue;
     var w=document.querySelector('input[data-e="'+idx+'"][data-s="'+k+'"][data-f="w"]');
     var r=document.querySelector('input[data-e="'+idx+'"][data-s="'+k+'"][data-f="r"]');
-    if(w&&pair[0]!==''){w.value=pair[0];w.dataset.inherited='false';any=true;}
-    if(r&&pair[1]!==''){r.value=pair[1];r.dataset.inherited='false';}
+    if(w&&pair[0]!==''){w.value=pair[0];w.dataset.inherited=pair[2]===1?'true':'false';if(pair[2]!==1)any=true;}
+    if(r&&pair[1]!==''){r.value=pair[1];r.dataset.inherited=pair[3]===1?'true':'false';if(pair[3]!==1)any=true;}
    }
   }
   if(data.cardio&&typeof data.cardio==='object'){
    var ckDone=document.getElementById('ck-done'), ckMin=document.getElementById('ck-min');
-   if(ckDone){ckDone.checked=!!data.cardio.done; if(data.cardio.done)any=true;}
+   if(ckDone){ckDone.checked=!!data.cardio.done; if(ckDone.checked!==(ckDone.dataset.def==='1'))any=true;}
    if(ckMin&&data.cardio.min!==''){ckMin.value=data.cardio.min; ckMin.dataset.inherited='false';}
   }
   return any;
@@ -79,15 +85,59 @@ function dropDraftAndRender(){dropDraft();renderTrain();toast('ЧЕРНОВИК 
 
 /* ==== раскрытие компактной строки подхода ==== */
 document.addEventListener('click',function(e){
+ var lab=e.target&&e.target.closest?e.target.closest('.srow.expanded.open .lab'):null;
+ if(lab){setSetOpen(lab.closest('.srow.expanded'),false);return;}
  if(e.target&&e.target.closest&&e.target.closest('.set-ok'))return;
  var row=e.target&&e.target.closest?e.target.closest('.srow.compact'):null;
  if(!row)return;
  var box=row.nextElementSibling;
  if(!box||!box.classList.contains('expanded'))return;
- var open=box.style.display!=='none';
- document.querySelectorAll('.srow.expanded').forEach(function(b){b.style.display='none';});
- if(!open)box.style.display='';
+ var open=box.classList.contains('open');
+ document.querySelectorAll('.srow.expanded.open').forEach(function(b){setSetOpen(b,false);});
+ if(!open)setSetOpen(box,true);
 });
+function setSetOpen(box,on){
+ box.classList.toggle('open',on);
+ box.setAttribute('aria-hidden',on?'false':'true');
+ var row=box.previousElementSibling;
+ if(row&&row.classList.contains('compact'))row.setAttribute('aria-expanded',on?'true':'false');
+ document.body.classList.toggle('set-open',!!document.querySelector('.srow.expanded.open'));
+ if(!on)return;
+ prefillFromPrevSet(box);
+ /* раскрывшийся блок не должен прятаться под нижними плашками: мягко подводим его в видимую область */
+ setTimeout(function(){
+  var navh=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'))||64;
+  var lim=innerHeight-navh-130, rc=box.getBoundingClientRect();
+  if(rc.bottom>lim)scrollBy({top:rc.bottom-lim+12,behavior:'smooth'});
+ },380);
+}
+
+/* новый подход часто повторяет предыдущий: подставляем его значения (приглушённо, их можно поправить) */
+function prefillFromPrevSet(box){
+ var e=box.dataset.e,k=+box.dataset.s;
+ if(!k)return;
+ ['w','r'].forEach(function(f){
+  var cur=document.querySelector('input[data-e="'+e+'"][data-s="'+k+'"][data-f="'+f+'"]');
+  var prev=document.querySelector('input[data-e="'+e+'"][data-s="'+(k-1)+'"][data-f="'+f+'"]');
+  if(cur&&prev&&cur.value===''&&prev.value!==''){cur.value=prev.value;cur.dataset.inherited='true';}
+ });
+ refreshCompactRow(+e,k);
+}
+/* смахивание вниз за шапку закрывает подход */
+(function(){
+ var sy=0,sx=0,box=null;
+ document.addEventListener('touchstart',function(e){
+  var lab=e.target&&e.target.closest?e.target.closest('.srow.expanded.open .lab'):null;
+  if(!lab||!e.touches[0]){box=null;return;}
+  box=lab.closest('.srow.expanded');sy=e.touches[0].clientY;sx=e.touches[0].clientX;
+ },{passive:true});
+ document.addEventListener('touchend',function(e){
+  if(!box||!e.changedTouches[0])return;
+  var dy=e.changedTouches[0].clientY-sy, dx=e.changedTouches[0].clientX-sx;
+  if(dy>28&&Math.abs(dx)<40){setSetOpen(box,false);try{if(navigator.vibrate)navigator.vibrate(6);}catch(err){}}
+  box=null;
+ },{passive:true});
+})();
 
 /* ==== синхронизация компактной строки с полями ==== */
 function refreshCompactRow(i,k){
@@ -118,10 +168,11 @@ document.addEventListener('click',function(e){
  var inp=document.querySelector('input[data-e="'+b.dataset.e+'"][data-s="'+b.dataset.s+'"][data-f="'+b.dataset.f+'"]');
  if(!inp)return;
  var step=b.dataset.f==='w'?2.5:1;
- var cur=inp.value===''?0:(parseFloat(inp.value)||0);
- var nv=Math.round((cur+(+b.dataset.d)*step)*10)/10;
+ var curV=inp.value===''?0:(parseFloat(inp.value)||0);
+ var nv=Math.round((curV+(+b.dataset.d)*step)*10)/10;
  inp.value=nv<=0?'':nv;
  inp.dataset.inherited='false';
+ inp.classList.remove('bump');void inp.offsetWidth;inp.classList.add('bump');
  try{if(navigator.vibrate)navigator.vibrate(8);}catch(err){}
  refreshCompactRow(+b.dataset.e,+b.dataset.s);
  saveDraftDebounced();
@@ -145,6 +196,8 @@ document.addEventListener('click',function(e){
  if(!sec){toast('[!] ДЛЯ ЭТОГО УПРАЖНЕНИЯ ОТДЫХ НЕ ЗАДАН');return;}
  startRest(sec,ex.n);
  b.classList.add('on');
+ b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');
+ try{if(navigator.vibrate)navigator.vibrate(12);}catch(err){}
 });
 
 /* ==== ТАЙМЕР ОТДЫХА (нижняя панель) ==== */
@@ -183,7 +236,7 @@ function startRest(sec,label){
  restTimer.total=sec;
  restTimer.endsAt=Date.now()+sec*1000;
  var w=restWidget();
- w.querySelector('#rt-label').textContent=esc(label||'ОТДЫХ');
+ w.querySelector('#rt-label').textContent=label||'ОТДЫХ';
  w.classList.add('on');
  document.body.classList.add('resting');
  try{
@@ -230,7 +283,7 @@ document.addEventListener('visibilitychange',function(){
 /* ==== WAKE LOCK ==== */
 var wl=null, wlEnabled=(localStorage.getItem('ironlog_wl')!=='0');
 function keepAwake(on){
- if(on&&!wl&&navigator.wakeLock){navigator.wakeLock.request('screen').then(function(l){wl=l;updateWlChip();}).catch(function(){wl=null;updateWlChip();});}
+ if(on&&!wl&&navigator.wakeLock){navigator.wakeLock.request('screen').then(function(l){wl=l;l.addEventListener('release',function(){if(wl===l){wl=null;updateWlChip();}});updateWlChip();}).catch(function(){wl=null;updateWlChip();});}
  else if(!on&&wl){wl.release().then(function(){wl=null;updateWlChip();}).catch(function(){wl=null;updateWlChip();});}
 }
 function updateWlChip(){var c=document.getElementById('wl-chip');if(c)c.textContent=wl?'☀ экран: не гаснет':'☀ экран: как обычно';}
@@ -327,7 +380,7 @@ function renderTrain(){
   var prevRec=null;
   if(prev&&prev.ex){for(var z=0;z<prev.ex.length;z++){if(prev.ex[z].key===key){prevRec=prev.ex[z];break;}}}
   var hasAny=false;
-  if(prevRec&&prevRec.sets){for(var y=0;y<prevRec.sets.length;y++){if(prevRec.sets[y]&&prevRec.sets[y][0]!==''){hasAny=true;break;}}}
+  if(prevRec&&prevRec.sets){for(var y=0;y<prevRec.sets.length;y++){if(prevRec.sets[y]&&(prevRec.sets[y][0]!==''||prevRec.sets[y][1]!=='')){hasAny=true;break;}}}
   var stt=exStats(key);
   var prline='';
   if(stt.best&&(e.kind||'weight')==='weight'){
@@ -339,20 +392,20 @@ function renderTrain(){
   var sets='';
   for(var k=0;k<e.s;k++){
    var p=['',''];
-   if(prevRec&&prevRec.sets&&prevRec.sets[k]&&prevRec.sets[k][0]!=='')p=prevRec.sets[k];
+   if(prevRec&&prevRec.sets&&prevRec.sets[k]&&(prevRec.sets[k][0]!==''||prevRec.sets[k][1]!==''))p=prevRec.sets[k];
    var wVal=p[0];
    var rVal=(p[1]!==undefined&&p[1]!=='')?p[1]:'';
    var isTime=(e.kind||'weight')==='time';
    var unit=isTime?'сек':'кг';
    var unitR=isTime?'сек':'повт';
    var valsTxt=isTime?(rVal!==''?rVal+' '+unitR:'—'):((wVal!==''?wVal+' '+unit:'—')+' × '+(rVal!==''?rVal+' '+unitR:'—'));
-   sets+='<div class="srow compact" data-e="'+i+'" data-s="'+k+'">'
+   sets+='<div class="srow compact" tabindex="0" role="button" aria-expanded="false" data-e="'+i+'" data-s="'+k+'">'
     +'<span class="set-num">'+(k+1)+'</span>'
     +'<span class="set-vals">'+valsTxt+'</span>'
     +'<button class="set-ok" data-e="'+i+'" data-s="'+k+'" aria-label="подход выполнен">✓</button>'
     +'</div>'
-    +'<div class="srow expanded" style="display:none" data-e="'+i+'" data-s="'+k+'">'
-    +'<span class="lab"><b>'+(k+1)+'</b> подход</span>'
+    +'<div class="srow expanded" aria-hidden="true" data-e="'+i+'" data-s="'+k+'"><div class="ex-in">'
+    +'<span class="lab" role="button" aria-label="свернуть подход"><span>Подход <b>'+(k+1)+'</b></span><i class="lab-chev" aria-hidden="true"></i></span>'
     +(isTime?'':'<div class="stp">'
      +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="w" data-d="-1" aria-label="минус вес">−</button>'
      +'<input type="number" step="0.5" min="0" inputmode="decimal" placeholder="'+unit+'" data-e="'+i+'" data-s="'+k+'" data-f="w" data-inherited="'+(wVal!==''?'true':'false')+'" value="'+esc(String(wVal))+'" enterkeyhint="next">'
@@ -363,7 +416,7 @@ function renderTrain(){
     +'<input type="number" step="1" min="0" inputmode="numeric" placeholder="'+unitR+'" data-e="'+i+'" data-s="'+k+'" data-f="r" data-inherited="'+(rVal!==''?'true':'false')+'" value="'+esc(String(rVal))+'" enterkeyhint="next">'
     +'<button class="stp-b" data-e="'+i+'" data-s="'+k+'" data-f="r" data-d="1" aria-label="плюс '+unitR+'">+</button>'
     +'</div>'
-    +'</div>';
+    +'</div></div>';
   }
   var exCls=e.sup?'sup':((e.kind||'weight')==='time'?'tm':'');
   html+='<div class="ex '+exCls+'">'
@@ -381,7 +434,7 @@ function renderTrain(){
  html+='<div class="ex cardio"><h3>Кардио <u style="text-decoration:none;color:var(--mut);font-weight:500">(заминка)</u></h3>'
   +'<div class="meta">низкая интенсивность · пульс 110–130 · после силовой</div>'
   +'<div class="ex-btns"><button class="copybtn" id="wl-chip" onclick="toggleWake()">☀ экран: …</button></div>'
-  +'<label class="ckrow"><input type="checkbox" id="ck-done" '+((pc&&pc.done)?'checked':'')+'><span>выполнено</span></label>'
+  +'<label class="ckrow"><input type="checkbox" id="ck-done" data-def="'+((pc&&pc.done)?'1':'0')+'" '+((pc&&pc.done)?'checked':'')+'><span>выполнено</span></label>'
   +'<div class="sets"><div class="srow one"><span class="lab">минуты</span>'
   +'<input type="number" step="1" min="0" inputmode="numeric" id="ck-min" placeholder="'+(pcMin?pcMin:'мин')+'" value="">'
   +'</div></div></div>';
@@ -405,7 +458,7 @@ function copyPrev(i){
  var prev=null;
  for(var n=S.sessions.length-1;n>=0;n--){
   var s=S.sessions[n];
-  if(s.dayId===cur&&s.ex){for(var z=0;z<s.ex.length;z++){if(s.ex[z].key===key){prev=s;break;}}}
+  if(s.dayId===cur&&inPack(s)&&s.ex){for(var z=0;z<s.ex.length;z++){if(s.ex[z].key===key){prev=s;break;}}}
   if(prev)break;
  }
  if(!prev)return;
@@ -432,7 +485,8 @@ function collect(){
   for(var k=0;k<e.s;k++){
    var w=document.querySelector('input[data-e="'+i+'"][data-s="'+k+'"][data-f="w"]');
    var r=document.querySelector('input[data-e="'+i+'"][data-s="'+k+'"][data-f="r"]');
-   sets.push([w.value===''?'':+w.value, r.value===''?'':+r.value]);
+   var wv=w?w.value:'', rv=r?r.value:'';
+   sets.push([wv===''?'':+wv, rv===''?'':+rv]);
   }
   out.push({ key:exKey(e.n), name:e.n, note:e.note||'', sets:sets });
  }
@@ -454,13 +508,14 @@ function save(){
    var old=0;
    for(var s1=0;s1<S.sessions.length;s1++){
     var s=S.sessions[s1];
-    if(s.dayId!==cur||!s.ex)continue;
+    if(!s.ex)continue;
     for(var s2=0;s2<s.ex.length;s2++){
      if(s.ex[s2].key!==c.key||!s.ex[s2].sets)continue;
      for(var s3=0;s3<s.ex[s2].sets.length;s3++){var ov=+s.ex[s2].sets[s3][0]||0;if(ov>old)old=ov;}
     }
    }
-   if(nm>old)pr=true;
+   /* рекорд — только если у упражнения уже есть история (по всем дням, как плашка PR) */
+   if(old>0&&nm>old)pr=true;
   }
  }
  var mv=document.getElementById('ck-min').value;
@@ -501,7 +556,7 @@ function journal(){
   var same=null;
   for(var m=0;m<S.sessions.length;m++){
    var x=S.sessions[m];
-   if(x.dayId===s.dayId&&x.ts<s.ts){if(!same||x.ts>same.ts)same=x;}
+   if(x.dayId===s.dayId&&(x.packId||'default')===(s.packId||'default')&&x.ts<s.ts){if(!same||x.ts>same.ts)same=x;}
   }
   var v=vol(s), pv=same?vol(same):null;
   var dl;
@@ -514,16 +569,17 @@ function journal(){
    var ex=s.ex[e2];var str='';
    for(var t2=0;t2<(ex.sets||[]).length;t2++){
     var set=ex.sets[t2];
-    if(set[0]==='')continue;
+    if(set[0]===''&&set[1]==='')continue;
     if(str)str+=', ';
-    str+=set[0]+'×'+(set[1]||'–');
+    str+=(set[0]===''?'':set[0]+'×')+(set[1]||'–');
    }
    if(str)rows+='<li><span class="n">'+esc(ex.name)+'</span><span class="w">'+str+'</span></li>';
   }
   var c='';
   if(s.cardio)c='<li><span class="n">Кардио</span><span class="w">'+esc(s.cardio.done?(s.cardio.min!==''?s.cardio.min+' мин':'ДА'):'—')+'</span></li>';
   html+='<div class="ses"><div class="sh"><span class="d">'+new Date(s.ts).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})+' · '+esc(dayLabel(s.dayTitle||''))+'</span>'
-   +'<span class="v">ТОННАЖ '+v.toLocaleString('ru-RU')+' кг</span>'+dl+'</div>'
+   +'<span class="v">ТОННАЖ '+v.toLocaleString('ru-RU')+' кг</span>'+dl
+   +'<button class="delbtn" aria-label="удалить тренировку" onclick="delSession('+s.ts+')">✕</button></div>'
    +'<ul>'+rows+c+'</ul></div>';
  }
  el.innerHTML=html;
@@ -552,7 +608,7 @@ document.getElementById('fileIn').addEventListener('change',function(e){
      else skipped++;
    });
    S.sessions.sort(function(a,b){return a.ts-b.ts;});
-   S.measures.sort(function(a,b){return a.ts-b.ts;});
+   S.measures.sort(byMeas);
    if(!saveS()){toast('[!] ОШИБКА СОХРАНЕНИЯ');e.target.value='';return;}
    renderTrain();renderMeasure();
    toast('[<<] ИМПОРТ: '+imported+' записей'+(skipped?', отклонено '+skipped:''));
@@ -561,7 +617,20 @@ document.getElementById('fileIn').addEventListener('change',function(e){
   e.target.value='';
  }).catch(function(){toast('[!] НЕ ЧИТАЕТСЯ ФАЙЛ');e.target.value='';});
 });
-function clearJ(){if(confirm('Удалить все тренировки журнала? (замеры останутся)')){S.sessions=[];if(saveS()){renderTrain();toast('ЖУРНАЛ ОЧИЩЕН');scheduleSync();}}}
+function clearJ(){if(confirm('Удалить все тренировки журнала? (замеры останутся)')){S.sessions=[];allowOverwrite();if(saveS()){renderTrain();toast('ЖУРНАЛ ОЧИЩЕН');scheduleSync();}}}
+function delSession(ts){
+ var i=-1;for(var n=0;n<S.sessions.length;n++){if(S.sessions[n].ts===ts){i=n;break;}}
+ if(i<0)return;
+ if(!confirm('Удалить эту тренировку из журнала?'))return;
+ var removed=S.sessions.splice(i,1)[0];
+ allowOverwrite();
+ if(!saveS()){S.sessions.splice(i,0,removed);return;}
+ renderTrain();toast('ТРЕНИРОВКА УДАЛЕНА');scheduleSync();
+}
+/* подход раскрывается и с клавиатуры */
+document.addEventListener('keydown',function(e){
+ if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.classList&&e.target.classList.contains('compact')){e.preventDefault();e.target.click();}
+});
 
 /* ==== стыковка ленты дней к навигации ==== */
 function dockTabs(){
@@ -723,7 +792,7 @@ function ghRestore(){
     S.measures.push(m);addM++;
    });
    S.sessions.sort(function(a,b){return a.ts-b.ts;});
-   S.measures.sort(function(a,b){return a.ts-b.ts;});
+   S.measures.sort(byMeas);
    if(!saveS()){toast('[!] ОШИБКА СОХРАНЕНИЯ');return;}
    renderTrain();renderMeasure();renderHome();
    toast('[CLOUD] ВОССТАНОВЛЕНО: '+addS+' трен., '+addM+' зам.');

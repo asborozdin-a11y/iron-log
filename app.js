@@ -9,6 +9,8 @@ let S={sessions:[],measures:[],reminder:null}, cur=1, GH={};
 function loadPersonas(){try{return JSON.parse(localStorage.getItem(P_LIST))||[]}catch(e){return[]}}
 function savePersonas(){try{localStorage.setItem(P_LIST,JSON.stringify(PERSONAS));return true}catch(e){return false}}
 function personaById(id){return PERSONAS.find(p=>p.id===id)}
+/* нужна на главной, которая рисуется при старте, до загрузки train.js */
+function dayLabel(t){return String(t||'').replace(/^(ПН|ВТ|СР|ЧТ|ПТ|СБ|ВС)\s*·\s*/,'');}
 function esc(s){return String(s===undefined||s===null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function slugName(s){
  const map={'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'c','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'};
@@ -146,10 +148,19 @@ function pinGate(p,done){
   <label class="ob-lab">Введите PIN-код</label>
   <div class="pin-row"><input id="gate-pin" class="pin-in" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"></div>
   <div class="mact" style="justify-content:center;margin-top:16px"><button class="ghost" id="gate-upd">Обновить</button><button id="gate-go">Войти</button></div>`);
+ /* после 5 неверных попыток — пауза, растущая с каждой ошибкой (хранится в localStorage) */
+ const FK='ironlog_pinfail_'+p.id;
+ const getFail=()=>{try{return JSON.parse(localStorage.getItem(FK))||{n:0,until:0}}catch(e){return{n:0,until:0}}};
  const go=async()=>{
+  const f=getFail(), wait=f.until-Date.now();
+  if(wait>0){toast('[!] СЛИШКОМ МНОГО ПОПЫТОК: ЖДИ '+Math.ceil(wait/1000)+' С');b.querySelector('#gate-pin').value='';return;}
   const ok=await pinVerify(b.querySelector('#gate-pin').value.trim(),p);
-  if(ok){sessionStorage.setItem('ironlog_unlocked_'+p.id,'1');b.remove();done();}
-  else{toast('[!] НЕВЕРНЫЙ PIN');const el=b.querySelector('#gate-pin');el.value='';el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),350);}
+  if(ok){try{localStorage.removeItem(FK);}catch(e){} sessionStorage.setItem('ironlog_unlocked_'+p.id,'1');b.remove();done();}
+  else{
+   const n=f.n+1, until=n>=5?Date.now()+Math.min(30*(n-4),600)*1000:0;
+   try{localStorage.setItem(FK,JSON.stringify({n:n,until:until}));}catch(e){}
+   toast('[!] НЕВЕРНЫЙ PIN');const el=b.querySelector('#gate-pin');el.value='';el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),350);
+  }
  };
  b.querySelector('#gate-go').onclick=go;
  b.querySelector('#gate-upd').onclick=forceUpdate;
@@ -233,8 +244,9 @@ function migrateMeasures(D){
  return changed;
 }
 function load(){
+ const raw = localStorage.getItem(KEYC);
  try{
-  const o = JSON.parse(localStorage.getItem(KEYC));
+  const o = JSON.parse(raw);
   if(o){
    if(!Array.isArray(o.sessions))o.sessions=[];
    if(!Array.isArray(o.measures))o.measures=[];
@@ -244,7 +256,11 @@ function load(){
    if(m.changed||mm){ try{localStorage.setItem(KEYC,JSON.stringify(m.data));}catch(e){} }
    return m.data;
   }
- }catch(e){}
+ }catch(e){
+  /* журнал не читается: сохраняем сырую копию, чтобы следующая запись её не затёрла */
+  try{localStorage.setItem(KEYC+'_corrupt_'+Date.now(),raw);}catch(e2){}
+  setTimeout(function(){toast('[!] ЖУРНАЛ ПОВРЕЖДЁН: копия сохранена, начат новый');},500);
+ }
  return {sessions:[],measures:[],reminder:null};
 }
 function saveS(){
@@ -253,18 +269,33 @@ function saveS(){
 }
 function loadGH(){try{return JSON.parse(localStorage.getItem(GHKC))||{}}catch(e){return{}}}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
-function lastOf(day){return [...S.sessions].reverse().find(s=>s.dayId===day)}
+function curPack(){return (ME&&ME.pack)||'default'}
+function inPack(s){return (s.packId||'default')===curPack()}
+function lastOf(day){return [...S.sessions].reverse().find(s=>s.dayId===day&&inPack(s))}
+/* порядок замеров — по дате замера, а не по моменту ввода (замер задним числом) */
+function measKey(m){const t=new Date(m.date+'T08:00').getTime();return isNaN(t)?m.ts:t}
+function byMeas(a,b){return measKey(a)-measKey(b)||a.ts-b.ts}
+function startDay(id){cur=id;showView('train');}
 function nextDayId(){
- function startDay(id){cur=id;showView('train');}
  if(typeof DAYS==='undefined'||!DAYS||!DAYS.length)return 1;
- if(!S.sessions.length)return DAYS[0].id;
- var last=S.sessions.reduce(function(a,b){return b.ts>a.ts?b:a;});
+ var ps=S.sessions.filter(inPack);
+ if(!ps.length)return DAYS[0].id;
+ var last=ps.reduce(function(a,b){return b.ts>a.ts?b:a;});
  for(var i=0;i<DAYS.length;i++){if(DAYS[i].id===last.dayId)return DAYS[(i+1)%DAYS.length].id;}
  return DAYS[0].id;
 }
 function vol(s){let v=0;(s.ex||[]).forEach(e=>{(e.sets||[]).forEach(([w,r])=>{v+=(+w||0)*(+r||0)});});return v}
 function fmtDate(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0].slice(2)}`:iso}
 function fmtDateFull(iso){if(!iso)return'';const[p]=iso.split('T');const a=p.split('-');return a.length===3?`${a[2]}.${a[1]}.${a[0]}`:iso}
+/* единый формат: числа с запятой, даты дд.мм (с годом, если не текущий), тоннаж от 1000 кг - в тоннах */
+function fmtNum(n){return (+n).toLocaleString('ru-RU',{maximumFractionDigits:1})}
+function fmtTon(kg){return kg>=1000?fmtNum(Math.round(kg/100)/10)+' т':fmtNum(kg)+' кг'}
+function shortDate(d){
+ const x=(d instanceof Date)?d:new Date(String(d).slice(0,10)+'T12:00');
+ if(isNaN(x))return '';
+ const dd=String(x.getDate()).padStart(2,'0'),mm=String(x.getMonth()+1).padStart(2,'0');
+ return x.getFullYear()===new Date().getFullYear()?dd+'.'+mm:dd+'.'+mm+'.'+String(x.getFullYear()).slice(2);
+}
 function todayISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function fxOK(){return !matchMedia('(prefers-reduced-motion: reduce)').matches && localStorage.getItem('ironlog_fxoff')!=='1'}
 function toggleFx(){
@@ -272,9 +303,10 @@ function toggleFx(){
  if(wasOff){try{localStorage.removeItem('ironlog_fxoff');}catch(e){}}
  else{
   try{localStorage.setItem('ironlog_fxoff','1');}catch(e){}
-  loopOn=false;
+  fxStop();
   if(fxCv&&fxCtx)fxCtx.clearRect(0,0,innerWidth,innerHeight);
  }
+ if(wasOff)kick();
  renderProfile();
  toast('[OK] ЭФФЕКТЫ: '+(wasOff?'ВКЛЮЧЕНЫ':'ВЫКЛЮЧЕНЫ'));
 }
@@ -291,10 +323,13 @@ function streakStats(){
  var now=Date.now();
  var week=0;
  list.forEach(function(t){if(now-t<=7*86400000)week++;});
+ /* неделя засчитана, если в ней была хотя бы одна тренировка */
+ var wset={};
+ list.forEach(function(t){wset[weekStartOf(t)]=1;});
  var curW=weekStartOf(now);
- if(list.length&&weekStartOf(list[0])!==curW)curW-=7*86400000;
+ if(!wset[curW])curW=weekStartOf(curW-86400000);
  var weeks=0;
- while(set[curW]){weeks++;curW-=7*86400000;}
+ while(wset[curW]){weeks++;curW=weekStartOf(curW-86400000);}
  return {week:week,weeks:weeks};
 }
 
@@ -471,7 +506,7 @@ function startApp(pid){
  const r=document.getElementById('gh-repo'); if(r)r.value=GH.repo||'iron-data';
  ghStatus();
  if(GH.token&&localStorage.getItem(PKEYC))setTimeout(function(){if(GH.token&&localStorage.getItem(PKEYC))doSync(false);},0);
- checkReminder();
+ checkReminder();armReminderTimer();remStatus();
  if(fxOK()){ensureCanvas();initParts();nextDist=performance.now()+6000;kick();}
  const hashView=(location.hash||'').replace('#','');
  runBoot(function(){
@@ -510,7 +545,8 @@ function setPack(k){
 }
 
 /* ==== FX ==== */
-let fxCv=null,fxCtx=null,parts=[],bolts=[],flash=0,distFlash=0,loopOn=false,nextDist=0;
+let fxCv=null,fxCtx=null,parts=[],bolts=[],flash=0,distFlash=0,loopOn=false,nextDist=0,fxRaf=0;
+function fxStop(){if(fxRaf){cancelAnimationFrame(fxRaf);fxRaf=0;}loopOn=false;}
 function ensureCanvas(){
  if(fxCv)return;
  fxCv=document.createElement('canvas');fxCv.id='fxcanvas';
@@ -537,6 +573,7 @@ function fireReward(x,y,pr){
  flash=Math.max(flash,pr?1.5:0.9); eyeFlare();kick();
 }
 function fxLoop(t){
+ fxRaf=0;
  if(document.hidden){loopOn=false;return;}
  fxCtx.clearRect(0,0,innerWidth,innerHeight);
  for(const p of parts){
@@ -568,10 +605,10 @@ function fxLoop(t){
   fxCtx.lineWidth=b.w*.4;fxCtx.stroke();
   b.life-=.085;
  }
- fxCtx.shadowBlur=0; requestAnimationFrame(fxLoop);
+ fxCtx.shadowBlur=0; fxRaf=requestAnimationFrame(fxLoop);
 }
-function kick(){if(!loopOn&&fxOK()){loopOn=true;requestAnimationFrame(fxLoop);}}
-document.addEventListener('visibilitychange',()=>{if(document.hidden)loopOn=false;else kick();});
+function kick(){if(!fxRaf&&fxCtx&&fxOK()){loopOn=true;fxRaf=requestAnimationFrame(fxLoop);}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)fxStop();else kick();});
 
 /* ==== BOOT ==== */
 function runBoot(done){
@@ -582,7 +619,7 @@ function runBoot(done){
  try{localStorage.setItem(bkey,today);}catch(e){}
  const b=document.createElement('div');b.id='boot';
  const lines=['> CYBERDYNE TACTICAL CORE · ONLINE',
-  `> PERSONA: ${ME?ME.name:'—'}`,
+  `> PERSONA: ${ME?esc(ME.name):'—'}`,
   `> THEME: ${(ME&&ME.theme||'terminator').toUpperCase()}`,
   `> SECURITY: ${ME&&ME.pinHash?'PIN LOCK ON':'OPEN'}`,
   `> SCHEMA: v2 · METRICS: 9`,
@@ -635,39 +672,51 @@ function showView(v, ev, opts){
  fxTarget(x,y, apply);
 }
 addEventListener('popstate', e=>{
- const v = (e.state && e.state.v && VALID_VIEWS.indexOf(e.state.v)>=0) ? e.state.v : 'home';
+ /* нет состояния (переход по #ссылке, например из уведомления) - берём экран из адреса */
+ const hv = (location.hash||'').replace('#','');
+ const v = (e.state && e.state.v && VALID_VIEWS.indexOf(e.state.v)>=0) ? e.state.v : (VALID_VIEWS.indexOf(hv)>=0 ? hv : 'home');
  showView(v, null, {fromPop:true, nofx:true, nohistory:true});
 });
 
 function renderHome(){
- const last=S.sessions.length?[...S.sessions].sort((a,b)=>b.ts-a.ts)[0]:null;
- const lm=S.measures.length?[...S.measures].sort((a,b)=>b.ts-a.ts)[0]:null;
+ const mine=S.sessions.filter(inPack);
+ const last=mine.length?[...mine].sort((a,b)=>b.ts-a.ts)[0]:null;
+ const lm=S.measures.length?[...S.measures].sort((a,b)=>byMeas(b,a))[0]:null;
  const st=streakStats();
  const nextDay=nextDayId();
  const nextDayObj=(typeof DAYS!=='undefined')?DAYS.find(d=>d.id===nextDay):null;
  const nextLabel=nextDayObj?(nextDayObj.t.replace(/^(ПН|ВТ|СР|ЧТ|ПТ|СБ|ВС)\s*·\s*/,'')):'';
  const nextSub=nextDayObj?nextDayObj.sub:'';
  
- const daysPick=(typeof DAYS!=='undefined'?DAYS:[]).map(function(d){return '<button class="'+(d.id===nextDay?'rec':'')+'" onclick="startDay('+d.id+')">'+esc(dayLabel(d.t))+'</button>';}).join('');
+ const days=(typeof DAYS!=='undefined'?DAYS:[]);
+ const altDays=days.filter(function(d){return d.id!==nextDay;}).map(function(d){return '<button onclick="startDay('+d.id+')">'+esc(dayLabel(d.t))+'</button>';}).join('');
+ const shortSub=nextSub.split(' · объём')[0];
+ /* цель недели = число дней программы; точки заполняются тренировками текущей недели */
+ const wkStart=weekStartOf(Date.now());
+ const wkDone=mine.filter(function(s){return s.ts>=wkStart;}).length;
+ const wkGoal=days.length||3, wkShown=Math.min(wkDone,wkGoal);
+ let wkDots='';for(let i=0;i<wkGoal;i++)wkDots+='<i class="wk-d'+(i<wkDone?' on':'')+'"></i>';
+ const wkText=wkDone>=wkGoal?'цель выполнена':(wkDone?'ещё '+(wkGoal-wkDone):'начни с сегодняшней');
+ const weekHtml='<div class="wk" role="img" aria-label="Эта неделя: '+wkShown+' из '+wkGoal+' тренировок"><span class="wk-dots">'+wkDots+'</span><span class="wk-t">Неделя '+wkShown+' из '+wkGoal+' · '+wkText+'</span></div>';
+ const streakChip=st.weeks?'<div class="streak-chip" title="недель подряд с тренировками"><b>'+st.weeks+'</b> нед подряд</div>':'';
  const todayHtml=`<div class="today-card">
-  <h2>Сегодня: ${esc(nextLabel)}</h2>
-  <div class="today-sub">${esc(nextSub)} · рекомендованный день подсвечен</div>
-  <div class="day-pick">${daysPick}</div>
+  <div class="tc-head"><h2>Сегодня: ${esc(nextLabel)}</h2>${streakChip}</div>
+  <div class="today-sub">${esc(shortSub)}</div>
+  ${weekHtml}
+  <button class="today-btn" onclick="startDay(${nextDay})">Начать: ${esc(nextLabel)} ▸</button>
+  <div class="day-alt"><span>Другой день</span>${altDays}</div>
   <div class="today-stats">
-   <div class="stat"><b>${st.week}</b><span>за 7 дней</span></div>
-   <div class="stat"><b>${lm&&lm.v.w?lm.v.w+' кг':'—'}</b><span>последний вес</span></div>
-   <div class="stat"><b>${last?vol(last).toLocaleString('ru-RU')+' кг':'—'}</b><span>тоннаж</span></div>
+   <div class="stat"><b>${st.week}</b><span>тренировок за 7 дней</span></div>
+   <div class="stat"><b>${lm&&lm.v.w?fmtNum(lm.v.w)+' кг':'—'}</b><span>вес, последний замер</span></div>
+   <div class="stat"><b>${last?fmtTon(vol(last)):'—'}</b><span>тоннаж, последняя</span></div>
   </div></div>`;
- 
- document.getElementById('hstatus').innerHTML=todayHtml+
-  `<div style="font:500 12px/1.6 var(--font-data);color:var(--mut2);margin-top:16px">
-   Тренировок: <b>${S.sessions.length}</b>${last?' · последняя: '+new Date(last.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}):''}<br>
-   Замеров: <b>${S.measures.length}</b>${lm?' · последний: '+fmtDate(lm.date):''}<br>
-   Серия: <b>${st.weeks}</b> нед подряд<br>
-   Облако: <b>${GH.token?'подключено':'не подключено'}</b>
-  </div>`;
- document.getElementById('ms-train').textContent=last?`последняя: ${new Date(last.ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})} · ${vol(last).toLocaleString('ru-RU')} кг`:'журнал силовых · 3 дня';
- document.getElementById('ms-meas').textContent=lm&&lm.v.w?`последний: ${fmtDate(lm.date)} · ${lm.v.w} кг`:'история пропорций';
+
+ /* облако видно на главной только когда есть что сообщить */
+ const cloudWarn=(GH.token&&localStorage.getItem(PKEYC))?'<div class="hs-warn">облако: есть несинхронизированные данные</div>':'';
+ document.getElementById('hstatus').innerHTML=todayHtml+cloudWarn;
+ /* история - подписи под иконками: дата и значение последней записи */
+ document.getElementById('ms-train').innerHTML=last?shortDate(new Date(last.ts))+'<br>'+fmtTon(vol(last)):'нет записей';
+ document.getElementById('ms-meas').innerHTML=lm?shortDate(lm.date)+'<br>'+(lm.v.w?fmtNum(lm.v.w)+' кг':'замер'):'нет записей';
 }
 
 /* ==== GitHub sync ==== */
@@ -688,7 +737,11 @@ async function ghPut(path,content){
  const g=await fetch(base,{headers:h});
  if(g.ok){
   const gt=await g.text();
-  try{sha=JSON.parse(gt).sha||null;}catch(e){sha=null;}
+  try{
+   const gj=JSON.parse(gt);sha=gj.sha||null;
+   /* содержимое не изменилось — не плодим пустые коммиты */
+   if(gj.content&&gj.content.replace(/\s/g,'')===b64utf8(content))return;
+  }catch(e){sha=null;}
   if(!sha){try{sha=await ghSha(path);}catch(e){}}
  } else if(g.status!==404)throw g.status;
  const body={message:'sync: auto-update '+path,content:b64utf8(content)};
@@ -758,6 +811,10 @@ function buildMeasCSV(){
  return rows.map(function(r){return r.map(csvEsc).join(',');}).join('\r\n');
 }
 let syncT=null;
+function forceKey(){return 'ironlog_f_'+(ME?ME.id:'x')}
+/* осознанное удаление данных: следующая синхронизация вправе уменьшить облако */
+function allowOverwrite(){try{localStorage.setItem(forceKey(),'1');}catch(e){}}
+function csvRows(t){return t?Math.max(0,String(t).split(/\r?\n/).filter(function(l){return l.trim()!=='';}).length-1):0}
 function scheduleSync(){
  if(!GH.token)return;
  try{localStorage.setItem(PKEYC,'1');}catch(e){}
@@ -779,9 +836,24 @@ async function doSync(manual){
   }
  }
  try{
-  await ghPut('trainings-'+sl+'.csv',buildTrainCSV());
-  await ghPut('measures-'+sl+'.csv',buildMeasCSV());
-  try{localStorage.removeItem(PKEYC);}catch(e){}
+  const tCSV=buildTrainCSV(), mCSV=buildMeasCSV();
+  /* защита: не затираем облако, если там записей больше, чем локально (новое устройство, частичные данные) */
+  if(localStorage.getItem(forceKey())!=='1'){
+   const lt=csvRows(tCSV), lm=csvRows(mCSV);
+   const nt=csvRows(await ghGet('trainings-'+sl+'.csv')), nm=csvRows(await ghGet('measures-'+sl+'.csv'));
+   if(nt>lt||nm>lm){
+    const msg='В облаке больше записей (трен. '+nt+', зам. '+nm+'), чем локально ('+lt+' / '+lm+').';
+    if(!manual){
+     try{localStorage.removeItem(PKEYC);}catch(e){}
+     toast('[CLOUD] СИНК ОСТАНОВЛЕН: В ОБЛАКЕ БОЛЬШЕ ДАННЫХ — «ВОССТАНОВИТЬ ИЗ ОБЛАКА»');
+     ghStatus();return;
+    }
+    if(!confirm(msg+'\nПерезаписать облако локальными данными? (прежняя версия останется в истории коммитов GitHub)'))return;
+   }
+  }
+  await ghPut('trainings-'+sl+'.csv',tCSV);
+  await ghPut('measures-'+sl+'.csv',mCSV);
+  try{localStorage.removeItem(forceKey());localStorage.removeItem(PKEYC);}catch(e){}
   toast('[CLOUD] GITHUB: ТАБЛИЦЫ ОБНОВЛЕНЫ');
  }catch(e){
   try{localStorage.setItem(PKEYC,'1');}catch(e){}
@@ -814,27 +886,182 @@ function ghStatus(){
 }
 
 /* ==== НАПОМИНАНИЯ ==== */
-const REPN={none:'разово',daily:'ежедневно',weekly:'еженедельно',monthly:'ежемесячно'};
+const REPN={none:'разово',daily:'ежедневно',every2:'через день',weekly:'еженедельно',monthly:'ежемесячно'};
+/* n-е наступление напоминания от базовой даты b; null - если повтор неизвестен */
+function remOccur(b,n,repeat){
+ const d=new Date(b);
+ if(repeat==='daily')d.setDate(b.getDate()+n);
+ else if(repeat==='every2')d.setDate(b.getDate()+2*n);
+ else if(repeat==='weekly')d.setDate(b.getDate()+7*n);
+ else if(repeat==='monthly')d.setMonth(b.getMonth()+n);
+ else return null;
+ return d;
+}
 function remBase(){if(!S.reminder)return null;const[d]=(S.reminder.date||'').split('T');const t=S.reminder.time||'08:00';const dt=new Date(d+'T'+t);return isNaN(dt)?null:dt}
 function nextReminder(){
  const r=S.reminder; if(!r||!r.enabled)return null;
  let d=remBase(); if(!d)return null;
  const now=new Date();
  if(r.repeat==='none')return d;
- while(d<now){
-  if(r.repeat==='daily')d.setDate(d.getDate()+1);
-  else if(r.repeat==='weekly')d.setDate(d.getDate()+7);
-  else if(r.repeat==='monthly')d.setMonth(d.getMonth()+1);
-  else break;
+ const b=new Date(d);
+ for(let n=1;d<now&&n<20000;n++){
+  const c=remOccur(b,n,r.repeat); if(!c)break;
+  d=c;
  }
  return d;
 }
+/* последнее наступившее (<= сейчас) время напоминания; null, если ещё не наступало */
+function dueReminder(){
+ const r=S.reminder; if(!r||!r.enabled)return null;
+ const b=remBase(); if(!b)return null;
+ const now=new Date(); if(b>now)return null;
+ if(r.repeat==='none')return b;
+ let last=b;
+ for(let n=1;n<20000;n++){
+  const c=remOccur(b,n,r.repeat); if(!c||c>now)break;
+  last=c;
+ }
+ return last;
+}
+
+/* ---- уведомления: поддержка, разрешение, звук ---- */
+function notifState(){return ('Notification' in window)?Notification.permission:'unsupported'}
+function notifText(){
+ const s=notifState();
+ if(s==='unsupported')return 'уведомления недоступны в этом браузере. На iPhone: «Поделиться» → «На экран Домой» и открой приложение оттуда';
+ if(s==='granted')return 'уведомления разрешены';
+ if(s==='denied')return 'уведомления запрещены: разреши их в настройках сайта или приложения';
+ return 'уведомления ещё не разрешены — нажми «Проверить уведомление»';
+}
+/* запрос разрешения - только из нажатия пользователя */
+function askNotif(){
+ if(notifState()!=='default')return Promise.resolve(notifState());
+ try{return Promise.resolve(Notification.requestPermission(function(){})).then(function(){return notifState();});}
+ catch(e){return Promise.resolve(notifState());}
+}
+let chimeAC=null;
+function unlockAudio(){
+ try{
+  if(!chimeAC)chimeAC=new (window.AudioContext||window.webkitAudioContext)();
+  if(chimeAC.state==='suspended')chimeAC.resume();
+ }catch(e){}
+}
+/* звук разрешается браузером только после касания: «разблокируем» его при любом нажатии в приложении */
+['pointerdown','keydown','touchstart'].forEach(function(ev){document.addEventListener(ev,unlockAudio,{passive:true});});
+/* два мягких тона; true - если звук реально запущен */
+function playChime(){
+ try{
+  unlockAudio();
+  if(!chimeAC||chimeAC.state!=='running')return false;
+  const t=chimeAC.currentTime;
+  [[880,0],[1175,.22]].forEach(function(n){
+   const o=chimeAC.createOscillator(),g=chimeAC.createGain();
+   o.type='sine';o.frequency.value=n[0];o.connect(g);g.connect(chimeAC.destination);
+   g.gain.setValueAtTime(0.0001,t+n[1]);
+   g.gain.exponentialRampToValueAtTime(0.25,t+n[1]+.02);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+n[1]+.6);
+   o.start(t+n[1]);o.stop(t+n[1]+.65);
+  });
+  return true;
+ }catch(e){return false;}
+}
+/* системное уведомление; silent=true, когда сигнал уже подали сами (приложение на экране) */
+function showMeasureNotification(isTest,silent){
+ const opts={
+  body:isTest?'Проверка: так выглядит напоминание о замере':'Пора сделать замер тела. Лучше утром, натощак',
+  icon:'icon-192.png',badge:'icon-192.png',tag:'ironlog-measure',renotify:true,
+  vibrate:[200,100,200],silent:!!silent,data:{url:'./#measure'}
+ };
+ return new Promise(function(resolve){
+  if(notifState()!=='granted'){resolve(false);return;}
+  /* Android Chrome не разрешает new Notification - нужен showNotification через service worker */
+  const fallback=function(){try{new Notification('IRON WORLD',opts);resolve(true);}catch(e){resolve(false);}};
+  if(navigator.serviceWorker&&navigator.serviceWorker.ready){
+   navigator.serviceWorker.ready.then(function(reg){return reg.showNotification('IRON WORLD',opts);}).then(function(){resolve(true);}).catch(fallback);
+  }else fallback();
+ });
+}
+function remTest(){
+ unlockAudio();
+ askNotif().then(function(st){
+  const chimed=playChime();
+  showMeasureNotification(true,chimed).then(function(shown){
+   remStatus();
+   const why=st==='denied'?'УВЕДОМЛЕНИЯ ЗАПРЕЩЕНЫ В НАСТРОЙКАХ':st==='unsupported'?'УВЕДОМЛЕНИЯ НЕДОСТУПНЫ В ЭТОМ БРАУЗЕРЕ':'РАЗРЕШЕНИЕ НЕ ВЫДАНО';
+   toast(shown?'[OK] УВЕДОМЛЕНИЕ ОТПРАВЛЕНО'+(chimed?' · ЗВУК':''):'[!] '+why+(chimed?' · ЗВУК ПРОВЕРЕН':''));
+  });
+ });
+}
+
+/* ---- точный таймер: срабатывает ровно в назначенное время, пока приложение живо ---- */
+let remTimer=null;
+function armReminderTimer(){
+ clearTimeout(remTimer);remTimer=null;
+ const r=S.reminder; if(!r||!r.enabled)return;
+ const n=nextReminder(); if(!n)return;
+ const delay=n.getTime()-Date.now();
+ if(delay>0&&delay<2147000000)remTimer=setTimeout(function(){checkReminder();armReminderTimer();},delay+300);
+}
+document.addEventListener('visibilitychange',function(){if(!document.hidden)checkReminder();});
+
+/* файл календаря: система сама напомнит со стандартным звуком, даже если приложение закрыто */
+function icsFold(line){
+ const enc=new TextEncoder();let out='',bytes=0;
+ for(const ch of line){
+  const b=enc.encode(ch).length;
+  if(bytes+b>72){out+='\r\n ';bytes=1;}
+  out+=ch;bytes+=b;
+ }
+ return out;
+}
+function icsEsc(s){return String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
+function buildICS(){
+ const r=S.reminder; let start=null,rep='none';
+ if(r&&r.enabled){start=(r.repeat==='none')?remBase():nextReminder();rep=r.repeat;}
+ if(!start||start<new Date()){ /* напоминания нет или оно в прошлом - предлагаем еженедельное с завтрашнего утра */
+  start=new Date();start.setDate(start.getDate()+1);start.setHours(8,0,0,0);
+  rep=(r&&r.enabled&&r.repeat!=='none')?r.repeat:'weekly';
+ }
+ const z=function(n){return String(n).padStart(2,'0');};
+ const loc=function(d){return d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+'T'+z(d.getHours())+z(d.getMinutes())+'00';};
+ const u=new Date();
+ const stamp=u.getUTCFullYear()+z(u.getUTCMonth()+1)+z(u.getUTCDate())+'T'+z(u.getUTCHours())+z(u.getUTCMinutes())+z(u.getUTCSeconds())+'Z';
+ const rule={daily:'FREQ=DAILY',every2:'FREQ=DAILY;INTERVAL=2',weekly:'FREQ=WEEKLY',monthly:'FREQ=MONTHLY'}[rep];
+ const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//IRON LOG//RU','CALSCALE:GREGORIAN','BEGIN:VEVENT',
+  'UID:ironlog-measure-'+(ME?ME.id:'x')+'@iron-log','DTSTAMP:'+stamp,'DTSTART:'+loc(start),'DURATION:PT15M'];
+ if(rule)L.push('RRULE:'+rule);
+ L.push('SUMMARY:'+icsEsc('Замер тела · IRON LOG'),
+  'DESCRIPTION:'+icsEsc('Утром, натощак. Приложение: '+location.origin+location.pathname),
+  'BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY','DESCRIPTION:'+icsEsc('Пора сделать замер тела'),'END:VALARM',
+  'END:VEVENT','END:VCALENDAR');
+ return L.map(icsFold).join('\r\n')+'\r\n';
+}
+function remICS(){
+ const blob=new Blob([buildICS()],{type:'text/calendar;charset=utf-8'});
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);a.download='iron-log-zamer.ics';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
+ toast('[>>] ФАЙЛ КАЛЕНДАРЯ: ОТКРОЙ ЕГО, ЧТОБЫ ДОБАВИТЬ СОБЫТИЕ');
+}
+
 function remStatus(){
- const el=document.getElementById('rem-status'); if(!el)return;
- const r=S.reminder;
- if(!r||!r.enabled){el.innerHTML='статус: <b>напомнит при следующем открытии приложения</b>';return}
- const n=nextReminder();
- el.innerHTML=`напомнит при открытии после: <b>${n?fmtDate(n.toISOString().slice(0,10))+' '+(r.time||'08:00'):'—'}</b> · ${REPN[r.repeat]||'разово'}`;
+ const r=S.reminder, on=!!(r&&r.enabled), n=on?nextReminder():null;
+ let when='выключено';
+ if(on&&n){
+  if(r.repeat==='none'&&n<new Date())when='сработало '+shortDate(n);
+  else when=n.toLocaleDateString('ru-RU',{weekday:'short',day:'2-digit',month:'2-digit'})+' в '+(r.time||'08:00')+' · '+(REPN[r.repeat]||'разово');
+ }
+ const perm=notifText();
+ const note='Уведомление приходит, пока приложение открыто или свёрнуто. Чтобы напомнило и при закрытом, добавь событие в календарь.';
+ const el=document.getElementById('rem-status');
+ if(el)el.innerHTML='следующее: <b>'+esc(when)+'</b><br>'+esc(perm)+'<br>'+esc(note);
+ const rc=document.getElementById('rc-status');
+ if(rc)rc.innerHTML=on?'Следующее: <b>'+esc(when)+'</b>':'<b>Выключено</b>';
+ const rn=document.getElementById('rc-note');
+ if(rn)rn.textContent=perm+'.';
+ const off=document.getElementById('rc-off');
+ if(off)off.hidden=!on;
 }
 let remModalTrap=null;
 function openRem(){
@@ -857,29 +1084,32 @@ function saveRem(){
   repeat:document.getElementById('rem-repeat').value,
   lastFire:0,snooze:0};
  saveS();closeRem();remStatus();
- if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
+ unlockAudio();askNotif().then(function(){remStatus();});
  toast('[OK] НАПОМИНАНИЕ ВКЛЮЧЕНО');
- checkReminder();
+ checkReminder();armReminderTimer();
 }
-function remOff(){if(S.reminder){S.reminder.enabled=false;saveS();remStatus();toast('НАПОМИНАНИЕ ВЫКЛЮЧЕНО')}}
+function remOff(){if(S.reminder){S.reminder.enabled=false;saveS();remStatus();armReminderTimer();toast('НАПОМИНАНИЕ ВЫКЛЮЧЕНО')}}
 let remAlertTrap=null;
 function checkReminder(){
  const r=S.reminder; if(!r||!r.enabled)return;
- const n=nextReminder(); if(!n)return;
+ const n=dueReminder(); if(!n)return;
  const now=Date.now();
- if(now>=n.getTime()&&now>=(r.snooze||0)&&(r.lastFire||0)<n.getTime()){
+ if(now>=(r.snooze||0)&&(r.lastFire||0)<n.getTime()){
    r.lastFire=n.getTime(); saveS();
    document.getElementById('remAlert').classList.add('on');
    if(remAlertTrap){try{remAlertTrap();}catch(e){}}
    remAlertTrap = trapFocus(document.getElementById('remAlert'), snoozeRem);
-   if('Notification' in window&&Notification.permission==='granted'){try{new Notification('IRON WORLD',{body:'Пора сделать замер тела'})}catch(e){}}
+   /* приложение на экране: свой сигнал и вибрация; иначе системное уведомление со стандартным звуком */
+   const chimed=!document.hidden&&playChime();
+   if(!document.hidden){try{if(navigator.vibrate)navigator.vibrate([200,100,200]);}catch(e){}}
+   showMeasureNotification(false,chimed);
    remStatus();
  }
 }
 function snoozeRem(){
  document.getElementById('remAlert').classList.remove('on');
  if(remAlertTrap){try{remAlertTrap();}catch(e){} remAlertTrap=null;}
- if(S.reminder){S.reminder.snooze=Date.now()+3600*1000;saveS()}
+ if(S.reminder){S.reminder.snooze=Date.now()+3600*1000;S.reminder.lastFire=0;saveS()}
  toast('[Z] ОТЛОЖЕНО НА 1 ЧАС');
 }
 function goMeasure(){
@@ -931,11 +1161,13 @@ document.addEventListener('change', e=>{
 });
 addEventListener('pagehide', ()=>{ if(typeof saveDraftDebounced==='function' && saveDraftDebounced.flush) saveDraftDebounced.flush(); });
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden && typeof saveDraftDebounced==='function' && saveDraftDebounced.flush) saveDraftDebounced.flush(); });
-(function init(){
+/* старт - после загрузки ВСЕХ скриптов: render* живут в train.js, measure.js, food.js, а они подключены после app.js */
+function init(){
  const pid=localStorage.getItem(P_CUR);
  if(!PERSONAS.length){onboardCreate(!!localStorage.getItem(LEGACY));return;}
  if(!pid||!personaById(pid)){onboardSelect();return;}
  const p=personaById(pid);
  if(p.pinHash&&sessionStorage.getItem('ironlog_unlocked_'+pid)!=='1'){pinGate(p,()=>startApp(pid));return;}
  startApp(pid);
-})();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();

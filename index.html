@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="eye-wrap" aria-hidden="true"><svg viewBox="0 0 120 80" class="eye-svg"><ellipse cx="60" cy="40" rx="50" ry="30" fill="none" stroke="var(--red)" stroke-width="3"/><circle cx="60" cy="40" r="14" fill="var(--red)"><animate attributeName="r" values="14;10;14" dur="3s" repeatCount="indefinite"/></circle></svg></div>
+<div class="eye-wrap" aria-hidden="true"><svg viewBox="0 0 80 80" class="eye-svg"><circle cx="40" cy="40" r="36" fill="none" stroke="var(--red)" stroke-width="3"/><circle cx="40" cy="40" r="25" fill="none" stroke="var(--red)" stroke-width="1" opacity=".4"/><circle cx="40" cy="40" r="13" fill="var(--red)"><animate attributeName="r" values="13;9;13" dur="3s" repeatCount="indefinite"/></circle></svg></div>
 
 <nav class="nav" id="nav">
  <button data-v="home" onclick="showView('home',event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg></button>
@@ -28,10 +28,10 @@
  <section id="view-home" class="view">
   <h1 class="title">IRON <span>WORLD</span></h1>
   <div id="hstatus" class="term"></div>
-  <div class="modules">
-   <button class="mod" onclick="showView('train')"><b>ТРЕНИРОВКИ</b><small id="ms-train">журнал силовых · 3 дня</small></button>
-   <button class="mod" onclick="showView('measure')"><b>ЗАМЕРЫ ТЕЛА</b><small id="ms-meas">история пропорций</small></button>
-   <button class="mod" onclick="showView('food')"><b>ПИТАНИЕ</b><small>план КБЖУ и меню</small></button>
+  <div class="hist">
+   <button class="hist-i" onclick="showView('train')" aria-label="Тренировки: журнал"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M6.5 17.5l11-11M4 12h16"/></svg><b>Тренировки</b><small id="ms-train">нет записей</small></button>
+   <button class="hist-i meas" onclick="showView('measure')" aria-label="Замеры тела: история"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h4l3-9 6 18 3-9h4"/></svg><b>Замеры</b><small id="ms-meas">нет записей</small></button>
+   <button class="hist-i food" onclick="showView('food')" aria-label="Питание: план и меню"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2M7 2v20M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg><b>Питание</b><small>КБЖУ<br>и меню</small></button>
   </div>
  </section>
 
@@ -43,14 +43,14 @@
    <button onclick="save()">Сохранить в журнал</button>
    <button class="ghost" onclick="clearInputs()">Сброс полей</button>
   </div>
-  <details class="secd" id="secJ"><summary>ЖУРНАЛ // ИСТОРИЯ</summary><div id="journal"></div>
+  <details class="secd" id="secJ"><summary class="sec">ЖУРНАЛ // ИСТОРИЯ</summary><div id="journal"></div>
    <div class="actions">
     <button class="ghost" onclick="exportJ()">Экспорт JSON</button>
     <label class="ghost" style="cursor:pointer">Импорт JSON<input type="file" id="fileIn" accept=".json" hidden></label>
     <button class="ghost" onclick="clearJ()">Очистить журнал</button>
    </div>
   </details>
-  <details class="secd"><summary>CLOUD // GITHUB SYNC</summary>
+  <details class="secd"><summary class="sec">CLOUD // GITHUB SYNC</summary>
    <label>Токен (fine-grained PAT)</label>
    <input id="gh-token" type="password" autocomplete="off" placeholder="github_pat_...">
    <label>Владелец</label>
@@ -65,10 +65,11 @@
    <div id="gh-status" class="note"></div>
    <div class="actions"><button class="ghost" onclick="purgePublic()">Удалить старые публичные CSV</button></div>
   </details>
-  <details class="secd"><summary>НАПОМИНАНИЯ</summary>
+  <details class="secd"><summary class="sec">НАПОМИНАНИЯ</summary>
    <div id="rem-status" class="note"></div>
    <div class="actions">
     <button onclick="openRem()">Настроить напоминание</button>
+    <button class="ghost" onclick="remTest()">Проверить уведомление</button>
     <button class="ghost" onclick="remOff()">Выключить</button>
    </div>
   </details>
@@ -78,14 +79,27 @@
   <h2 class="sec">Замеры <span>//</span> тело</h2>
   <div id="measChart"></div>
   <form id="measForm" onsubmit="return saveMeasure()">
-   <label>Дата</label>
-   <input type="date" id="m-date">
+   <div class="mdaterow"><label for="m-date">Дата замера</label><input type="date" id="m-date"></div>
    <div id="m-metrics"></div>
   <div class="actions"><button type="button" onclick="saveMeasure()">Сохранить замер</button></div>
   </form>
+  <div class="remcard" id="remcard">
+   <div class="rc-head"><b>Напоминание о замере</b><span id="rc-status"></span></div>
+   <div class="rc-btns">
+    <button class="rc-main" onclick="openRem()">Настроить напоминание</button>
+   </div>
+   <div class="rc-links">
+    <button onclick="remTest()">Проверить уведомление</button>
+    <button onclick="remICS()">Добавить в календарь</button>
+    <button id="rc-off" onclick="remOff()">Выключить</button>
+   </div>
+   <div class="rc-note" id="rc-note"></div>
+  </div>
   <h2 class="sec">Динамика <span>//</span> графики</h2>
   <div id="measHist"></div>
-  <details class="secd" id="secMH"><summary>ИСТОРИЯ // ТАБЛИЦА</summary>
+  <h2 class="sec">Последние <span>//</span> замеры</h2>
+  <div id="measLast"></div>
+  <details class="secd" id="secMH"><summary class="sec">ЕЩЁ ЗАМЕРЫ</summary>
    <div id="measList"></div>
    <div class="actions"><button class="ghost" onclick="clearMeas()">Очистить замеры</button></div>
   </details>
@@ -96,7 +110,7 @@
   <div id="macros"></div>
   <h2 class="sec">Меню <span>//</span> приёмы</h2>
   <div id="meals"></div>
-  <details class="secd"><summary>ЗАЧЕМ БАНАН ОБЯЗАТЕЛЕН</summary>
+  <details class="secd"><summary class="sec">ЗАЧЕМ БАНАН ОБЯЗАТЕЛЕН</summary>
    <div class="note">Быстрые углеводы после силовой: гликоген, инсулин, восстановление. Без них — катаболизм и кортизол. Это не опция, это часть программы.</div>
   </details>
  </section>
@@ -107,14 +121,14 @@
  </section>
 </main>
 
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 <div id="remModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="rem-title">
  <div class="mbox">
   <h3 id="rem-title">Напоминание о замере</h3>
   <label>Дата начала</label><input type="date" id="rem-date">
   <label>Время</label><input type="time" id="rem-time" value="08:00">
   <label>Повторять</label>
-  <select id="rem-repeat"><option value="none">разово</option><option value="daily">ежедневно</option><option value="weekly">еженедельно</option><option value="monthly">ежемесячно</option></select>
+  <select id="rem-repeat"><option value="none">разово</option><option value="daily">ежедневно</option><option value="every2">через день</option><option value="weekly">еженедельно</option><option value="monthly">ежемесячно</option></select>
   <div class="mact"><button class="ghost" onclick="closeRem()">Отмена</button><button onclick="saveRem()">Включить</button></div>
  </div>
 </div>
