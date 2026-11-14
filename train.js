@@ -173,7 +173,7 @@ document.addEventListener('click',function(e){
  inp.value=nv<=0?'':nv;
  inp.dataset.inherited='false';
  inp.classList.remove('bump');void inp.offsetWidth;inp.classList.add('bump');
- haptic(20);
+ haptic(25);
  refreshCompactRow(+b.dataset.e,+b.dataset.s);
  saveDraftDebounced();
 });
@@ -197,7 +197,7 @@ document.addEventListener('click',function(e){
  startRest(sec,ex.n);
  b.classList.add('on');
  b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');
- haptic(35);
+ haptic(40);
 });
 
 /* ==== ТАЙМЕР ОТДЫХА (нижняя панель) ==== */

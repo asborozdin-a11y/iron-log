@@ -270,9 +270,18 @@ function saveS(){
 function loadGH(){try{return JSON.parse(localStorage.getItem(GHKC))||{}}catch(e){return{}}}
 /* вибрация: импульсы короче ~20 мс на многих Android не ощущаются, поэтому минимум 20 мс; отключается в профиле */
 function hapticOn(){try{return localStorage.getItem('ironlog_haptic')!=='0'}catch(e){return true}}
+/* сила вибрации: у разных телефонов моторчики разные, поэтому есть три уровня (множитель длительности) */
+const HAPTIC_LV=[{n:'слабая',k:1},{n:'средняя',k:1.6},{n:'сильная',k:2.4}];
+function hapticLevel(){try{const v=localStorage.getItem('ironlog_haptic_lvl');if(v!==null&&+v>=0&&+v<HAPTIC_LV.length)return +v;}catch(e){}return 1;}
 function haptic(p){
  if(!hapticOn()||!navigator.vibrate)return false;
- try{return navigator.vibrate(Array.isArray(p)?p:Math.max(20,p||20));}catch(e){return false;}
+ try{return navigator.vibrate(Array.isArray(p)?p:Math.max(20,Math.round((p||20)*HAPTIC_LV[hapticLevel()].k)));}catch(e){return false;}
+}
+function cycleHapticLevel(){
+ try{localStorage.setItem('ironlog_haptic_lvl',String((hapticLevel()+1)%HAPTIC_LV.length));}catch(e){}
+ renderProfile();
+ haptic(40); /* сразу чувствуется новая сила */
+ toast('[OK] СИЛА ВИБРАЦИИ: '+HAPTIC_LV[hapticLevel()].n.toUpperCase());
 }
 /* звук таймера отдыха (сигнал в конце паузы): можно выключить */
 function soundOn(){try{return localStorage.getItem('ironlog_restsound')!=='0'}catch(e){return true}}
@@ -287,7 +296,7 @@ function toggleSound(){
 document.addEventListener('click',function(e){
  const b=e.target&&e.target.closest?e.target.closest('#nav button,#tabs button,.day-alt button,.hist-i,.today-btn'):null;
  if(!b||b.classList.contains('on'))return;
- haptic(b.classList.contains('today-btn')?30:20);
+ haptic(b.classList.contains('today-btn')?35:25);
 });
 function toggleHaptic(){
  const on=hapticOn();
@@ -574,7 +583,7 @@ function renderProfile(){
     <div class="pf-themes"><span class="pf-lab">Пакет:</span>${Object.keys(PACKS).map(k=>`<button class="ob-pk ${ME.pack===k?'on':''}" onclick="setPack('${k}')">${esc(PACKS[k].label||k)}</button>`).join('')}</div>
     <div class="pf-themes"><span class="pf-lab">Тема:</span>${TH_LIST.map(t=>`<button class="ob-th ${ME.theme===t?'on':''}" style="background:${TH_SW[t]}" title="${t}" onclick="setTheme('${t}')"></button>`).join('')}</div>
     <div class="pf-themes"><span class="pf-lab">Эффекты:</span><button class="ob-pk ${localStorage.getItem('ironlog_fxoff')==='1'?'selected':'on'}" onclick="toggleFx()">${localStorage.getItem('ironlog_fxoff')==='1'?'✓ выкл':'вкл'}</button></div>
-    <div class="pf-themes"><span class="pf-lab">Вибрация:</span><button class="ob-pk ${hapticOn()?'on':''}" onclick="toggleHaptic()">${hapticOn()?'вкл':'выкл'}</button><button class="ob-pk" onclick="hapticTest()">проверить</button></div>
+    <div class="pf-themes"><span class="pf-lab">Вибрация:</span><button class="ob-pk ${hapticOn()?'on':''}" onclick="toggleHaptic()">${hapticOn()?'вкл':'выкл'}</button><button class="ob-pk" onclick="cycleHapticLevel()">сила: ${HAPTIC_LV[hapticLevel()].n}</button><button class="ob-pk" onclick="hapticTest()">проверить</button></div>
     <div class="pf-themes"><span class="pf-lab">Звук отдыха:</span><button class="ob-pk ${soundOn()?'on':''}" onclick="toggleSound()">${soundOn()?'вкл':'выкл'}</button></div>
     <div class="pf-themes"><span class="pf-lab">PIN:</span><button class="ob-pk on" onclick="pinSetup()">${ME.pinHash?'сменить':'установить'}</button>${ME.pinHash?`<button class="ob-pk" onclick="pinRemove()">снять</button>`:''}</div>`
    :`<div class="mact" style="justify-content:flex-start;margin-top:10px"><button class="ghost" onclick="switchPersona('${p.id}')">Открыть профиль</button></div>`}
