@@ -274,6 +274,21 @@ function haptic(p){
  if(!hapticOn()||!navigator.vibrate)return false;
  try{return navigator.vibrate(Array.isArray(p)?p:Math.max(20,p||20));}catch(e){return false;}
 }
+/* звук таймера отдыха (сигнал в конце паузы): можно выключить */
+function soundOn(){try{return localStorage.getItem('ironlog_restsound')!=='0'}catch(e){return true}}
+function toggleSound(){
+ const on=soundOn();
+ try{localStorage.setItem('ironlog_restsound',on?'0':'1');}catch(e){}
+ renderProfile();
+ if(!on&&typeof restBeep==='function')restBeep(true); /* при включении - сразу слышно, как звучит */
+ toast('[OK] ЗВУК ОТДЫХА: '+(on?'ВЫКЛЮЧЕН':'ВКЛЮЧЕН'));
+}
+/* лёгкий отклик при переключении вкладок, дней и кнопках главной (повторное нажатие на уже активную - без отклика) */
+document.addEventListener('click',function(e){
+ const b=e.target&&e.target.closest?e.target.closest('#nav button,#tabs button,.day-alt button,.hist-i,.today-btn'):null;
+ if(!b||b.classList.contains('on'))return;
+ haptic(b.classList.contains('today-btn')?30:20);
+});
 function toggleHaptic(){
  const on=hapticOn();
  try{localStorage.setItem('ironlog_haptic',on?'0':'1');}catch(e){}
@@ -560,6 +575,7 @@ function renderProfile(){
     <div class="pf-themes"><span class="pf-lab">Тема:</span>${TH_LIST.map(t=>`<button class="ob-th ${ME.theme===t?'on':''}" style="background:${TH_SW[t]}" title="${t}" onclick="setTheme('${t}')"></button>`).join('')}</div>
     <div class="pf-themes"><span class="pf-lab">Эффекты:</span><button class="ob-pk ${localStorage.getItem('ironlog_fxoff')==='1'?'selected':'on'}" onclick="toggleFx()">${localStorage.getItem('ironlog_fxoff')==='1'?'✓ выкл':'вкл'}</button></div>
     <div class="pf-themes"><span class="pf-lab">Вибрация:</span><button class="ob-pk ${hapticOn()?'on':''}" onclick="toggleHaptic()">${hapticOn()?'вкл':'выкл'}</button><button class="ob-pk" onclick="hapticTest()">проверить</button></div>
+    <div class="pf-themes"><span class="pf-lab">Звук отдыха:</span><button class="ob-pk ${soundOn()?'on':''}" onclick="toggleSound()">${soundOn()?'вкл':'выкл'}</button></div>
     <div class="pf-themes"><span class="pf-lab">PIN:</span><button class="ob-pk on" onclick="pinSetup()">${ME.pinHash?'сменить':'установить'}</button>${ME.pinHash?`<button class="ob-pk" onclick="pinRemove()">снять</button>`:''}</div>`
    :`<div class="mact" style="justify-content:flex-start;margin-top:10px"><button class="ghost" onclick="switchPersona('${p.id}')">Открыть профиль</button></div>`}
   </div>`).join('')+

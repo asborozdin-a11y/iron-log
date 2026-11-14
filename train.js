@@ -214,9 +214,11 @@ function restWidget(){
  }
  return w;
 }
-function restBeep(){
+function restBeep(test){
  try{
-  if(!restAC)return;
+  if(!test&&!soundOn())return;
+  /* test=true вызывается из нажатия кнопки: звуковой контекст можно создать */
+  if(!restAC){if(!test)return;restAC=new (window.AudioContext||window.webkitAudioContext)();}
   if(restAC.state==='suspended')restAC.resume();
   var o=restAC.createOscillator(),g=restAC.createGain();
   o.connect(g);g.connect(restAC.destination);
