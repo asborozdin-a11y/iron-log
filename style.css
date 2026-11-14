@@ -599,3 +599,7 @@ body.set-open #tabs{transform:translateY(130%);opacity:0;pointer-events:none}
 #measLast .ses ul,#measList .ses ul{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:16px}
 #measLast .ses li,#measList .ses li{min-width:0}
 #secMH[hidden]{display:none}
+
+/* ==== v78: невидимая плашка уведомления больше не перехватывает касания (мешала нажимать PULL) ==== */
+#toast{pointer-events:none}
+.ver{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 2px 0;font:500 12px/1.3 var(--font-data);color:var(--mut2)}

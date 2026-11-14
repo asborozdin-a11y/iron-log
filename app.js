@@ -268,6 +268,36 @@ function saveS(){
  catch(e){ toast('[!] НЕ ХВАТАЕТ МЕСТА: сделай «Экспорт JSON» и удали старые записи'); return false; }
 }
 function loadGH(){try{return JSON.parse(localStorage.getItem(GHKC))||{}}catch(e){return{}}}
+/* вибрация: импульсы короче ~20 мс на многих Android не ощущаются, поэтому минимум 20 мс; отключается в профиле */
+function hapticOn(){try{return localStorage.getItem('ironlog_haptic')!=='0'}catch(e){return true}}
+function haptic(p){
+ if(!hapticOn()||!navigator.vibrate)return false;
+ try{return navigator.vibrate(Array.isArray(p)?p:Math.max(20,p||20));}catch(e){return false;}
+}
+function toggleHaptic(){
+ const on=hapticOn();
+ try{localStorage.setItem('ironlog_haptic',on?'0':'1');}catch(e){}
+ renderProfile();
+ if(!on)haptic(40);
+ toast('[OK] ВИБРАЦИЯ: '+(on?'ВЫКЛЮЧЕНА':'ВКЛЮЧЕНА'));
+}
+/* проверка вибрации с понятным объяснением, если не сработало */
+function hapticTest(){
+ if(!navigator.vibrate){toast('[!] БРАУЗЕР НЕ УМЕЕТ ВИБРИРОВАТЬ (на iPhone вибрации в браузере нет)');return;}
+ if(!hapticOn()){toast('[!] ВИБРАЦИЯ ВЫКЛЮЧЕНА В ПРИЛОЖЕНИИ: ВКЛЮЧИ ЕЁ ВЫШЕ');return;}
+ let ok=false;
+ try{ok=navigator.vibrate([80,60,80]);}catch(e){}
+ toast(ok?'[OK] ДОЛЖНО ЗАВИБРИРОВАТЬ. Если нет: настройки телефона → вибрация и отклик, режим «Не беспокоить»':'[!] БРАУЗЕР ОТКЛОНИЛ ВИБРАЦИЮ');
+}
+/* версия берётся из кеша service worker (ironlog-vNN), поэтому всегда показывает реально активную */
+function showVersion(){
+ const el=document.getElementById('appver'); if(!el)return;
+ if(!window.caches){el.textContent='версия: —';return;}
+ caches.keys().then(function(ks){
+  const v=ks.filter(function(k){return /^ironlog-v\d+$/.test(k);}).map(function(k){return +k.slice(9);}).sort(function(x,y){return y-x;})[0];
+  el.textContent='версия: '+(v?'v'+v:'—');
+ }).catch(function(){});
+}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 function curPack(){return (ME&&ME.pack)||'default'}
 function inPack(s){return (s.packId||'default')===curPack()}
@@ -529,10 +559,13 @@ function renderProfile(){
     <div class="pf-themes"><span class="pf-lab">Пакет:</span>${Object.keys(PACKS).map(k=>`<button class="ob-pk ${ME.pack===k?'on':''}" onclick="setPack('${k}')">${esc(PACKS[k].label||k)}</button>`).join('')}</div>
     <div class="pf-themes"><span class="pf-lab">Тема:</span>${TH_LIST.map(t=>`<button class="ob-th ${ME.theme===t?'on':''}" style="background:${TH_SW[t]}" title="${t}" onclick="setTheme('${t}')"></button>`).join('')}</div>
     <div class="pf-themes"><span class="pf-lab">Эффекты:</span><button class="ob-pk ${localStorage.getItem('ironlog_fxoff')==='1'?'selected':'on'}" onclick="toggleFx()">${localStorage.getItem('ironlog_fxoff')==='1'?'✓ выкл':'вкл'}</button></div>
+    <div class="pf-themes"><span class="pf-lab">Вибрация:</span><button class="ob-pk ${hapticOn()?'on':''}" onclick="toggleHaptic()">${hapticOn()?'вкл':'выкл'}</button><button class="ob-pk" onclick="hapticTest()">проверить</button></div>
     <div class="pf-themes"><span class="pf-lab">PIN:</span><button class="ob-pk on" onclick="pinSetup()">${ME.pinHash?'сменить':'установить'}</button>${ME.pinHash?`<button class="ob-pk" onclick="pinRemove()">снять</button>`:''}</div>`
    :`<div class="mact" style="justify-content:flex-start;margin-top:10px"><button class="ghost" onclick="switchPersona('${p.id}')">Открыть профиль</button></div>`}
   </div>`).join('')+
-  `<div class="actions"><button class="ghost" onclick="onboardCreate(false)">+ Добавить профиль</button></div>`;
+  `<div class="actions"><button class="ghost" onclick="onboardCreate(false)">+ Добавить профиль</button></div>
+   <div class="ver"><span id="appver">версия: …</span><button class="ob-pk" onclick="forceUpdate()">обновить приложение</button></div>`;
+ showVersion();
 }
 function setPack(k){
  if(!ME||typeof PACKS==='undefined'||!PACKS[k])return;
@@ -1101,7 +1134,7 @@ function checkReminder(){
    remAlertTrap = trapFocus(document.getElementById('remAlert'), snoozeRem);
    /* приложение на экране: свой сигнал и вибрация; иначе системное уведомление со стандартным звуком */
    const chimed=!document.hidden&&playChime();
-   if(!document.hidden){try{if(navigator.vibrate)navigator.vibrate([200,100,200]);}catch(e){}}
+   if(!document.hidden)haptic([200,100,200]);
    showMeasureNotification(false,chimed);
    remStatus();
  }

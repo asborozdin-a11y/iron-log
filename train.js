@@ -134,7 +134,7 @@ function prefillFromPrevSet(box){
  document.addEventListener('touchend',function(e){
   if(!box||!e.changedTouches[0])return;
   var dy=e.changedTouches[0].clientY-sy, dx=e.changedTouches[0].clientX-sx;
-  if(dy>28&&Math.abs(dx)<40){setSetOpen(box,false);try{if(navigator.vibrate)navigator.vibrate(6);}catch(err){}}
+  if(dy>28&&Math.abs(dx)<40){setSetOpen(box,false);haptic(25);}
   box=null;
  },{passive:true});
 })();
@@ -173,7 +173,7 @@ document.addEventListener('click',function(e){
  inp.value=nv<=0?'':nv;
  inp.dataset.inherited='false';
  inp.classList.remove('bump');void inp.offsetWidth;inp.classList.add('bump');
- try{if(navigator.vibrate)navigator.vibrate(8);}catch(err){}
+ haptic(20);
  refreshCompactRow(+b.dataset.e,+b.dataset.s);
  saveDraftDebounced();
 });
@@ -197,7 +197,7 @@ document.addEventListener('click',function(e){
  startRest(sec,ex.n);
  b.classList.add('on');
  b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');
- try{if(navigator.vibrate)navigator.vibrate(12);}catch(err){}
+ haptic(35);
 });
 
 /* ==== ТАЙМЕР ОТДЫХА (нижняя панель) ==== */
@@ -266,7 +266,7 @@ function addRest(sec){
 }
 function finishRest(){
  stopRest();
- try{if(navigator.vibrate)navigator.vibrate([250,120,250]);}catch(e){}
+ haptic([250,120,250]);
  restBeep();
  toast('[T] ОТДЫХ ОКОНЧЕН — РАБОТАТЬ!');
  eyeFlare();
