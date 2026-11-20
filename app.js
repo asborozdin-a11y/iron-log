@@ -1211,11 +1211,18 @@ window.addEventListener('online',()=>{if(GH.token&&localStorage.getItem(PKEYC))d
 document.addEventListener('input', e=>{
  if(typeof saveDraftDebounced==='function' && e.target && e.target.closest && e.target.closest('#workout')){
   if(e.target.dataset) e.target.dataset.inherited='false';
+  /* строка подхода («60 кг × 8») обновляется сразу при вводе с клавиатуры, а не только по кнопкам +/- */
+  var ds=e.target.dataset;
+  if(ds&&ds.e!==undefined&&ds.s!==undefined&&typeof refreshCompactRow==='function')refreshCompactRow(+ds.e,+ds.s);
   saveDraftDebounced();
  }
 });
 document.addEventListener('change', e=>{
- if(typeof saveDraftDebounced==='function' && e.target && e.target.closest && e.target.closest('#workout')) saveDraftDebounced();
+ if(typeof saveDraftDebounced==='function' && e.target && e.target.closest && e.target.closest('#workout')){
+  var ds=e.target.dataset;
+  if(ds&&ds.e!==undefined&&ds.s!==undefined&&typeof refreshCompactRow==='function')refreshCompactRow(+ds.e,+ds.s);
+  saveDraftDebounced();
+ }
 });
 addEventListener('pagehide', ()=>{ if(typeof saveDraftDebounced==='function' && saveDraftDebounced.flush) saveDraftDebounced.flush(); });
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden && typeof saveDraftDebounced==='function' && saveDraftDebounced.flush) saveDraftDebounced.flush(); });

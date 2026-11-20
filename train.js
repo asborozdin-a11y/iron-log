@@ -99,6 +99,7 @@ document.addEventListener('click',function(e){
 function setSetOpen(box,on){
  box.classList.toggle('open',on);
  box.setAttribute('aria-hidden',on?'false':'true');
+ refreshCompactRow(+box.dataset.e,+box.dataset.s); /* на случай, если значение изменилось без события ввода (автозаполнение клавиатуры) */
  var row=box.previousElementSibling;
  if(row&&row.classList.contains('compact'))row.setAttribute('aria-expanded',on?'true':'false');
  document.body.classList.toggle('set-open',!!document.querySelector('.srow.expanded.open'));
